@@ -30,3 +30,61 @@ C_Timer = {
 		callback()
 	end,
 }
+
+-- The game's (and LuaJIT's) xpcall passes extra arguments to the function;
+-- plain Lua 5.1 (used by the tests in GitHub) doesn't. Same behaviour here.
+if not jit then
+	local plainXpcall = xpcall
+	-- luacheck: push ignore 121
+	xpcall = function(fn, handler, ...)
+		local args, n = { ... }, select("#", ...)
+		return plainXpcall(function()
+			return fn(unpack(args, 1, n))
+		end, handler)
+	end
+	-- luacheck: pop
+end
+
+function strtrim(s)
+	return (s:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+-- Fake frames: they remember registered events and scripts.
+-- frame:Fire(event, ...) runs its OnEvent script like the game would.
+local function newFrame(frameType, name)
+	local frame = { type = frameType, name = name, events = {}, scripts = {} }
+	function frame:RegisterEvent(event)
+		self.events[event] = true
+	end
+	function frame:UnregisterEvent(event)
+		self.events[event] = nil
+	end
+	function frame:SetScript(script, fn)
+		self.scripts[script] = fn
+	end
+	function frame:Fire(event, ...)
+		self.scripts.OnEvent(self, event, ...)
+	end
+	FakeFrames[#FakeFrames + 1] = frame
+	return frame
+end
+
+-- Fresh fake game state: call it in before_each.
+-- FakeFrames: frames created; ChatLog: chat lines; ReportedErrors: errors sent
+-- to the game's error handler.
+function ResetWoW()
+	FakeFrames, ChatLog, ReportedErrors = {}, {}, {}
+	SlashCmdList = {}
+	CreateFrame = newFrame
+	DEFAULT_CHAT_FRAME = {
+		AddMessage = function(_, msg)
+			ChatLog[#ChatLog + 1] = msg
+		end,
+	}
+	geterrorhandler = function()
+		return function(err)
+			ReportedErrors[#ReportedErrors + 1] = err
+		end
+	end
+end
+ResetWoW()

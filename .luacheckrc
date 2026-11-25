@@ -14,12 +14,18 @@ ignore = {
 }
 
 -- Unit tests (busted): its globals, and the helpers defined in spec/helpers/wow.lua
+local testHelpers = { "LoadAddonFile", "NewNamespace", "ResetWoW", "FakeFrames", "ChatLog", "ReportedErrors" }
 files["spec/"] = {
 	std = "+busted",
-	globals = { "LoadAddonFile", "NewNamespace" },
+	read_globals = testHelpers,
 }
 files["spec/helpers/"] = {
-	globals = { "LoadAddonFile", "NewNamespace", "GetLocale", "C_Timer" },
+	globals = {
+		"LoadAddonFile", "NewNamespace", "ResetWoW", "FakeFrames", "ChatLog", "ReportedErrors",
+		-- WoW API stubs
+		"GetLocale", "C_Timer", "CreateFrame", "DEFAULT_CHAT_FRAME", "geterrorhandler", "strtrim",
+		"xpcall", "jit", "unpack",
+	},
 }
 
 -- Globals MapScout defines
