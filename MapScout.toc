@@ -16,5 +16,6 @@ Locales/enUS.lua
 Locales/esES.lua
 Core/Init.lua
 Core/Caps.lua
-Core/DB.lua
 Core/Util.lua
+Core/DB.lua
+API/MapScoutAPI.lua

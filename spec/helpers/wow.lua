@@ -103,6 +103,7 @@ function ResetWoW()
 		_G[name] = nil
 	end
 	stubbed = {}
+	MapScoutAPI, MapScoutDB, MapScoutCharDB = nil, nil, nil
 	baseStubs()
 	FakeFrames, ChatLog, ReportedErrors = {}, {}, {}
 	SlashCmdList = {}
