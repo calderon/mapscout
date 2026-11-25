@@ -121,6 +121,33 @@ ns.RegisterCommand("version", function()
 	ns.Print("version " .. ns.VERSION)
 end, "show the version")
 
+-- /ms debug <topic>: developer checks that modules add with ns.RegisterDebug.
+local debugTopics = {} -- name -> { fn = fn, help = text }
+local debugOrder = {}
+
+function ns.RegisterDebug(name, fn, help)
+	assert(type(name) == "string" and name ~= "", "name is required")
+	assert(type(fn) == "function", "fn must be a function")
+	name = name:lower()
+	if not debugTopics[name] then
+		debugOrder[#debugOrder + 1] = name
+	end
+	debugTopics[name] = { fn = fn, help = help }
+end
+
+ns.RegisterCommand("debug", function(rest)
+	local name, args = ns.ParseCommand(rest)
+	local topic = debugTopics[name]
+	if topic then
+		topic.fn(args)
+		return
+	end
+	ns.Print("debug topics:")
+	for _, topicName in ipairs(debugOrder) do
+		DEFAULT_CHAT_FRAME:AddMessage("  /ms debug " .. topicName .. " - " .. (debugTopics[topicName].help or ""))
+	end
+end, "developer checks (/ms debug for the list)")
+
 SLASH_MAPSCOUT1 = "/mapscout"
 SLASH_MAPSCOUT2 = "/ms"
 SlashCmdList.MAPSCOUT = ns.HandleSlash
