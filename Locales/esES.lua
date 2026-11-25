@@ -51,6 +51,8 @@ L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda d
 L.PROVIDER_STATE_ON = "activado"
 L.PROVIDER_STATE_OFF = "desactivado"
 L.PROVIDER_STATE_FAILED = "desactivado por errores"
+L.DEBUG_QUERY = "cómo se lee una búsqueda: /ms debug query <texto>"
+L.DEBUG_QUERY_RESULT = "filtros: %s · coordenadas: %s · zona: %s · texto: «%s»"
 L.DEBUG_NORMALIZE = "cómo se busca un texto: /ms debug normalize <texto>"
 L.DEBUG_NORMALIZE_RESULT = "«%s» se busca como «%s»"
 

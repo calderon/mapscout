@@ -20,3 +20,4 @@ Core/Util.lua
 Core/DB.lua
 API/MapScoutAPI.lua
 API/Registry.lua
+Search/Query.lua

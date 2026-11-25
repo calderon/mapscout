@@ -222,9 +222,28 @@ describe("API/Registry.lua", function()
 		MapScoutAPI:RegisterProvider("bridge", { name = "Bridge", filter = "Bridge", filterAliases = { "rutas", "Route" } })
 		MapScoutAPI:RegisterProvider("aliasonly", { name = "A", filterAliases = { "Rutas" } })
 		assert.are.same({ "bridge", "rutas", "route" }, Registry.Get("bridge").filters)
-		local found = Registry.FindByFilter("RUTAS")
-		assert.are.same({ "bridge", "aliasonly" }, { found[1].id, found[2].id })
+		assert.are.same({ { provider = "bridge" }, { provider = "aliasonly" } }, Registry.FindByFilter("RUTAS"))
 		assert.are.same({}, Registry.FindByFilter("nothing"))
+	end)
+
+	it("turns category filter words into @ filters for that category", function()
+		load()
+		login()
+		MapScoutAPI:RegisterProvider("services", {
+			name = "Services",
+			filter = "services",
+			categories = {
+				{ id = "mail", name = "Mailboxes", filter = "mailbox", filterAliases = { "buzón" } },
+				{ id = "bank", name = "Banks", filter = "bank" },
+				{ id = "plain", name = "No words" },
+			},
+		})
+		assert.are.same({ { provider = "services", category = "mail" } }, Registry.FindByFilter("Buzon"))
+		assert.are.same({ { provider = "services" } }, Registry.FindByFilter("services"))
+		local ok, err = pcall(MapScoutAPI.RegisterProvider, MapScoutAPI, "x",
+			{ name = "X", categories = { { id = "a", name = "A", filter = 3 } } })
+		assert.is_false(ok)
+		assert.matches("filter must be a string", err, 1, true)
 	end)
 
 	it("/ms debug providers lists them", function()
