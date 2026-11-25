@@ -43,6 +43,7 @@ MapScout/
     Geography.lua Instances.lua Taxi.lua Transport.lua Services.lua Quests.lua
     AreaPOI.lua Vignettes.lua Portals.lua
   UI/
+    Map.lua                    # MapScout's layer over the map area, map hooks, open/close/change events
     SearchBar.lua              # edit box + gear button anchored to WorldMapFrame
     Results.lua                # pooled rows, groups "In this zone" / "Elsewhere"
     Preview.lua                # hover marker on the map canvas (own frames)
