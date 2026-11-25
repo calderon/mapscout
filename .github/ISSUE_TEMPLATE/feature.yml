@@ -1,0 +1,30 @@
+name: Feature
+description: Something new for players (an idea, a new search category, a UX improvement)
+labels: [feature]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title: clean and descriptive, no prefixes in brackets (the type and area go in labels).
+        Add the area label (Core, UI, API, Data, Options, UX), the milestone and, if it belongs to one, link it to its epic as a sub-issue.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What the player gets and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] 
+    validations:
+      required: true
+  - type: input
+    id: epic
+    attributes:
+      label: Epic
+      description: Parent epic, if any (also link it as a sub-issue).
+      placeholder: "#3"

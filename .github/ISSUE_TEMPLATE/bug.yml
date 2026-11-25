@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in MapScout doesn't work as it should (English or Spanish welcome)
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please write a short title that says what goes wrong (for example "Search bar hides the map's zoom buttons").
+        You can write in English or Spanish.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What did you see? Screenshots help a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the world map in Orgrimmar
+        2. Type "bank"
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Lua error (if any)
+      description: Copy it from the game's error window or from BugSack.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: MapScout version
+      description: "Type /ms version in the game"
+    validations:
+      required: true
+  - type: dropdown
+    id: game
+    attributes:
+      label: Game version
+      options:
+        - WoW Forever
+        - Retail
+        - Classic (other)
+    validations:
+      required: true
+  - type: textarea
+    id: addons
+    attributes:
+      label: Other map addons you use
+      description: For example Bridge, TomTom, Questie, Leatrix Maps...
