@@ -3,6 +3,7 @@
 -- and listens to game events through ns.RegisterEvent (never its own frame).
 
 local ADDON_NAME, ns = ...
+local L = ns.L
 
 -- Kept up to date by release-please (the game doesn't re-read the .toc on /reload)
 ns.VERSION = "0.0.0" -- x-release-please-version
@@ -91,7 +92,7 @@ function ns.RegisterCommand(name, fn, help)
 end
 
 local function printHelp()
-	ns.Print("commands (/mapscout or /ms):")
+	ns.Print(L.HELP_TITLE)
 	for _, name in ipairs(commandOrder) do
 		local help = commands[name].help
 		if help then
@@ -116,10 +117,10 @@ function ns.HandleSlash(text)
 	end
 end
 
-ns.RegisterCommand("help", printHelp, "this list")
+ns.RegisterCommand("help", printHelp, L.HELP_HELP)
 ns.RegisterCommand("version", function()
-	ns.Print("version " .. ns.VERSION)
-end, "show the version")
+	ns.Print(L.VERSION:format(ns.VERSION))
+end, L.HELP_VERSION)
 
 -- /ms debug <topic>: developer checks that modules add with ns.RegisterDebug.
 local debugTopics = {} -- name -> { fn = fn, help = text }
@@ -142,11 +143,11 @@ ns.RegisterCommand("debug", function(rest)
 		topic.fn(args)
 		return
 	end
-	ns.Print("debug topics:")
+	ns.Print(L.DEBUG_TITLE)
 	for _, topicName in ipairs(debugOrder) do
 		DEFAULT_CHAT_FRAME:AddMessage("  /ms debug " .. topicName .. " - " .. (debugTopics[topicName].help or ""))
 	end
-end, "developer checks (/ms debug for the list)")
+end, L.HELP_DEBUG)
 
 SLASH_MAPSCOUT1 = "/mapscout"
 SLASH_MAPSCOUT2 = "/ms"

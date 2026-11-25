@@ -140,7 +140,11 @@ What the client cannot tell us at runtime (NPC services, mailboxes and other obj
 
 ## Localization
 
-`L["KEY"]` with `Locales/enUS.lua` as the complete base and other locales overriding it; a missing key falls back to English. esES also serves esMX. Search keywords and `@` filters are localized, and English ones always work. On Mac, texts say Option and Cmd instead of Alt and Ctrl.
+`Locales/enUS.lua` defines every text in `ns.L` (English base); `Locales/esES.lua` overrides what it translates for esES and esMX. A key missing everywhere shows the key itself. Both files load first in the `.toc`. Unit tests check that every `L.KEY` used in the code exists in English and that translations keep the same placeholders (`%s`, `%d`).
+
+- `ns.KeyName("ALT")` / `("CTRL")`: modifier names as on the player's keyboard (Option and Cmd on Mac).
+- `ns.Words(key)`: search words for a filter or category: the English list (`ns.W_EN`) plus the player's language (`ns.W`), lowercase, without repeats. English words always work in every language.
+- Slash subcommands stay in English.
 
 ## Quality checks
 

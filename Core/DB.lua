@@ -9,6 +9,7 @@
 -- Modules read ns.db and ns.charDB from PLAYER_LOGIN on (ADDON_LOADED comes first).
 
 local ADDON_NAME, ns = ...
+local L = ns.L
 
 local DB = {}
 ns.DB = DB
@@ -101,10 +102,7 @@ function DB.Prepare(saved, defaults, migrations, schema)
 	return DB.MergeDefaults(saved, defaults), state
 end
 
-local WARNINGS = {
-	newer = "your saved %s data comes from a newer MapScout. It is left untouched, and changes made now won't be saved.",
-	failed = "your saved %s data could not be updated (%s). It is left untouched, and changes made now won't be saved.",
-}
+local WARNINGS = { newer = "DB_NEWER", failed = "DB_FAILED" }
 
 function DB.Load()
 	local account, accountState, accountErr = DB.Prepare(MapScoutDB, DB.ACCOUNT_DEFAULTS, DB.migrations.account, DB.SCHEMA)
@@ -112,12 +110,12 @@ function DB.Load()
 
 	-- Only data that is safe to change goes back to the SavedVariables
 	if WARNINGS[accountState] then
-		ns.Print(WARNINGS[accountState]:format("account", tostring(accountErr)))
+		ns.Print(L[WARNINGS[accountState]]:format(L.DB_ACCOUNT, tostring(accountErr)))
 	else
 		MapScoutDB = account
 	end
 	if WARNINGS[charState] then
-		ns.Print(WARNINGS[charState]:format("character", tostring(charErr)))
+		ns.Print(L[WARNINGS[charState]]:format(L.DB_CHARACTER, tostring(charErr)))
 	else
 		MapScoutCharDB = char
 	end
@@ -145,16 +143,14 @@ end
 
 function DB.Report()
 	if not ns.db then
-		return { "saved data not loaded yet" }
+		return { L.DB_NOT_LOADED }
 	end
 	local db, char = ns.db, ns.charDB
 	return {
-		string.format("saved data: schema %d (current %d), account %s, character %s",
-			db.schema or 0, DB.SCHEMA, DB.state.account, DB.state.char),
-		string.format("  account: %d aliases, %d hidden, %d favorites, %d in frequency, max results %d",
-			size(db.aliases), size(db.blacklist), size(db.favorites), size(db.frequency), db.options.maxResults),
-		string.format("  character: %d recent searches, %d known flight paths",
-			size(char.history), size(char.knownTaxi)),
+		L.DB_REPORT:format(db.schema or 0, DB.SCHEMA, L["DB_STATE_" .. DB.state.account], L["DB_STATE_" .. DB.state.char]),
+		L.DB_REPORT_ACCOUNT:format(size(db.aliases), size(db.blacklist), size(db.favorites), size(db.frequency),
+			db.options.maxResults),
+		L.DB_REPORT_CHARACTER:format(size(char.history), size(char.knownTaxi)),
 	}
 end
 
@@ -162,4 +158,4 @@ ns.RegisterDebug("db", function()
 	for _, line in ipairs(DB.Report()) do
 		ns.Print(line)
 	end
-end, "saved data: schema, state and sizes")
+end, L.DEBUG_DB)
