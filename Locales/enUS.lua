@@ -36,6 +36,8 @@ local EN = {
 	DB_REPORT_ACCOUNT = "  account: %d aliases, %d hidden, %d favorites, %d in frequency, max results %d",
 	DB_REPORT_CHARACTER = "  character: %d recent searches, %d known flight paths",
 	DEBUG_DB = "saved data: schema, state and sizes",
+	DEBUG_NORMALIZE = "how a text is searched: /ms debug normalize <text>",
+	DEBUG_NORMALIZE_RESULT = "\"%s\" is searched as \"%s\"",
 
 	-- Key names (ns.KeyName)
 	KEY_ALT = "Alt",
