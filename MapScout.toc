@@ -1,0 +1,15 @@
+## Interface: 16001
+## Title: MapScout
+## Notes: A light, fast search bar in the world map: places, travel, services, quests and coordinates.
+## Notes-esES: Buscador ligero y rápido en el mapa del mundo: lugares, viajes, servicios, misiones y coordenadas.
+## Notes-esMX: Buscador ligero y rápido en el mapa del mundo: lugares, viajes, servicios, misiones y coordenadas.
+## Author: Daniel Calderón
+# x-release-please-start-version
+## Version: 0.0.0
+# x-release-please-end
+## Category: Map
+## OptionalDeps: Bridge, TomTom
+## SavedVariables: MapScoutDB
+## SavedVariablesPerCharacter: MapScoutCharDB
+
+Core/Init.lua
