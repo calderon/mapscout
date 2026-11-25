@@ -26,6 +26,8 @@ end
 
 -- Minimal WoW API stubs: GetLocale, GetBuildInfo and IsMacClient are set
 -- again by ResetWoW, so a test can replace them with StubGlobals.
+local newTimerAPI -- defined below
+
 local function baseStubs()
 	GetLocale = function()
 		return "enUS"
@@ -39,14 +41,49 @@ local function baseStubs()
 	debugprofilestop = function()
 		return os.clock() * 1000
 	end
+	C_Timer = newTimerAPI()
 end
 
-C_Timer = {
-	-- Runs at once: tests don't wait for real time
-	After = function(_, callback)
-		callback()
-	end,
-}
+-- Timers don't run by themselves: a test runs them with RunTimers(), the
+-- way time passing would. PendingTimers() says how many are waiting.
+local timers = {}
+
+function RunTimers()
+	local due = timers
+	timers = {}
+	for _, timer in ipairs(due) do
+		if not timer.cancelled then
+			timer.callback()
+		end
+	end
+end
+
+function PendingTimers()
+	local n = 0
+	for _, timer in ipairs(timers) do
+		if not timer.cancelled then
+			n = n + 1
+		end
+	end
+	return n
+end
+
+newTimerAPI = function()
+	timers = {}
+	return {
+		After = function(seconds, callback)
+			table.insert(timers, { seconds = seconds, callback = callback })
+		end,
+		NewTimer = function(seconds, callback)
+			local timer = { seconds = seconds, callback = callback }
+			function timer.Cancel(self)
+				self.cancelled = true
+			end
+			table.insert(timers, timer)
+			return timer
+		end,
+	}
+end
 
 -- The game's (and LuaJIT's) xpcall passes extra arguments to the function;
 -- plain Lua 5.1 (used by the tests in GitHub) doesn't. Same behaviour here.
@@ -135,11 +172,31 @@ function Frame:SetAllPoints(target)
 	self.points = { { "ALL", target or self.parent } }
 end
 function Frame:SetPoint(...)
-	self.points = self.points or {}
 	table.insert(self.points, { ... })
 end
 function Frame:ClearAllPoints()
 	self.points = {}
+end
+function Frame:GetWidth()
+	return self.width
+end
+function Frame:SetWidth(width)
+	self.width = width
+end
+function Frame:GetText()
+	return self.text or ""
+end
+function Frame:SetText(text)
+	self.text = text
+end
+function Frame:SetFocus()
+	self.focus = true
+end
+function Frame:ClearFocus()
+	self.focus = false
+end
+function Frame:HasFocus()
+	return self.focus == true
 end
 function Frame:CreateTexture()
 	return newFrame("Texture", nil, self)
@@ -154,10 +211,10 @@ local FrameMeta = {
 	end,
 }
 
-newFrame = function(frameType, name, parent)
+newFrame = function(frameType, name, parent, template)
 	local frame = setmetatable({
-		type = frameType, name = name, parent = parent, events = {}, scripts = {}, hooks = {},
-		shown = true, level = (parent and parent.level or 0) + 1, width = 0, height = 0,
+		type = frameType, name = name, parent = parent, template = template, events = {}, scripts = {}, hooks = {},
+		shown = true, level = (parent and parent.level or 0) + 1, width = 0, height = 0, points = {},
 	}, FrameMeta)
 	FakeFrames[#FakeFrames + 1] = frame
 	return frame
@@ -209,5 +266,7 @@ function ResetWoW()
 			ReportedErrors[#ReportedErrors + 1] = err
 		end
 	end
+	GameTooltip = newFrame("GameTooltip", "GameTooltip")
+	table.remove(FakeFrames) -- not one of the addon's frames
 end
 ResetWoW()
