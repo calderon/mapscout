@@ -46,17 +46,7 @@ DB.migrations.account[1] = function(db)
 	db.audit, db.audit2 = nil, nil
 end
 
-local function copy(value)
-	if type(value) ~= "table" then
-		return value
-	end
-	local result = {}
-	for k, v in pairs(value) do
-		result[k] = copy(v)
-	end
-	return result
-end
-DB.Copy = copy
+local copy = ns.CopyTable
 
 -- Adds the defaults the data lacks, at any depth, never replacing a value the
 -- player has. Tables from the defaults are copied, never shared.

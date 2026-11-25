@@ -5,6 +5,7 @@ describe("Core/DB.lua", function()
 	local function load()
 		ns = LoadAddonFile("Core/Init.lua")
 		frame = FakeFrames[1]
+		LoadAddonFile("Core/Util.lua", ns)
 		LoadAddonFile("Core/DB.lua", ns)
 		return ns.DB
 	end
@@ -16,8 +17,6 @@ describe("Core/DB.lua", function()
 
 	before_each(function()
 		ResetWoW()
-		StubGlobals({ MapScoutDB = false, MapScoutCharDB = false }) -- so ResetWoW clears them
-		_G.MapScoutDB, _G.MapScoutCharDB = nil, nil
 	end)
 
 	describe("MergeDefaults", function()

@@ -65,6 +65,19 @@ function ns.Normalize(text)
 	return (text:match("^ ?(.-) ?$"))
 end
 
+-- Deep copy of a table (other values are returned as they are). Used for the
+-- defaults of the saved data and for every table handed to other addons.
+function ns.CopyTable(value)
+	if type(value) ~= "table" then
+		return value
+	end
+	local result = {}
+	for k, v in pairs(value) do
+		result[k] = ns.CopyTable(v)
+	end
+	return result
+end
+
 -- Splits a normalized text into its words.
 function ns.SplitWords(normalized)
 	local words = {}

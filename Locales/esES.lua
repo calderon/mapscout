@@ -39,6 +39,8 @@ L.DB_REPORT = "datos guardados: esquema %d (actual %d), cuenta %s, personaje %s"
 L.DB_REPORT_ACCOUNT = "  cuenta: %d alias, %d ocultos, %d favoritos, %d en frecuencia, máximo de resultados %d"
 L.DB_REPORT_CHARACTER = "  personaje: %d búsquedas recientes, %d rutas de vuelo conocidas"
 L.DEBUG_DB = "datos guardados: esquema, estado y tamaños"
+L.DEBUG_API = "API pública: versión, estado y funciones"
+L.DEBUG_API_RESULT = "MapScoutAPI versión %d, lista: %s, %d llamadas en espera, funciones: %s"
 L.DEBUG_NORMALIZE = "cómo se busca un texto: /ms debug normalize <texto>"
 L.DEBUG_NORMALIZE_RESULT = "«%s» se busca como «%s»"
 
