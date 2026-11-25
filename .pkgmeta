@@ -1,0 +1,31 @@
+# BigWigs Packager: how the release zip is built (MapScout-vX.Y.Z.zip with MapScout/ inside)
+package-as: MapScout
+
+# LoadOnDemand modules shipped in the same zip, each as its own addon folder.
+# Uncomment each line when the folder exists (#39 data packs, #82 adapters):
+# move-folders:
+#   MapScout/MapScout_Data_Forever: MapScout_Data_Forever
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
+# Development files: not part of the addon
+ignore:
+  - CLAUDE.md
+  - .claude
+  - .github
+  - .husky
+  - .gitignore
+  - .gitmessage
+  - .luacheckrc
+  - .nvmrc
+  - .pkgmeta
+  - .release-please-manifest.json
+  - commitlint.config.mjs
+  - dev
+  - node_modules
+  - package.json
+  - package-lock.json
+  - release-please-config.json
+  - scripts
