@@ -1,0 +1,9 @@
+-- busted settings: tests live in spec/ and end in _spec.lua
+return {
+	default = {
+		ROOT = { "spec" },
+		pattern = "_spec",
+		helper = "spec/helpers/wow.lua",
+		lpath = "./?.lua;./spec/?.lua",
+	},
+}
