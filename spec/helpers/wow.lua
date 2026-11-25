@@ -24,6 +24,10 @@ function GetLocale()
 	return "enUS"
 end
 
+function GetBuildInfo()
+	return "1.60.1", "71139", "Nov 24 2026", 16001
+end
+
 C_Timer = {
 	-- Runs at once: tests don't wait for real time
 	After = function(_, callback)
@@ -72,7 +76,23 @@ end
 -- Fresh fake game state: call it in before_each.
 -- FakeFrames: frames created; ChatLog: chat lines; ReportedErrors: errors sent
 -- to the game's error handler.
+-- Globals set by StubGlobals, removed by the next ResetWoW
+local stubbed = {}
+
+-- Sets fake game globals for one test: StubGlobals({ C_Map = { ... } })
+-- (writes the real global table: assignments inside a test file stay local to it)
+function StubGlobals(values)
+	for name, value in pairs(values) do
+		stubbed[name] = true
+		_G[name] = value
+	end
+end
+
 function ResetWoW()
+	for name in pairs(stubbed) do
+		_G[name] = nil
+	end
+	stubbed = {}
 	FakeFrames, ChatLog, ReportedErrors = {}, {}, {}
 	SlashCmdList = {}
 	CreateFrame = newFrame
