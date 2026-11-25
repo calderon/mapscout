@@ -10,6 +10,10 @@ Any other addon can add its own results and actions to the search through the pu
 
 > MapScout is in development. Bugs and ideas: [GitHub Issues](https://github.com/calderon/mapscout/issues).
 
+### For developers
+
+Any addon can add its own results and actions to MapScout through `MapScoutAPI`. How MapScout is built: [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ---
 
 <a name="espanol"></a>
@@ -21,3 +25,7 @@ Any other addon can add its own results and actions to the search through the pu
 Cualquier otro addon puede añadir sus propios resultados y acciones al buscador con la API pública, `MapScoutAPI`.
 
 > MapScout está en desarrollo. Errores e ideas: [GitHub Issues](https://github.com/calderon/mapscout/issues).
+
+### Para desarrolladores
+
+Cualquier addon puede añadir sus propios resultados y acciones a MapScout con `MapScoutAPI`. Cómo está hecho MapScout: [ARCHITECTURE.md](ARCHITECTURE.md) (en inglés).
