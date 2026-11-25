@@ -5,9 +5,14 @@
 
 local ADDON_NAME = "MapScout"
 
--- A fresh, empty addon namespace (the "ns" every addon file receives).
+-- A fresh addon namespace (the "ns" every addon file receives), with the
+-- language files already loaded, as in the game (they come first in the .toc).
 function NewNamespace()
-	return {}
+	local ns = {}
+	for _, path in ipairs({ "Locales/enUS.lua", "Locales/esES.lua" }) do
+		assert(loadfile(path))(ADDON_NAME, ns)
+	end
+	return ns
 end
 
 -- Runs an addon file like the game does: with the addon name and the
@@ -19,13 +24,18 @@ function LoadAddonFile(path, ns)
 	return ns
 end
 
--- Minimal WoW API stubs
-function GetLocale()
-	return "enUS"
-end
-
-function GetBuildInfo()
-	return "1.60.1", "71139", "Nov 24 2026", 16001
+-- Minimal WoW API stubs: GetLocale, GetBuildInfo and IsMacClient are set
+-- again by ResetWoW, so a test can replace them with StubGlobals.
+local function baseStubs()
+	GetLocale = function()
+		return "enUS"
+	end
+	GetBuildInfo = function()
+		return "1.60.1", "71139", "Nov 24 2026", 16001
+	end
+	IsMacClient = function()
+		return false
+	end
 end
 
 C_Timer = {
@@ -93,6 +103,7 @@ function ResetWoW()
 		_G[name] = nil
 	end
 	stubbed = {}
+	baseStubs()
 	FakeFrames, ChatLog, ReportedErrors = {}, {}, {}
 	SlashCmdList = {}
 	CreateFrame = newFrame

@@ -12,6 +12,8 @@
 ## SavedVariables: MapScoutDB
 ## SavedVariablesPerCharacter: MapScoutCharDB
 
+Locales/enUS.lua
+Locales/esES.lua
 Core/Init.lua
 Core/Caps.lua
 Core/DB.lua

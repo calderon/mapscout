@@ -6,6 +6,7 @@
 -- table in ARCHITECTURE.md): that is the providers' business, not this file's.
 
 local _, ns = ...
+local L = ns.L
 
 -- Each capability and the game functions it needs (all of them must exist).
 local CHECKS = {
@@ -79,12 +80,12 @@ ns.Caps = ns.DetectCaps()
 -- /ms diag ----------------------------------------------------------------
 
 local function yesNo(value)
-	return value and "|cff00ff00yes|r" or "|cffff4040no|r"
+	return value and ("|cff00ff00" .. L.YES .. "|r") or ("|cffff4040" .. L.NO .. "|r")
 end
 
 function ns.CapsReport(caps)
 	local lines = {
-		string.format("version %s · WoW %s · %s · %s", ns.VERSION, caps.build, caps.flavor, GetLocale()),
+		L.DIAG_HEADER:format(ns.VERSION, caps.build, caps.flavor, GetLocale()),
 	}
 	local names = { "searchBox" }
 	for _, check in ipairs(CHECKS) do
@@ -110,4 +111,4 @@ ns.RegisterCommand("diag", function()
 	for i = 2, #lines do
 		DEFAULT_CHAT_FRAME:AddMessage(lines[i])
 	end
-end, "show the game version and what this client can do")
+end, L.HELP_DIAG)
