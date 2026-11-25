@@ -38,6 +38,16 @@ local EN = {
 	DEBUG_DB = "saved data: schema, state and sizes",
 	DEBUG_API = "public API: version, state and functions",
 	DEBUG_API_RESULT = "MapScoutAPI version %d, ready: %s, %d calls waiting, functions: %s",
+	DEBUG_PROVIDERS = "search providers: state, entries and errors",
+	DEBUG_PROVIDERS_NONE = "no search providers registered",
+	DEBUG_PROVIDERS_TITLE = "%d search providers:",
+	DEBUG_PROVIDERS_LINE = "  %s (%s): %s, %d entries, %d errors, filters %s",
+
+	-- Search providers
+	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
+	PROVIDER_STATE_ON = "on",
+	PROVIDER_STATE_OFF = "off",
+	PROVIDER_STATE_FAILED = "turned off after errors",
 	DEBUG_NORMALIZE = "how a text is searched: /ms debug normalize <text>",
 	DEBUG_NORMALIZE_RESULT = "\"%s\" is searched as \"%s\"",
 
