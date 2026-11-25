@@ -87,6 +87,66 @@ function ns.SplitWords(normalized)
 	return words
 end
 
+-- Maps by name -------------------------------------------------------------------
+-- Continents and zones of the world map tree, with their normalized names,
+-- built the first time they are needed.
+
+local MAP_ROOTS = { 946, 947 } -- Cosmic (Retail), Azeroth (Forever, Classic)
+local MAP_TYPES = { [2] = true, [3] = true } -- continent, zone (cities are zones)
+local mapNames -- list of { mapID, name, normalized, mapType }
+
+local function buildMapNames()
+	mapNames = {}
+	if not (C_Map and C_Map.GetMapChildrenInfo) then
+		return
+	end
+	local seen = {}
+	for _, root in ipairs(MAP_ROOTS) do
+		for _, info in ipairs(C_Map.GetMapChildrenInfo(root, nil, true) or {}) do
+			if MAP_TYPES[info.mapType] and not seen[info.mapID] then
+				seen[info.mapID] = true
+				mapNames[#mapNames + 1] = {
+					mapID = info.mapID, name = info.name, normalized = ns.Normalize(info.name), mapType = info.mapType,
+				}
+			end
+		end
+	end
+end
+
+-- Finds a continent or zone by (part of) its name: the exact name first, then
+-- a name that starts with it, then a name with a word that starts with it
+-- ("elwynn" finds "Bosque de Elwynn"). Zones win over continents, then the
+-- shortest name. Returns mapID and name, or nil.
+function ns.FindMapByName(text)
+	local wanted = ns.Normalize(text)
+	if wanted == "" then
+		return nil
+	end
+	if not mapNames then
+		buildMapNames()
+	end
+	local best, bestRank
+	for _, map in ipairs(mapNames) do
+		local rank
+		if map.normalized == wanted then
+			rank = 1
+		elseif map.normalized:sub(1, #wanted) == wanted then
+			rank = 2
+		elseif (" " .. map.normalized):find(" " .. wanted, 1, true) then
+			rank = 3
+		end
+		if rank then
+			rank = rank * 10 + (map.mapType == 3 and 0 or 1)
+			if not best or rank < bestRank or (rank == bestRank and #map.normalized < #best.normalized) then
+				best, bestRank = map, rank
+			end
+		end
+	end
+	if best then
+		return best.mapID, best.name
+	end
+end
+
 ns.RegisterDebug("normalize", function(text)
 	ns.Print(L.DEBUG_NORMALIZE_RESULT:format(text, ns.Normalize(text)))
 end, L.DEBUG_NORMALIZE)

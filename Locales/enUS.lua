@@ -48,6 +48,8 @@ local EN = {
 	PROVIDER_STATE_ON = "on",
 	PROVIDER_STATE_OFF = "off",
 	PROVIDER_STATE_FAILED = "turned off after errors",
+	DEBUG_QUERY = "how a search is read: /ms debug query <text>",
+	DEBUG_QUERY_RESULT = "filters: %s · coordinates: %s · zone: %s · text: \"%s\"",
 	DEBUG_NORMALIZE = "how a text is searched: /ms debug normalize <text>",
 	DEBUG_NORMALIZE_RESULT = "\"%s\" is searched as \"%s\"",
 

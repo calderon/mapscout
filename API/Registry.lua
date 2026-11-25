@@ -7,7 +7,7 @@
 --       description = "...", icon = "Interface\\...",
 --       filter = "myaddon",                -- "@myaddon" in the search
 --       filterAliases = { "mine" },        -- more @ words
---       categories = { { id = "shops", name = "Shops" } }, -- sub-toggles
+--       categories = { { id = "shops", name = "Shops", filter = "shops" } }, -- sub-toggles, own @ words
 --       defaultEnabled = true,
 --       OnEnable = function() provider:SetEntries(...) end, -- on, at login too
 --       OnDisable = function() end,        -- off: stop events, drop data
@@ -78,6 +78,10 @@ local function validateSpec(id, spec)
 	for i, category in ipairs(spec.categories or {}) do
 		if type(category) ~= "table" or type(category.id) ~= "string" or type(category.name) ~= "string" then
 			fail(id, ("categories[%d] needs an id and a name"):format(i))
+		end
+		if (category.filter ~= nil and type(category.filter) ~= "string")
+			or (category.filterAliases ~= nil and type(category.filterAliases) ~= "table") then
+			fail(id, ("categories[%d]: filter must be a string and filterAliases a list"):format(i))
 		end
 	end
 end
@@ -230,6 +234,21 @@ end
 
 -- Registration --------------------------------------------------------------
 
+-- The @ words of a provider or category (filter + filterAliases), normalized
+local function filterWords(spec)
+	local words, result = { spec.filter }, {}
+	for _, alias in ipairs(spec.filterAliases or {}) do
+		words[#words + 1] = alias
+	end
+	for _, word in pairs(words) do
+		local normalized = ns.Normalize(word)
+		if normalized ~= "" then
+			result[#result + 1] = normalized
+		end
+	end
+	return result
+end
+
 local function create(id, spec)
 	validateSpec(id, spec)
 	local existing = providers[id]
@@ -239,18 +258,16 @@ local function create(id, spec)
 		end
 		fail(id, "a provider with this id is already registered")
 	end
-	local record = { id = id, spec = spec, enabled = false, errors = 0, entries = {}, categoryIDs = {}, filters = {} }
+	local record = {
+		id = id, spec = spec, enabled = false, errors = 0, entries = {},
+		categoryIDs = {}, filters = {}, categoryFilters = {},
+	}
+	record.filters = filterWords(spec)
 	for _, category in ipairs(spec.categories or {}) do
 		record.categoryIDs[category.id] = true
-	end
-	local words = { spec.filter }
-	for _, alias in ipairs(spec.filterAliases or {}) do
-		words[#words + 1] = alias
-	end
-	for _, word in pairs(words) do
-		local normalized = ns.Normalize(word)
-		if normalized ~= "" then
-			record.filters[#record.filters + 1] = normalized
+		for _, word in ipairs(filterWords(category)) do
+			record.categoryFilters[word] = record.categoryFilters[word] or {}
+			table.insert(record.categoryFilters[word], category.id)
 		end
 	end
 	record.handle = setmetatable({ record = record }, Handle)
@@ -339,15 +356,24 @@ function Registry.IsCategoryEnabled(id, categoryID)
 	return not (options and options.categories[id .. "." .. categoryID] == false)
 end
 
--- Providers whose @ word (normalized) is this one
+-- What an @ word selects: a list of { provider = id, category = id or nil }.
+-- A provider's word selects the whole provider; a category's word, that category.
 function Registry.FindByFilter(word)
 	word = ns.Normalize(word)
 	local found = {}
 	for _, id in ipairs(order) do
-		for _, filter in ipairs(providers[id].filters) do
+		local record = providers[id]
+		local whole = false
+		for _, filter in ipairs(record.filters) do
 			if filter == word then
-				found[#found + 1] = providers[id]
+				whole = true
+				found[#found + 1] = { provider = id }
 				break
+			end
+		end
+		if not whole then
+			for _, categoryID in ipairs(record.categoryFilters[word] or {}) do
+				found[#found + 1] = { provider = id, category = categoryID }
 			end
 		end
 	end
