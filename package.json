@@ -1,0 +1,13 @@
+{
+  "name": "mapscout-dev",
+  "private": true,
+  "description": "Development tools for MapScout (not part of the addon)",
+  "scripts": {
+    "prepare": "husky && git config commit.template .gitmessage"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "husky": "^9.1.7"
+  }
+}

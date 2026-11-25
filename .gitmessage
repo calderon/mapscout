@@ -1,0 +1,20 @@
+# <type>(<scope>): <summary in English, imperative, no final period>
+#
+# <body: what and why, wrap at 72 columns>
+#
+# Closes #<issue>
+#
+# ---------------------------------------------------------------------
+# Types (only these three), by branch, and how they bump the version:
+#   feat      feature/<n>-slug   new feature   -> 1.1.0 -> 1.2.0
+#   fix       bug/<n>-slug       bug fix       -> 1.1.0 -> 1.1.1
+#   chore     tech/<n>-slug      technical     -> no new version, not in the CHANGELOG
+#   feat!     breaking change (or footer "BREAKING CHANGE: ...") -> 2.0.0
+#
+# Scope (optional): core, search, ui, map, options, api, data, providers,
+#   locales, ci...
+#
+# Issue footer (GitHub closes the issue when this reaches main):
+#   Closes #12    Fixes #12    Resolves #12    Refs #12 (does not close)
+#
+# Lines starting with # are ignored.
