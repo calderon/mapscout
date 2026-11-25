@@ -102,7 +102,7 @@ describe("Core/Init.lua", function()
 			local before = #ChatLog
 			SlashCmdList.MAPSCOUT("nonsense")
 			assert.is_true(#ChatLog > before)
-			assert.matches("/ms help", ChatLog[#ChatLog - 1] .. ChatLog[#ChatLog], 1, true)
+			assert.matches("/ms help", table.concat(ChatLog, "\n", before + 1), 1, true)
 		end)
 	end)
 end)
