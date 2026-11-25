@@ -50,6 +50,11 @@ local EN = {
 	PROVIDER_STATE_FAILED = "turned off after errors",
 	DEBUG_QUERY = "how a search is read: /ms debug query <text>",
 	DEBUG_QUERY_RESULT = "filters: %s · coordinates: %s · zone: %s · text: \"%s\"",
+	DEBUG_SEARCH = "search without the map: /ms debug search <text>",
+	DEBUG_SEARCH_TITLE = "\"%s\": %d results",
+	DEBUG_SEARCH_LINE = "  %d. %s (%s) %.0f%s",
+	DEBUG_BENCH = "time a search: /ms debug bench <text>",
+	DEBUG_BENCH_RESULT = "\"%s\": %.2f ms, %d candidates, %d results, typos: %s · typed letter by letter (%d searches): %.2f ms, slowest %.2f ms · index: %d providers, %d entries, built in %.2f ms",
 	DEBUG_NORMALIZE = "how a text is searched: /ms debug normalize <text>",
 	DEBUG_NORMALIZE_RESULT = "\"%s\" is searched as \"%s\"",
 

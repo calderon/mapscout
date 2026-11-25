@@ -36,6 +36,9 @@ local function baseStubs()
 	IsMacClient = function()
 		return false
 	end
+	debugprofilestop = function()
+		return os.clock() * 1000
+	end
 end
 
 C_Timer = {

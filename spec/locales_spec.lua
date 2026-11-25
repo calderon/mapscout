@@ -46,10 +46,10 @@ describe("Locales", function()
 		local files = io.popen("ls Core/*.lua Search/*.lua API/*.lua Providers/*.lua UI/*.lua Options/*.lua 2>/dev/null")
 		for path in files:lines() do
 			local source = io.open(path):read("*a")
-			for key in source:gmatch("L%.([%w_]+)") do
+			for key in source:gmatch("%f[%w_]L%.([%w_]+)") do
 				assert.is_not_nil(en[key], path .. " uses missing text L." .. key)
 			end
-			for key in source:gmatch('L%["([%w_]+)"%]') do
+			for key in source:gmatch('%f[%w_]L%["([%w_]+)"%]') do
 				assert.is_not_nil(en[key], path .. ' uses missing text L["' .. key .. '"]')
 			end
 		end
