@@ -14,14 +14,14 @@ ignore = {
 }
 
 -- Unit tests (busted): its globals, and the helpers defined in spec/helpers/wow.lua
-local testHelpers = { "LoadAddonFile", "NewNamespace", "ResetWoW", "StubGlobals", "FakeFrames", "ChatLog", "ReportedErrors" }
+local testHelpers = { "LoadAddonFile", "NewNamespace", "ResetWoW", "StubGlobals", "RunTimers", "PendingTimers", "FakeFrames", "ChatLog", "ReportedErrors" }
 files["spec/"] = {
 	std = "+busted",
 	read_globals = testHelpers,
 }
 files["spec/helpers/"] = {
 	globals = {
-		"LoadAddonFile", "NewNamespace", "ResetWoW", "StubGlobals", "FakeFrames", "ChatLog", "ReportedErrors",
+		"LoadAddonFile", "NewNamespace", "ResetWoW", "StubGlobals", "RunTimers", "PendingTimers", "FakeFrames", "ChatLog", "ReportedErrors", "GameTooltip",
 		-- WoW API stubs
 		"GetLocale", "GetBuildInfo", "IsMacClient", "debugprofilestop", "hooksecurefunc", "InCombatLockdown", "C_Timer", "CreateFrame", "DEFAULT_CHAT_FRAME", "geterrorhandler", "strtrim",
 		"xpcall", "jit", "unpack",
@@ -45,7 +45,7 @@ read_globals = {
 	"format", "tinsert", "tremove", "wipe", "max", "min", "floor", "ceil", "abs",
 	"date", "time", "debugprofilestop", "GetBuildInfo", "geterrorhandler", "hooksecurefunc", "securecallfunction",
 	-- Namespaces
-	"C_AddOns", "C_AreaPoiInfo", "C_XMLUtil", "C_EncounterJournal", "C_Map", "C_QuestLog", "C_SuperTrack",
+	"C_AddOns", "C_AreaPoiInfo", "C_XMLUtil", "C_Texture", "C_EncounterJournal", "C_Map", "C_QuestLog", "C_SuperTrack",
 	"C_TaskQuest", "C_TaxiMap", "C_Timer", "C_VignetteInfo",
 	-- Functions
 	"CreateFrame", "CreateFramePool", "GetLocale", "GetTime", "InCombatLockdown", "IsMacClient",

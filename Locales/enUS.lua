@@ -43,6 +43,10 @@ local EN = {
 	DEBUG_PROVIDERS_TITLE = "%d search providers:",
 	DEBUG_PROVIDERS_LINE = "  %s (%s): %s, %d entries, %d errors, filters %s",
 
+	-- Search bar
+	SEARCH_PLACEHOLDER = "Search the map",
+	SETTINGS = "MapScout settings",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",
@@ -58,6 +62,11 @@ local EN = {
 	DEBUG_MAP = "the world map layer: /ms debug map [outline]",
 	DEBUG_MAP_NOT_READY = "the world map layer is not ready yet",
 	DEBUG_MAP_RESULT = "map %s (%s), open: %s, layer %.0f x %.0f, in combat: %s",
+	DEBUG_BAR = "the map search bar: /ms debug bar [live]",
+	DEBUG_BAR_LIVE = "bar: \"%s\" -> %d results in %.2f ms",
+	DEBUG_BAR_LIVE_ON = "every search of the bar will be shown in chat (/ms debug bar live to stop)",
+	DEBUG_BAR_LIVE_OFF = "searches of the bar no longer shown in chat",
+	DEBUG_BAR_NOTHING = "the bar hasn't searched anything yet",
 	DEBUG_NORMALIZE = "how a text is searched: /ms debug normalize <text>",
 	DEBUG_NORMALIZE_RESULT = "\"%s\" is searched as \"%s\"",
 

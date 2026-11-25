@@ -46,6 +46,10 @@ L.DEBUG_PROVIDERS_NONE = "no hay proveedores de búsqueda registrados"
 L.DEBUG_PROVIDERS_TITLE = "%d proveedores de búsqueda:"
 L.DEBUG_PROVIDERS_LINE = "  %s (%s): %s, %d entradas, %d errores, filtros %s"
 
+-- Barra de búsqueda
+L.SEARCH_PLACEHOLDER = "Buscar en el mapa"
+L.SETTINGS = "Opciones de MapScout"
+
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
 L.PROVIDER_STATE_ON = "activado"
@@ -60,6 +64,11 @@ L.DEBUG_BENCH_RESULT = "«%s»: %.2f ms, %d candidatos, %d resultados, erratas: 
 L.DEBUG_MAP = "la capa del mapa del mundo: /ms debug map [outline]"
 L.DEBUG_MAP_NOT_READY = "la capa del mapa del mundo aún no está lista"
 L.DEBUG_MAP_RESULT = "mapa %s (%s), abierto: %s, capa %.0f x %.0f, en combate: %s"
+L.DEBUG_BAR = "la barra de búsqueda del mapa: /ms debug bar [live]"
+L.DEBUG_BAR_LIVE = "barra: «%s» -> %d resultados en %.2f ms"
+L.DEBUG_BAR_LIVE_ON = "cada búsqueda de la barra saldrá en el chat (/ms debug bar live para dejarlo)"
+L.DEBUG_BAR_LIVE_OFF = "las búsquedas de la barra ya no salen en el chat"
+L.DEBUG_BAR_NOTHING = "la barra aún no ha buscado nada"
 L.DEBUG_NORMALIZE = "cómo se busca un texto: /ms debug normalize <texto>"
 L.DEBUG_NORMALIZE_RESULT = "«%s» se busca como «%s»"
 

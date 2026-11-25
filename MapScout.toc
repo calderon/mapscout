@@ -24,3 +24,4 @@ Search/Query.lua
 Search/Index.lua
 Search/Engine.lua
 UI/Map.lua
+UI/SearchBar.lua
