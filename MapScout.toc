@@ -13,3 +13,4 @@
 ## SavedVariablesPerCharacter: MapScoutCharDB
 
 Core/Init.lua
+Core/Caps.lua
