@@ -17,3 +17,4 @@ Locales/esES.lua
 Core/Init.lua
 Core/Caps.lua
 Core/DB.lua
+Core/Util.lua
