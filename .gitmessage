@@ -14,6 +14,10 @@
 # Scope (optional): core, search, ui, map, options, api, data, providers,
 #   locales, ci...
 #
+# Issue references (#12) only in the footer, never in the body: commitlint
+# takes a body line with one for the start of the footer (a warning, and
+# warnings fail like errors).
+#
 # Issue footer (GitHub closes the issue when this reaches main):
 #   Closes #12    Fixes #12    Resolves #12    Refs #12 (does not close)
 #
