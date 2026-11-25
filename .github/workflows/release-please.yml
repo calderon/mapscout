@@ -1,0 +1,39 @@
+name: Release
+
+# On every push to main, release-please keeps a "release" pull request up to date
+# (new version in MapScout.toc and Core/Init.lua, CHANGELOG.md) when there are feat
+# or fix commits. Merging that pull request creates the tag vX.Y.Z and the GitHub
+# release; then the Package workflow builds MapScout-vX.Y.Z.zip and attaches it to
+# the release (and uploads it to CurseForge once the project exists, 1.0).
+# GitHub doesn't run the checks on pull requests made by this workflow: the
+# repository admin merges the release pull request bypassing the required checks.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # Only when the release pull request has just been merged
+  package:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    uses: ./.github/workflows/package.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
