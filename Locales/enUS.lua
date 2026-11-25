@@ -55,6 +55,9 @@ local EN = {
 	DEBUG_SEARCH_LINE = "  %d. %s (%s) %.0f%s",
 	DEBUG_BENCH = "time a search: /ms debug bench <text>",
 	DEBUG_BENCH_RESULT = "\"%s\": %.2f ms, %d candidates, %d results, typos: %s · typed letter by letter (%d searches): %.2f ms, slowest %.2f ms · index: %d providers, %d entries, built in %.2f ms",
+	DEBUG_MAP = "the world map layer: /ms debug map [outline]",
+	DEBUG_MAP_NOT_READY = "the world map layer is not ready yet",
+	DEBUG_MAP_RESULT = "map %s (%s), open: %s, layer %.0f x %.0f, in combat: %s",
 	DEBUG_NORMALIZE = "how a text is searched: /ms debug normalize <text>",
 	DEBUG_NORMALIZE_RESULT = "\"%s\" is searched as \"%s\"",
 

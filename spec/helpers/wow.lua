@@ -66,29 +66,113 @@ function strtrim(s)
 	return (s:gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
--- Fake frames: they remember registered events and scripts.
--- frame:Fire(event, ...) runs its OnEvent script like the game would.
-local function newFrame(frameType, name)
-	local frame = { type = frameType, name = name, events = {}, scripts = {} }
-	function frame:RegisterEvent(event)
-		self.events[event] = true
+-- Fake frames: they remember registered events, scripts, hooks, points,
+-- size and level. frame:Fire(event, ...) runs OnEvent like the game would;
+-- frame:Run(script, ...) runs a script and its hooks (OnShow, OnHide...).
+-- Any other method exists and does nothing, so UI code can run in tests.
+local newFrame -- defined below
+local Frame = {}
+
+function Frame:RegisterEvent(event)
+	self.events[event] = true
+end
+function Frame:UnregisterEvent(event)
+	self.events[event] = nil
+end
+function Frame:SetScript(script, fn)
+	self.scripts[script] = fn
+	self.hooks[script] = nil -- like the game: SetScript drops the hooks
+end
+function Frame:GetScript(script)
+	return self.scripts[script]
+end
+function Frame:HookScript(script, fn)
+	self.hooks[script] = self.hooks[script] or {}
+	table.insert(self.hooks[script], fn)
+end
+function Frame:Run(script, ...)
+	if self.scripts[script] then
+		self.scripts[script](self, ...)
 	end
-	function frame:UnregisterEvent(event)
-		self.events[event] = nil
+	for _, fn in ipairs(self.hooks[script] or {}) do
+		fn(self, ...)
 	end
-	function frame:SetScript(script, fn)
-		self.scripts[script] = fn
+end
+function Frame:Fire(event, ...)
+	self.scripts.OnEvent(self, event, ...)
+end
+function Frame:Show()
+	self.shown = true
+	self:Run("OnShow")
+end
+function Frame:Hide()
+	self.shown = false
+	self:Run("OnHide")
+end
+function Frame:SetShown(shown)
+	if shown then
+		self:Show()
+	else
+		self:Hide()
 	end
-	function frame:Fire(event, ...)
-		self.scripts.OnEvent(self, event, ...)
-	end
+end
+function Frame:IsShown()
+	return self.shown
+end
+function Frame:GetFrameLevel()
+	return self.level
+end
+function Frame:SetFrameLevel(level)
+	self.level = level
+end
+function Frame:GetSize()
+	return self.width, self.height
+end
+function Frame:SetSize(width, height)
+	self.width, self.height = width, height
+end
+function Frame:SetAllPoints(target)
+	self.points = { { "ALL", target or self.parent } }
+end
+function Frame:SetPoint(...)
+	self.points = self.points or {}
+	table.insert(self.points, { ... })
+end
+function Frame:ClearAllPoints()
+	self.points = {}
+end
+function Frame:CreateTexture()
+	return newFrame("Texture", nil, self)
+end
+function Frame:CreateFontString()
+	return newFrame("FontString", nil, self)
+end
+
+local FrameMeta = {
+	__index = function(_, key)
+		return Frame[key] or function() end
+	end,
+}
+
+newFrame = function(frameType, name, parent)
+	local frame = setmetatable({
+		type = frameType, name = name, parent = parent, events = {}, scripts = {}, hooks = {},
+		shown = true, level = (parent and parent.level or 0) + 1, width = 0, height = 0,
+	}, FrameMeta)
 	FakeFrames[#FakeFrames + 1] = frame
 	return frame
 end
 
--- Fresh fake game state: call it in before_each.
--- FakeFrames: frames created; ChatLog: chat lines; ReportedErrors: errors sent
--- to the game's error handler.
+-- hooksecurefunc(table, "Method", fn): fn runs after the method, like the game
+local function fakeHooksecurefunc(target, method, fn)
+	local original = target[method]
+	target[method] = function(...)
+		local results = { original(...) }
+		fn(...)
+		return unpack(results)
+	end
+end
+
 -- Globals set by StubGlobals, removed by the next ResetWoW
 local stubbed = {}
 
@@ -111,6 +195,10 @@ function ResetWoW()
 	FakeFrames, ChatLog, ReportedErrors = {}, {}, {}
 	SlashCmdList = {}
 	CreateFrame = newFrame
+	hooksecurefunc = fakeHooksecurefunc
+	InCombatLockdown = function()
+		return false
+	end
 	DEFAULT_CHAT_FRAME = {
 		AddMessage = function(_, msg)
 			ChatLog[#ChatLog + 1] = msg
