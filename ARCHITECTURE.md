@@ -150,8 +150,33 @@ What the client cannot tell us at runtime (NPC services, mailboxes and other obj
 
 ## Forever client API
 
-*Pending: filled in by the audit (#20).* For each API above: available in Forever (yes/no/partial), notes and the `ns.Caps` flag that guards it. Also which services exist in Forever (barbers, transmogrifiers, training dummies, crafting tables…), for the static data packs.
+Audited in game (#20) on **WoW Forever 1.60.1 (build 71139)**, `toc=16001`, `WOW_PROJECT_ID=18`, esES client, from Ironforge, plus every zone of Kalimdor and the Eastern Kingdoms asked by mapID. The audit commands are kept in `dev/audit/` to repeat it on other clients (Retail, Classic: milestone 4.0).
+
+**Summary:** the client is modern (Settings, MenuUtil, ScrollBox, user waypoints and super-track, `C_XMLUtil`, `C_AddOns`); only pre-Dragonflight globals are missing. But several live APIs exist and **return nothing** in Forever: dungeon entrances, area POI events, map links and world quests. That content needs static data.
 
 | API / feature | Forever | `ns.Caps` flag | Notes |
 |---|---|---|---|
-| … | | | |
+| `Settings.RegisterCanvasLayoutCategory`, `RegisterAddOnCategory`, `OpenToCategory` | ✅ | `settings` | Options panel (#49). `InterfaceOptions_AddCategory` is **missing**: no fallback needed |
+| `MenuUtil.CreateContextMenu` | ✅ | `menuUtil` | `EasyMenu` is **missing**; `UIDropDownMenu_Initialize` exists |
+| Templates: `SearchBoxTemplate`, `InputBoxTemplate`, `UIPanelButtonTemplate`, `UICheckButtonTemplate`, `SettingsCheckboxControlTemplate`, `WowScrollBoxList`, `MinimalScrollBar`, `BackdropTemplate`, `TooltipBackdropTemplate` | ✅ | — | Checked with `C_XMLUtil.GetTemplateInfo` |
+| `CreateFramePool`, `CreateObjectPool`, `CreateScrollBoxListLinearView`, `EventRegistry` | ✅ | — | |
+| `C_Map` (`GetMapInfo`, `GetMapChildrenInfo`, `GetAreaInfo`, `GetMapGroupMembersInfo`, `GetMapInfoAtPosition`, world/map position conversion) | ✅ | — | Map tree: Azeroth (947) → Kalimdor, Eastern Kingdoms, Zephras Isle. Includes Forever-only zones (Mount Hyjal 2482, Shen'dralas 2652, Riverglen 2548, Blackspear Islands 2524) |
+| `C_Map.SetUserWaypoint`, `CanSetUserWaypointOnMap`, `GetUserWaypointHyperlink`, `C_SuperTrack.SetSuperTrackedUserWaypoint` | ✅ | — | Waypoints allowed on zone, continent and world maps; chat link `\|Hworldmap:1455:5000:5000\|h` works |
+| `C_Navigation.GetDistance` | ✅ | — | |
+| `C_TaxiMap.GetTaxiNodesForMap` | ⚠️ partial | `taxi` | Works outside the flight window, but returns **all nodes of the continent** for a zone map (Kalimdor 38, Eastern Kingdoms 36), with positions relative to the asked map, and `state = nil` (known/unknown not available). Nodes must be assigned to their zone by position (cities overlap their zone, so a bounds check is not enough). Known nodes: cache on `TAXIMAP_OPENED` (#43) |
+| `C_TaxiMap.GetAllTaxiNodes` | ⚠️ | — | Returns 0 outside the flight window |
+| `C_EncounterJournal.GetDungeonEntrancesForMap` | ❌ empty | `dungeonEntrances` | Exists but returns **0 entrances in all 53 zones**: dungeons and raids need static data (#42). `EJ_GetInstanceInfo` exists |
+| `C_AreaPoiInfo.GetAreaPOIForMap` / `GetAreaPOIInfo` | ⚠️ almost empty | `areaPOI` | Only capital city labels on continent/world maps and 4 POIs in the Blackspear Islands (no atlas). Little value in Forever (#77) |
+| `C_AreaPoiInfo.GetEventsForMap` | ❌ empty | `areaPOI` | 0 events in every zone |
+| `C_Map.GetMapLinksForMap` | ❌ empty | — | 0 links: portals need static data (#80) |
+| `C_VignetteInfo` (`GetVignettes`, `GetVignetteInfo`, `GetVignettePosition`) | ✅ (untested in the field) | `vignettes` | 0 vignettes in Ironforge, as expected in a city; to check near rares/treasures (#78) |
+| `C_QuestLog` (`GetNumQuestLogEntries`, `GetInfo`, `GetQuestsOnMap`, `GetNextWaypoint`, `GetQuestObjectives`, `GetTitleForQuestID`, `IsComplete`) | ✅ | — | `GetQuestsOnMap` returns quest IDs (1 in Ironforge, 12 on the Eastern Kingdoms map). Old `GetNumQuestLogEntries`/`GetQuestLogTitle` globals are **missing** |
+| `C_TaskQuest.GetQuestsOnMap` | ❌ empty | `taskQuest` | Exists, returns 0 (no world quests in Forever). `GetQuestsForPlayerByMapID` is missing |
+| `C_AddOns` (`LoadAddOn`, `GetAddOnMetadata`, `IsAddOnLoaded`, `IsAddOnLoadOnDemand`, `GetAddOnInfo`) | ✅ | — | LoadOnDemand data packs and `## X-MapScout-Provider` discovery are possible |
+| `C_Timer.NewTimer`, `debugprofilestop`, `GetAddOnMemoryUsage`, `UpdateAddOnMemoryUsage` | ✅ | — | Debounce and cost measurement |
+| `WorldMapFrame` (`ScrollContainer`, `BorderFrame`, `BorderFrame.MaximizeMinimizeFrame`, `SidePanelToggle`, `SetMapID`, `GetMapID`, `pinPools`) | ✅ | — | |
+| `TomTom` | ⚠️ | — | Present as a table when **Bridge** is loaded: Bridge defines a fake `TomTom` (`TomTom.isBridge`) when the real one is missing. Treat both the same (its `AddWaypoint` turns into a Bridge stop) |
+
+### Services in Forever
+
+According to Daniel (from playing it; not yet checked against data), Forever has all the services in the plan, so the static data packs cover them all: banks, auction houses, mailboxes, innkeepers, repair vendors, stable masters, class/profession/riding/weapon trainers, **barbers**, **transmogrifiers**, **training dummies**, **crafting stations** (anvils, forges and others), **faction/reputation quartermasters** and **guild banks**. Retail-only services (Catalyst, crafting orders) are still left to 4.0. Forever-only services, if any, are added when found (harvest mode, #40).
