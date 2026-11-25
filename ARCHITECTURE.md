@@ -72,7 +72,10 @@ A provider is anything that adds results. All of them, ours and other addons', g
 - **Discovery.** Addons can declare `## X-MapScout-Provider: <id>` in their `.toc`. MapScout reads it with `C_AddOns.GetAddOnMetadata`, lists them in the options before they load and loads LoadOnDemand ones only when enabled.
 - **Merging.** Results for the same place from several providers (same map, close position, same NPC/object or similar name) become one row with both sources and both providers' actions.
 - **Cost.** Each provider's time per search and approximate memory are measured (`debugprofilestop`, `/ms diag`, options). A provider over its budget is skipped for that keystroke and retried after the debounce; one provider can never freeze the search.
-- **Errors.** Every call into a provider or action runs in `xpcall`; after 3 errors in a session the provider is disabled for the session and reported once in chat.
+- **On and off.** `OnEnable` runs when a provider is turned on, also at login: that is where pushed providers call `SetEntries` (entries set before login are applied first). A disabled provider keeps nothing: its entries are dropped and `SetEntries` is ignored until it is on again. Only choices that differ from `defaultEnabled` are saved.
+- **Validation.** A bad spec (no name, bad id or field types) raises a clear error to the registering addon. Bad entries (no id or name, coordinates outside 0–1, unknown category) are skipped and reported once per provider through the game's error handler.
+- **Errors.** Every call into a provider or action runs in `xpcall`; after 3 errors in a session the provider is disabled for the session (not saved) and reported once in chat.
+- **Internal listeners.** The index, the cache and the options follow the registry with `ns.Registry.Listen` (`registered`, `toggled`, `entries`, `invalidate`, `removed`). `/ms debug providers` lists every provider with its state, entries, errors and `@` words.
 - **Actions.** Any addon can add actions to **any** result (`RegisterResultAction`): menu entries, optional row buttons and submenus (e.g. Bridge: "Add to current route", "Add to a saved route").
 
 The full public contract (functions, result fields, events, versioning) is in `API.md` (#70); the agreed design is in epics #95 and #7.

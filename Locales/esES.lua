@@ -41,6 +41,16 @@ L.DB_REPORT_CHARACTER = "  personaje: %d búsquedas recientes, %d rutas de vuelo
 L.DEBUG_DB = "datos guardados: esquema, estado y tamaños"
 L.DEBUG_API = "API pública: versión, estado y funciones"
 L.DEBUG_API_RESULT = "MapScoutAPI versión %d, lista: %s, %d llamadas en espera, funciones: %s"
+L.DEBUG_PROVIDERS = "proveedores de búsqueda: estado, entradas y errores"
+L.DEBUG_PROVIDERS_NONE = "no hay proveedores de búsqueda registrados"
+L.DEBUG_PROVIDERS_TITLE = "%d proveedores de búsqueda:"
+L.DEBUG_PROVIDERS_LINE = "  %s (%s): %s, %d entradas, %d errores, filtros %s"
+
+-- Proveedores de búsqueda
+L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
+L.PROVIDER_STATE_ON = "activado"
+L.PROVIDER_STATE_OFF = "desactivado"
+L.PROVIDER_STATE_FAILED = "desactivado por errores"
 L.DEBUG_NORMALIZE = "cómo se busca un texto: /ms debug normalize <texto>"
 L.DEBUG_NORMALIZE_RESULT = "«%s» se busca como «%s»"
 
