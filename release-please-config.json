@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "simple",
+  "bootstrap-sha": "c2122c9ab51167c3b2aa50e409e0e882f223ead3",
+  "packages": {
+    ".": {
+      "package-name": "MapScout",
+      "include-component-in-tag": false,
+      "bump-minor-pre-major": true,
+      "changelog-path": "CHANGELOG.md",
+      "changelog-sections": [
+        { "type": "feat", "section": "Features" },
+        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "chore", "section": "Miscellaneous", "hidden": true }
+      ],
+      "extra-files": [
+        { "type": "generic", "path": "MapScout.toc" },
+        { "type": "generic", "path": "Core/Init.lua" }
+      ]
+    }
+  }
+}
