@@ -1,0 +1,30 @@
+name: Technical task
+description: Infrastructure, architecture, performance, taint, cache, tooling (no visible change for players)
+labels: [tech]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title: clean and descriptive, in the imperative ("Cache live results per map"), no prefixes in brackets.
+        Add the area label (Core, UI, API, Data, Options, UX), the milestone and, if it belongs to one, link it to its epic as a sub-issue.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What has to be done and why.
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] 
+    validations:
+      required: true
+  - type: input
+    id: epic
+    attributes:
+      label: Epic
+      description: Parent epic, if any (also link it as a sub-issue).
+      placeholder: "#1"
