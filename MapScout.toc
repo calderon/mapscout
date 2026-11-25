@@ -21,3 +21,5 @@ Core/DB.lua
 API/MapScoutAPI.lua
 API/Registry.lua
 Search/Query.lua
+Search/Index.lua
+Search/Engine.lua
