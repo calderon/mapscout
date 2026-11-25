@@ -1,8 +1,8 @@
 name: Lua
 
-# Compiles every addon .lua file with LuaJIT (the game's Lua 5.1) and checks
-# for undefined globals with luacheck. Same script as locally:
-# bash scripts/check-lua.sh
+# Compiles every .lua file with LuaJIT (the game's Lua 5.1), runs luacheck and
+# the unit tests (busted). Same scripts as locally:
+# bash scripts/check-lua.sh and bash scripts/test-lua.sh (npm run check:lua, npm test)
 on:
   pull_request:
   push:
@@ -16,10 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Install LuaJIT and luacheck
+      - name: Install LuaJIT, luacheck and busted
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq luajit luarocks
           sudo luarocks install luacheck
+          sudo luarocks install busted
       - name: Check Lua files
         run: bash scripts/check-lua.sh
+      - name: Run unit tests
+        run: bash scripts/test-lua.sh

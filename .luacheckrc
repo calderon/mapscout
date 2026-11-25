@@ -1,9 +1,26 @@
--- luacheck settings (only globals are checked: see scripts/check-lua.sh)
+-- luacheck settings (all warnings are checked: see scripts/check-lua.sh)
 -- Add here every WoW API global the addon uses. A name missing from both lists
 -- makes the check fail: either it is a typo, or it has to be added here.
 std = "lua51"
 max_line_length = false
 exclude_files = { "node_modules/", ".release/", "dev/" }
+
+ignore = {
+	"212/self",  -- unused self in methods (common in WoW frame handlers)
+	"212/event", -- unused event argument of event handlers
+	"211/_.*",   -- unused variables named _ or _something (on purpose)
+	"212/_.*",   -- unused arguments named _ or _something (on purpose)
+	"212/%.%.%.", -- unused vararg (the addon name and namespace in every file)
+}
+
+-- Unit tests (busted): its globals, and the helpers defined in spec/helpers/wow.lua
+files["spec/"] = {
+	std = "+busted",
+	globals = { "LoadAddonFile", "NewNamespace" },
+}
+files["spec/helpers/"] = {
+	globals = { "LoadAddonFile", "NewNamespace", "GetLocale", "C_Timer" },
+}
 
 -- Globals MapScout defines
 globals = {

@@ -2,9 +2,9 @@
 # Checks every addon .lua file, the same way locally and in GitHub:
 #  1. Compiles it with LuaJIT (the game's Lua 5.1): syntax errors and the
 #     limit of 200 local variables per function.
-#  2. luacheck, only for global variables (codes 111, 112, 113): a name that is
-#     not local and not listed in .luacheckrc is a typo or a lost declaration
-#     ("attempt to call/index a nil value" in the game).
+#  2. luacheck with all its warnings (settings in .luacheckrc). A global that is
+#     not listed there is a typo or a lost declaration ("attempt to call/index a
+#     nil value" in the game); unused or shadowed variables are usually bugs too.
 # Usage: bash scripts/check-lua.sh   (or: npm run check:lua)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,5 +26,5 @@ for f in "${FILES[@]}"; do
 done
 [ $status -eq 0 ] && echo "LuaJIT: ${#FILES[@]} file(s) compile."
 
-"$LUACHECK" --only 111 112 113 -- "${FILES[@]}" || status=1
+"$LUACHECK" -- "${FILES[@]}" || status=1
 exit $status

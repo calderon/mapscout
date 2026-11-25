@@ -4,7 +4,8 @@
   "description": "Development tools for MapScout (not part of the addon)",
   "scripts": {
     "prepare": "husky && git config commit.template .gitmessage",
-    "check:lua": "bash scripts/check-lua.sh"
+    "check:lua": "bash scripts/check-lua.sh",
+    "test": "bash scripts/test-lua.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
