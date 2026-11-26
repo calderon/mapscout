@@ -34,6 +34,7 @@ UI/SearchBar.lua
 UI/Preview.lua
 UI/Results.lua
 UI/Waypoint.lua
+Options/Panel.lua
 
 #@do-not-package@
 Debug/Sample.lua

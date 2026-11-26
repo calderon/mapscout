@@ -117,6 +117,10 @@ L.SERVICE_vendor = "Vendedor"
 L.DEBUG_SERVICES = "servicios de QuestieDB"
 L.DEBUG_SERVICES_RESULT = "QuestieDB: %d PNJ, %d servicios, creado en %.0f ms"
 
+-- Página de opciones
+L.OPTIONS_ABOUT = "Un buscador en el mapa del mundo. Escribe un lugar, un servicio, una misión o unas coordenadas; con @ eliges qué buscar (@zona, @banco, @mision...)."
+L.OPTIONS_AFTER_COMBAT = "las opciones se abrirán al terminar el combate."
+
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
 L.PROVIDER_STATE_ON = "activado"
