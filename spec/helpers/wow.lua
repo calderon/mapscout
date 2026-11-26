@@ -55,6 +55,9 @@ function RunTimers()
 	for _, timer in ipairs(due) do
 		if not timer.cancelled then
 			timer.callback()
+			if timer.ticker and not timer.cancelled then
+				table.insert(timers, timer) -- a ticker comes back
+			end
 		end
 	end
 end
@@ -74,6 +77,14 @@ newTimerAPI = function()
 	return {
 		After = function(seconds, callback)
 			table.insert(timers, { seconds = seconds, callback = callback })
+		end,
+		NewTicker = function(seconds, callback)
+			local timer = { seconds = seconds, callback = callback, ticker = true }
+			function timer.Cancel(self)
+				self.cancelled = true
+			end
+			table.insert(timers, timer)
+			return timer
 		end,
 		NewTimer = function(seconds, callback)
 			local timer = { seconds = seconds, callback = callback }

@@ -287,6 +287,64 @@ function Results.UpdateScrollBar()
 	end
 end
 
+-- Live distances --------------------------------------------------------------
+-- While the list is open, the distances of the rows in this zone follow the
+-- player: checked every half second, worked out again only after moving.
+
+Results.DISTANCE_EVERY = 0.5 -- seconds
+Results.MOVED_YARDS = 1 -- less than this: not worth updating
+
+local ticker, lastX, lastY
+
+function Results.UpdateDistances()
+	local px, py
+	if UnitPosition then
+		px, py = UnitPosition("player") -- not "UnitPosition and UnitPosition()": that keeps only px
+	end
+	if not px then
+		return false
+	end
+	if lastX and math.abs(px - lastX) < Results.MOVED_YARDS and math.abs(py - lastY) < Results.MOVED_YARDS then
+		return false -- hasn't moved
+	end
+	lastX, lastY = px, py
+	for _, row in ipairs(rows) do
+		local line = row.line
+		if line and line.kind == "result" and line.distance then
+			local entry = line.result.item.entry
+			local yards = ns.DistanceToPlayer(entry.mapID, entry.x, entry.y)
+			line.distance = yards and ns.FormatDistance(yards) or line.distance
+			row.Distance:SetText(line.distance)
+		end
+	end
+	return true
+end
+
+local function stopDistances()
+	if ticker then
+		ticker:Cancel()
+		ticker = nil
+	end
+end
+
+local function startDistances(lines)
+	stopDistances()
+	lastX, lastY = nil, nil
+	for _, line in ipairs(lines) do
+		if line.distance then
+			ticker = C_Timer.NewTicker(Results.DISTANCE_EVERY, Results.UpdateDistances)
+			if UnitPosition then
+				lastX, lastY = UnitPosition("player") -- the distances were just worked out from here
+			end
+			return
+		end
+	end
+end
+
+function Results.IsFollowingDistances()
+	return ticker ~= nil
+end
+
 -- Shows these lines (or hides the list when there are none).
 function Results.Show(lines)
 	Results.lines = lines
@@ -295,6 +353,7 @@ function Results.Show(lines)
 		return
 	end
 	if #lines == 0 then
+		stopDistances()
 		frame:Hide()
 		return
 	end
@@ -341,9 +400,11 @@ function Results.Show(lines)
 	scroll:SetVerticalScroll(0)
 	Results.UpdateScrollBar()
 	frame:Show()
+	startDistances(lines)
 end
 
 function Results.Hide()
+	stopDistances()
 	if Results.frame then
 		Results.frame:Hide()
 	end

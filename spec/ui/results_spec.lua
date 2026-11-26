@@ -171,3 +171,74 @@ describe("UI/Results.lua hover", function()
 		assert.is_true(hidden >= 1)
 	end)
 end)
+
+describe("UI/Results.lua live distances", function()
+	local ns, map, px
+
+	before_each(function()
+		ResetWoW()
+		local MAPS = dofile("spec/fixtures/maps.lua")
+		px = 0
+		StubGlobals({
+			C_Map = {
+				GetMapInfo = function(id) return MAPS[id] end,
+				GetWorldPosFromMapPos = function(_, pos) return 0, { GetXY = function() return pos.x * 100, 0 end } end,
+			},
+			C_XMLUtil = { GetTemplateInfo = function() return {} end },
+			UnitPosition = function() return px, 0, 0, 0 end,
+			CreateVector2D = function(x, y) return { x = x, y = y } end,
+		})
+		map = CreateFrame("Frame", "WorldMapFrame")
+		map.ScrollContainer = CreateFrame("Frame", nil, map)
+		function map:GetMapID() return 1455 end
+		StubGlobals({ WorldMapFrame = map })
+		local before = #FakeFrames
+		ns = LoadAddonFile("Core/Init.lua")
+		local frame = FakeFrames[before + 1]
+		for _, file in ipairs({ "Core/Caps.lua", "Core/Util.lua", "Core/DB.lua", "API/MapScoutAPI.lua", "API/Registry.lua",
+			"Search/Query.lua", "Search/Index.lua", "Search/Engine.lua", "UI/Map.lua", "UI/SearchBar.lua", "UI/Preview.lua",
+			"UI/Results.lua" }) do
+			LoadAddonFile(file, ns)
+		end
+		frame:Fire("ADDON_LOADED", "MapScout")
+		frame:Fire("PLAYER_LOGIN")
+		MapScoutAPI:RegisterProvider("p", { name = "P" }):SetEntries({
+			{ id = 1, name = "Buzón de Forjaz", mapID = 1455, x = 0.5, y = 0.5 }, -- 50 yards east of x = 0
+			{ id = 2, name = "Buzón lejano", mapID = 1453, x = 0.5, y = 0.5 },
+		})
+		ns.SearchBar.box:SetText("buzon")
+		ns.SearchBar.Search()
+	end)
+
+	local function distance()
+		return ns.Results.lines[2].distance -- the first result, after "In Forjaz"
+	end
+
+	it("follows the player while the list is open", function()
+		assert.are.equal("50 yd", distance())
+		assert.is_true(ns.Results.IsFollowingDistances())
+		px = 20
+		RunTimers()
+		assert.are.equal("30 yd", distance())
+	end)
+
+	it("does nothing while the player stands still", function()
+		assert.is_false(ns.Results.UpdateDistances())
+		px = 0.5 -- less than a yard
+		assert.is_false(ns.Results.UpdateDistances())
+	end)
+
+	it("stops when the list closes", function()
+		ns.Results.Hide()
+		assert.is_false(ns.Results.IsFollowingDistances())
+		px = 20
+		RunTimers()
+		assert.are.equal("50 yd", distance()) -- not worked out again
+	end)
+
+	it("doesn't start without distances to follow", function()
+		ns.SearchBar.box:SetText("lejano")
+		ns.SearchBar.Search()
+		assert.is_false(ns.Results.IsFollowingDistances())
+	end)
+end)
