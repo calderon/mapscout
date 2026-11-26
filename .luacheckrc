@@ -50,6 +50,7 @@ read_globals = {
 	"C_TaskQuest", "C_TaxiMap", "C_Timer", "C_VignetteInfo",
 	-- Functions
 	"CreateFrame", "CreateFramePool", "GetTaxiMapID", "bit", "UnitLevel", "UnitRace", "UnitClass", "UnitQuestTrivialLevelRange", "NumTaxiNodes", "TaxiNodeName", "TaxiNodeGetType", "CreateVector2D", "UnitPosition", "GetLocale", "GetTime", "InCombatLockdown", "IsMacClient",
+	"IsInInstance", "GetInstanceInfo", "C_GossipInfo", "CanMerchantRepair",
 	"IsAltKeyDown", "IsControlKeyDown", "IsShiftKeyDown", "PlaySound", "UnitFactionGroup",
 	"UnitGUID", "UnitName", "UpdateAddOnMemoryUsage", "GetAddOnMemoryUsage",
 	-- Frames and UI

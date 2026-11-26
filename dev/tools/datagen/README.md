@@ -5,6 +5,7 @@ game cannot tell the addon while playing. Development tool only: it is not part
 of the addon zip (`dev/` is in `.pkgmeta` `ignore`).
 
 ```sh
+python3 dev/tools/datagen/datagen.py harvest     # bring in what /ms harvest recorded
 python3 dev/tools/datagen/datagen.py             # the build in BUILD (datagen.py)
 python3 dev/tools/datagen/datagen.py --refresh   # download the tables again
 python3 -m unittest discover -s dev/tools/datagen
@@ -20,7 +21,7 @@ generator changes, and commit what changed.
 |---|---|---|
 | The Forever client's DB2 tables of one exact build (`BUILD`, now 1.60.1.71139) | CSV exports of [wago.tools](https://wago.tools) (`/db2/{table}/csv?version=…`), the build's own client data. Its `robots.txt` and `/llms.txt` allow these downloads. Kept in `.cache/<build>/` (not committed) | Instance entrances, map positions, names, levels |
 | Hand-written entrances (`manual/entrances.csv`) | Single facts from public sources, at least two that agree, cited per row. Never another addon's list | Entrances the client data does not have |
-| Harvest data (#40) | Recorded in the game | Not yet |
+| Harvest data (`harvest/*.csv`) | Recorded in the game with `/ms harvest on` (Debug/Harvest.lua, development only), brought in with `datagen.py harvest` | Dungeon entrances (they count as checked); service NPCs and mailboxes, for later categories |
 | wow-completionist-data (CC BY-SA 4.0) | Quest and NPC seed (#104) | Not yet |
 
 Never data from other addons' databases, emulator databases or wiki scraping
