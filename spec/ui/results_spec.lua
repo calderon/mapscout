@@ -8,8 +8,10 @@ describe("UI/Results.lua", function()
 		StubGlobals({
 			C_Map = { GetMapInfo = function(id) return MAPS[id] end },
 			C_XMLUtil = { GetTemplateInfo = function() return {} end },
+			C_EventUtils = { IsEventValid = function(event) return event == "GLOBAL_MOUSE_DOWN" end },
 		})
 		map = CreateFrame("Frame", "WorldMapFrame")
+		function map:OnMapChanged() end
 		map.ScrollContainer = CreateFrame("Frame", nil, map)
 		map.mapID = 1455
 		function map:GetMapID()
@@ -80,6 +82,52 @@ describe("UI/Results.lua", function()
 		end
 		search("gran fundicion")
 		assert.are.equal("50 yd", ns.Results.lines[2].distance)
+	end)
+
+	describe("a click outside", function()
+		local box
+
+		before_each(function()
+			box = ns.SearchBar.box
+			box:SetFocus()
+			search("buzon")
+			assert.is_true(ns.Results.frame:IsShown())
+		end)
+
+		it("closes the list and leaves the box, keeping the text", function()
+			frame:Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+			assert.is_false(ns.Results.frame:IsShown())
+			assert.is_false(box:HasFocus())
+			assert.are.equal("buzon", box:GetText())
+			assert.is_nil(frame.events.GLOBAL_MOUSE_DOWN) -- not watched while closed
+		end)
+
+		it("does nothing on the list or on the box", function()
+			ns.Results.frame.IsMouseOver = function() return true end
+			frame:Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+			assert.is_true(ns.Results.frame:IsShown())
+			ns.Results.frame.IsMouseOver = function() return false end
+			box.IsMouseOver = function() return true end
+			frame:Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+			assert.is_true(ns.Results.frame:IsShown())
+		end)
+
+		it("keeps it closed when the map changes, until the box is used again", function()
+			frame:Fire("GLOBAL_MOUSE_DOWN", "LeftButton")
+			map.mapID = 1453
+			map:OnMapChanged() -- e.g. a pin of the map was clicked
+			assert.is_false(ns.Results.frame:IsShown())
+			box:Run("OnEditFocusGained")
+			assert.is_true(ns.Results.frame:IsShown())
+			assert.are.equal("zone: In Ciudad de Ventormenta", ns.Results.lines[1].kind .. ": " .. ns.Results.lines[1].text)
+		end)
+
+		it("searches again when the map changes with the list open", function()
+			map.mapID = 1453
+			map:OnMapChanged()
+			assert.is_true(ns.Results.frame:IsShown())
+			assert.are.equal("In Ciudad de Ventormenta", ns.Results.lines[1].text)
+		end)
 	end)
 
 	it("shows a hint when nothing matches, and nothing for an empty search", function()

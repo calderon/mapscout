@@ -248,8 +248,9 @@ ns.Map.Listen(function(what)
 		if SearchBar.box then
 			C_Timer.After(0, layout) -- the zone path changes with the map
 		end
-		-- another zone: search again so "In this zone" follows the map
-		if SearchBar.box and SearchBar.box:GetText() ~= "" then
+		-- another zone: search again so "In this zone" follows the map, only
+		-- while the list is open (closed, it stays closed until the box is used)
+		if SearchBar.box and SearchBar.box:GetText() ~= "" and ns.Results and ns.Results.IsShown() then
 			SearchBar.Search()
 		end
 	elseif what == "hidden" then

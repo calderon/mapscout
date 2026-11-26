@@ -6,7 +6,8 @@
 -- With text but no results, a short hint. The list has a limited height and
 -- scrolls; rows are reused (#35 will only lay out the visible ones).
 -- Hovering a row previews the place on the map (UI/Preview.lua); clicking
--- it goes there (UI/Waypoint.lua).
+-- it goes there (UI/Waypoint.lua). A click anywhere else (the map, one of its
+-- pins...) closes the list and leaves the box; clicking the box shows it again.
 
 local _, ns = ...
 local L = ns.L
@@ -284,6 +285,15 @@ function Results.Create()
 	end
 	frame:EnableMouse(true) -- clicks on the list don't go through to the map
 	frame:Hide()
+	-- Clicks are only watched while the list is open (MapScout's own frame)
+	frame:SetScript("OnShow", function()
+		if Results.CanWatchClicks() then
+			ns.RegisterEvent("GLOBAL_MOUSE_DOWN", "Results", Results.ClickedSomewhere)
+		end
+	end)
+	frame:SetScript("OnHide", function()
+		ns.UnregisterEvent("GLOBAL_MOUSE_DOWN", "Results")
+	end)
 
 	local scroll = CreateFrame("ScrollFrame", "MapScoutResultsScroll", frame, "UIPanelScrollFrameTemplate")
 	scroll:SetPoint("TOPLEFT", 4, -4)
@@ -443,6 +453,29 @@ function Results.Hide()
 		Results.frame:Hide()
 	end
 	ns.Preview.Hide()
+end
+
+function Results.IsShown()
+	return Results.frame ~= nil and Results.frame:IsShown() == true
+end
+
+-- Does this client tell about every mouse click? (GLOBAL_MOUSE_DOWN)
+function Results.CanWatchClicks()
+	return C_EventUtils ~= nil and C_EventUtils.IsEventValid ~= nil
+		and C_EventUtils.IsEventValid("GLOBAL_MOUSE_DOWN") == true
+end
+
+-- A click while the list is open: outside the list and the bar, close the list
+-- and leave the box (the text stays; clicking the box shows the list again)
+function Results.ClickedSomewhere()
+	local box = ns.SearchBar.box
+	if Results.frame:IsMouseOver() or (box and box:IsMouseOver()) then
+		return
+	end
+	Results.Hide()
+	if box then
+		box:ClearFocus()
+	end
 end
 
 -- The first result shown (what Enter goes to), or nil
