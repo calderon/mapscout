@@ -111,6 +111,42 @@ class DungeonsTest(unittest.TestCase):
         self.assertIn('[36] = "Dead \\"mines\\"",', text)
 
 
+class ManualTest(unittest.TestCase):
+    def manual_file(self, folder, name, body):
+        path = os.path.join(folder, name)
+        with open(path, "w", encoding="utf-8") as out:
+            out.write("# comment\ninstance,uiMap,x,y,sources\n" + body)
+        return path
+
+    def test_manual_rows_and_later_file_wins(self):
+        with tempfile.TemporaryDirectory() as folder:
+            a = self.manual_file(folder, "a.csv", "2970,1434,21.4,27.9,guide one ; guide two\n")
+            b = self.manual_file(folder, "b.csv", "2970,1434,22,28,other\n")
+            (row,) = dungeons.manual([a])
+            self.assertEqual((row[0], row[1], row[4]), (2970, 1434, "guide one ; guide two"))
+            self.assertAlmostEqual(row[2], 0.214)
+            self.assertAlmostEqual(row[3], 0.279)
+            (row,) = dungeons.manual([a, b])
+            self.assertEqual((row[1], row[4]), (1434, "other"))
+            self.assertAlmostEqual(row[2], 0.22)
+
+    def test_manual_rows_need_sources_and_a_place_on_the_map(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with self.assertRaises(ValueError):
+                dungeons.manual([self.manual_file(folder, "a.csv", "1,1434,21,27, \n")])
+            with self.assertRaises(ValueError):
+                dungeons.manual([self.manual_file(folder, "b.csv", "1,1434,121,27,x\n")])
+
+    def test_merge_adds_and_overrides(self):
+        rows = [instance(36, "Deadmines", 1, 0, 750, 600), instance(2970, "The Drowned City", 1, -1, 0, 0)]
+        found = dungeons.entrances(MAPS, rows, {})
+        merged = dungeons.merge(found, rows, {"The Drowned City": 35},
+                                [(2970, 1434, 0.214, 0.279, "s"), (36, 11, 0.5, 0.5, "s")])
+        self.assertEqual(merged, [(36, "dungeon", 11, 5000, 5000, 0), (2970, "dungeon", 1434, 2140, 2790, 35)])
+        with self.assertRaises(ValueError):
+            dungeons.merge(found, rows, {}, [(30, 1, 0.5, 0.5, "s")])  # not an instance
+
+
 class LuaTest(unittest.TestCase):
     def test_values(self):
         self.assertEqual(lua.row([1, "a\\b", True]), '{ 1, "a\\\\b", true }')

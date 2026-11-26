@@ -4,3 +4,4 @@ node_modules/
 .DS_Store
 __pycache__/
 dev/tools/datagen/.cache/
+dev/tools/datagen/manual/*.pending.csv

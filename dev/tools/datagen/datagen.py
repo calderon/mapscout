@@ -25,12 +25,15 @@ LOCALES = ["enUS", "esES", "esMX"]  # MapScout's languages (Locales/)
 ROOT = os.path.normpath(os.path.join(HERE, "..", "..", ".."))
 OUT = os.path.join(ROOT, "MapScout_Data_Forever")
 CACHE = os.path.join(HERE, ".cache")
+MANUAL = os.path.join(HERE, "manual")
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--build", default=BUILD, help="full Forever version, e.g. 1.60.1.71139")
     parser.add_argument("--refresh", action="store_true", help="download the tables again")
+    parser.add_argument("--pending", action="store_true",
+                        help="also use manual/*.pending.csv (local tests only: never commit that output)")
     args = parser.parse_args(argv)
 
     tables = Tables(args.build, CACHE, refresh=args.refresh)
@@ -41,10 +44,16 @@ def main(argv=None):
     os.makedirs(OUT, exist_ok=True)
 
     level_by_name = dungeons.levels(tables.rows("LFGDungeons"), tables.rows("ContentTuning"))
-    found = dungeons.entrances(maps, tables.rows("Map"), level_by_name)
+    instances = tables.rows("Map")
+    files = [os.path.join(MANUAL, "entrances.csv")]
+    if args.pending:
+        files.append(os.path.join(MANUAL, "entrances.pending.csv"))
+    manual = dungeons.manual([f for f in files if os.path.exists(f)])
+    found = dungeons.merge(dungeons.entrances(maps, instances, level_by_name), instances, level_by_name, manual)
     names = dungeons.names({locale: tables.rows("Map", locale) for locale in LOCALES}, [e[0] for e in found])
-    dungeons.write(os.path.join(OUT, "Dungeons.lua"), args.build, date, found, names)
-    print("Dungeons.lua: %d entrances (build %s, %s)" % (len(found), args.build, date))
+    dungeons.write(os.path.join(OUT, "Dungeons.lua"), args.build, date, found, names, manual)
+    print("Dungeons.lua: %d entrances, %d by hand (build %s, %s)%s" % (
+        len(found), len(manual), args.build, date, "  WITH PENDING ROWS: do not commit" if args.pending else ""))
 
 
 if __name__ == "__main__":
