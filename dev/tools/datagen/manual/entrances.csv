@@ -1,0 +1,9 @@
+# Dungeon and raid entrances the client data does not have, written by hand.
+# One row per instance: where a player goes in, on the zone map they see it.
+#   instance: the instance's map ID (client Map table)
+#   uiMap, x, y: the zone map and the position on it, 0-100 as the game shows it
+#   sources: where the point comes from; at least two public sources that agree,
+#            separated by " ; ". Single facts only: never another addon's list.
+# A row here wins over the client data for the same instance.
+instance,uiMap,x,y,sources
+2970,1434,21.4,27.9,https://wow.gg/guides/the-drowned-city ; https://conquestcapped.com/guides/wow-forever/wow-forever-the-drowned-city-guide/

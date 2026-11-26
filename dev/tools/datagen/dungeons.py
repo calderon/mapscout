@@ -7,8 +7,11 @@ continent). The recommended level comes from LFGDungeons -> ContentTuning
 matched by name (NAMES lists the names that differ).
 
 Instances without a corpse point (Forever's own ones, and a few like
-Naxxramas) are left out: their entrances will come from the harvest mode (#40).
+Naxxramas) come from manual/entrances.csv (written by hand, with the public
+sources of each point), and later from the harvest mode (#40).
 """
+
+import csv
 
 import lua
 from geo import to_int
@@ -24,6 +27,7 @@ NAMES = {
     "Onyxia's Lair": "Onyxia",
     "Blackrock Spire": "Lower Blackrock Spire",
     "Dire Maul": "Dire Maul - East",
+    "The Hall of Thanes": "Hall of Thanes",
 }
 
 
@@ -57,6 +61,39 @@ def entrances(maps, instance_rows, level_by_name):
     return out
 
 
+def manual(paths):
+    """Rows of the hand-written files: [(instance, uiMap, x, y, sources)], x and
+    y 0..1. A later file wins over an earlier one for the same instance."""
+    rows = {}
+    for path in paths:
+        with open(path, newline="", encoding="utf-8") as source:
+            lines = [line for line in source if line.strip() and not line.lstrip().startswith("#")]
+        for row in csv.DictReader(lines):
+            instance = int(row["instance"])
+            x, y = float(row["x"]), float(row["y"])
+            if not (0 <= x <= 100 and 0 <= y <= 100):
+                raise ValueError("%s: instance %d is off the map (%s, %s)" % (path, instance, x, y))
+            if not row["sources"].strip():
+                raise ValueError("%s: instance %d has no sources" % (path, instance))
+            rows[instance] = (instance, int(row["uiMap"]), x / 100, y / 100, row["sources"].strip())
+    return [rows[k] for k in sorted(rows)]
+
+
+def merge(found, instance_rows, level_by_name, manual_rows):
+    """The client entrances plus the manual ones (a manual row wins)."""
+    by_id = {e[0]: e for e in found}
+    rows = {int(r["ID"]): r for r in instance_rows}
+    for instance, ui_map, x, y, _ in manual_rows:
+        row = rows.get(instance)
+        kind = row and KINDS.get(int(row["InstanceType"]))
+        if not kind:
+            raise ValueError("manual entrance for %d: not a dungeon or raid in this build" % instance)
+        name = row["MapName_lang"]
+        level = level_by_name.get(NAMES.get(name, name), 0)
+        by_id[instance] = (instance, kind, ui_map, to_int(x), to_int(y), level)
+    return [by_id[k] for k in sorted(by_id)]
+
+
 def names(rows_by_locale, ids):
     """{locale: {instanceMapID: name}} for the instances kept."""
     wanted = set(ids)
@@ -66,10 +103,10 @@ def names(rows_by_locale, ids):
     return out
 
 
-def write(path, version, date, found, names_by_locale):
+def write(path, version, date, found, names_by_locale, manual_rows=()):
     lines = [lua.header("dungeon and raid entrances", version, date, [
         "the client's Map (Corpse_0/1, CorpseMapID), UiMapAssignment, UiMap, LFGDungeons and ContentTuning tables, through wago.tools",
-    ])]
+    ] + ["instance %d: %s" % (row[0], row[4]) for row in manual_rows])]
     lines.append("local _, pack = ...\n")
     lines.append("pack.dungeons = {")
     lines.append('\tbuild = %s,' % lua.string(version))

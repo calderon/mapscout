@@ -19,6 +19,7 @@ generator changes, and commit what changed.
 | Input | Where it comes from | Used for |
 |---|---|---|
 | The Forever client's DB2 tables of one exact build (`BUILD`, now 1.60.1.71139) | CSV exports of [wago.tools](https://wago.tools) (`/db2/{table}/csv?version=…`), the build's own client data. Its `robots.txt` and `/llms.txt` allow these downloads. Kept in `.cache/<build>/` (not committed) | Instance entrances, map positions, names, levels |
+| Hand-written entrances (`manual/entrances.csv`) | Single facts from public sources, at least two that agree, cited per row. Never another addon's list | Entrances the client data does not have |
 | Harvest data (#40) | Recorded in the game | Not yet |
 | wow-completionist-data (CC BY-SA 4.0) | Quest and NPC seed (#104) | Not yet |
 
@@ -27,7 +28,11 @@ Never data from other addons' databases, emulator databases or wiki scraping
 
 Tables per output:
 
-- `Dungeons.lua`: `Map` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`.
+- `Dungeons.lua`: `Map` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`, plus `manual/entrances.csv`.
+
+`manual/*.pending.csv` (not committed) holds points waiting for their author's
+permission. `--pending` adds them, for tests in the game only: never commit a
+file generated with it.
 
 ## Outputs
 
@@ -42,5 +47,6 @@ game (`ns.PlaceOnMap`).
 
 - `Dungeons.lua`: dungeon and raid entrances (where the corpse of a player who
   dies inside goes), their kind, recommended level and names. Instances without
-  that point (Forever's new ones, Naxxramas, Caverns of Time) are not there yet:
-  they will come from the harvest mode (#40).
+  that point (Forever's new ones, Naxxramas, Caverns of Time) come from
+  `manual/entrances.csv` when there are public sources for them, and later from
+  the harvest mode (#40).
