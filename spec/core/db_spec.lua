@@ -19,38 +19,51 @@ describe("Core/DB.lua", function()
 		ResetWoW()
 	end)
 
-	describe("MergeDefaults", function()
-		it("adds what is missing at any depth and keeps the player's values", function()
+	describe("Attach and Prune", function()
+		it("reads the defaults through, without copying them into the data", function()
 			local DB = load()
-			local data = { a = 1, nested = { keep = "mine" } }
-			DB.MergeDefaults(data, { a = 2, b = 3, nested = { keep = "default", add = true } })
-			assert.are.same({ a = 1, b = 3, nested = { keep = "mine", add = true } }, data)
+			local defaults = { a = 2, b = 3, nested = { keep = "default", add = true } }
+			local data = DB.Attach({ a = 1, nested = { keep = "mine" } }, defaults)
+			assert.are.equal(1, data.a)
+			assert.are.equal(3, data.b)
+			assert.are.equal("mine", data.nested.keep)
+			assert.is_true(data.nested.add)
+			assert.is_nil(rawget(data, "b")) -- read through, not stored
+			assert.is_nil(rawget(data.nested, "add"))
 		end)
 
-		it("keeps a player's false and doesn't replace a value of another type", function()
+		it("creates the structure tables, so writing never touches the defaults", function()
 			local DB = load()
-			local data = { flag = false, list = "not a table" }
-			DB.MergeDefaults(data, { flag = true, list = { 1 } })
-			assert.is_false(data.flag)
+			local defaults = { options = { waypoint = { native = false } } }
+			local data = DB.Attach({}, defaults)
+			data.options.waypoint.native = true
+			assert.is_true(rawget(data.options.waypoint, "native"))
+			assert.is_false(defaults.options.waypoint.native)
+		end)
+
+		it("keeps a player's value of another type than its default", function()
+			local DB = load()
+			local data = DB.Attach({ list = "not a table", flag = false }, { list = { 1 }, flag = true })
 			assert.are.equal("not a table", data.list)
+			assert.is_false(data.flag)
 		end)
 
-		it("copies default tables instead of sharing them", function()
+		it("removes saved values equal to their default, at any depth", function()
 			local DB = load()
-			local defaults = { list = { 1 } }
-			local a = DB.MergeDefaults({}, defaults)
-			a.list[2] = 2
-			assert.are.same({ 1 }, defaults.list)
-			assert.are.same({ 1 }, DB.MergeDefaults({}, defaults).list)
+			local defaults = { a = 1, b = 2, nested = { x = false, y = 5 } }
+			local data = DB.Prune({ a = 1, b = 9, nested = { x = false, y = 6 }, extra = "kept" }, defaults)
+			assert.are.same({ b = 9, nested = { y = 6 }, extra = "kept" }, data)
 		end)
 	end)
 
 	describe("Prepare", function()
 		it("creates new data with the current schema", function()
 			local DB = load()
-			local data, state = DB.Prepare(nil, { x = {} }, {}, 3)
+			local data, state = DB.Prepare(nil, { x = {}, y = 1 }, {}, 3)
 			assert.are.equal("new", state)
-			assert.are.same({ x = {}, schema = 3 }, data)
+			assert.are.equal(3, data.schema)
+			assert.are.equal(1, data.y)
+			assert.is_nil(rawget(data, "y")) -- a default: not stored
 		end)
 
 		it("runs the missing migrations in order and completes the defaults", function()
@@ -160,6 +173,20 @@ describe("Core/DB.lua", function()
 		addonLoaded()
 		assert.are.same({ native = false, superTrack = false, tomtom = true }, MapScoutDB.options.waypoint)
 		assert.are.equal(2, MapScoutDB.schema)
+	end)
+
+	it("saves only what the player changed, also after an older version saved all", function()
+		load()
+		_G.MapScoutDB = { schema = 2, options = { maxResults = 50, waypoint = { native = false, tomtom = true } } }
+		addonLoaded()
+		assert.is_nil(rawget(MapScoutDB.options, "maxResults")) -- equal to the default: removed on load
+		assert.is_true(rawget(MapScoutDB.options.waypoint, "tomtom")) -- changed: kept
+		assert.are.equal(50, MapScoutDB.options.maxResults) -- still read through
+		MapScoutDB.options.maxResults = 20
+		MapScoutDB.options.waypoint.tomtom = false -- back to the default
+		frame:Fire("PLAYER_LOGOUT")
+		assert.are.equal(20, rawget(MapScoutDB.options, "maxResults"))
+		assert.is_nil(rawget(MapScoutDB.options.waypoint, "tomtom"))
 	end)
 
 	it("/ms debug db shows the state and sizes", function()
