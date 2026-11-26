@@ -200,6 +200,33 @@ function ns.IsMapInside(mapID, outerID)
 	return place ~= nil and place.ancestors[outerID] == true
 end
 
+-- Where a point of one map is on another map (0-1), through world coordinates,
+-- or nil if it isn't on it.
+function ns.PositionOnMap(mapID, x, y, openMapID)
+	if not (mapID and x and y and openMapID) then
+		return nil
+	end
+	if mapID == openMapID then
+		return x, y
+	end
+	if not (CreateVector2D and C_Map and C_Map.GetWorldPosFromMapPos and C_Map.GetMapPosFromWorldPos) then
+		return nil
+	end
+	local continent, world = C_Map.GetWorldPosFromMapPos(mapID, CreateVector2D(x, y))
+	if not world then
+		return nil
+	end
+	local _, position = C_Map.GetMapPosFromWorldPos(continent, world, openMapID)
+	if not position then
+		return nil
+	end
+	local px, py = position:GetXY()
+	if px < 0 or px > 1 or py < 0 or py > 1 then
+		return nil
+	end
+	return px, py
+end
+
 -- Distance --------------------------------------------------------------------
 
 -- Yards from the player to a point of a map, or nil when it can't be known

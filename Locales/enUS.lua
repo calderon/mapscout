@@ -75,6 +75,15 @@ local EN = {
 	COORDS_GO_IN = "Go to %s in %s",
 	COORDS_SUBTITLE = "Coordinates",
 
+	-- Flight masters
+	FLIGHTS_NAME = "Flight masters",
+	FLIGHTS_DESCRIPTION = "Flight masters of your faction and neutral ones",
+	FLIGHTS_SUBTITLE = "Flight master",
+	FLIGHTS_SUBTITLE_UNKNOWN = "Flight master · not known yet",
+	FLIGHTS_HOW_TO_LEARN = "Open the flight map of any flight master once, so MapScout learns which ones this character knows.",
+	DEBUG_FLIGHTS = "flight masters and the map each one is placed in",
+	DEBUG_FLIGHTS_RESULT = "%d flight masters (%d known) for %s:",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",
@@ -117,6 +126,8 @@ local WORDS = {
 	CITIES = { "capital", "cities", "capitals" },
 	ZONES = { "zones" },
 	OTHERS = { "bg", "area", "battlegrounds", "areas" },
+	FLIGHTS = { "fly", "taxi", "flights" },
+	FLIGHT_MASTER = { "flight master" },
 }
 
 ns.L_EN = EN

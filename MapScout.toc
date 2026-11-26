@@ -25,6 +25,7 @@ Search/Index.lua
 Search/Engine.lua
 Search/Coordinates.lua
 Providers/Geography.lua
+Providers/Flights.lua
 UI/Map.lua
 UI/SearchBar.lua
 UI/Preview.lua

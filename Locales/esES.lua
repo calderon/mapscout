@@ -77,6 +77,15 @@ L.COORDS_GO = "Ir a %s"
 L.COORDS_GO_IN = "Ir a %s en %s"
 L.COORDS_SUBTITLE = "Coordenadas"
 
+-- Maestros de vuelo
+L.FLIGHTS_NAME = "Maestros de vuelo"
+L.FLIGHTS_DESCRIPTION = "Maestros de vuelo de tu facción y neutrales"
+L.FLIGHTS_SUBTITLE = "Maestro de vuelo"
+L.FLIGHTS_SUBTITLE_UNKNOWN = "Maestro de vuelo · aún desconocido"
+L.FLIGHTS_HOW_TO_LEARN = "Abre una vez el mapa de vuelo de cualquier maestro de vuelo para que MapScout sepa cuáles conoce este personaje."
+L.DEBUG_FLIGHTS = "maestros de vuelo y el mapa donde se coloca cada uno"
+L.DEBUG_FLIGHTS_RESULT = "%d maestros de vuelo (%d conocidos) para %s:"
+
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
 L.PROVIDER_STATE_ON = "activado"
@@ -114,3 +123,5 @@ ns.W.CONTINENTS = { "continente", "continentes" }
 ns.W.CITIES = { "ciudad", "capital", "ciudades", "capitales" }
 ns.W.ZONES = { "zona", "zonas" }
 ns.W.OTHERS = { "campo", "area", "campos", "areas" }
+ns.W.FLIGHTS = { "vuelo", "volar", "vuelos" }
+ns.W.FLIGHT_MASTER = { "maestro de vuelo" }
