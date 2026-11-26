@@ -50,7 +50,7 @@ describe("Core/Packs.lua", function()
 		assert.are.same({ "MapScout_Data_Forever" }, loads)
 		assert.is_table(dungeons.entrances)
 		assert.are.equal("Deadmines", dungeons.names.enUS[36])
-		assert.are.same({ "dungeon", 1415, 4068, 7958, 16 }, dungeons.entrances[36])
+		assert.are.same({ "dungeon", 1421, 4472, 6777, 18 }, dungeons.entrances[33])
 		assert.are.equal(dungeons, ns.Packs.Get("dungeons")) -- built once
 		assert.are.same({ "MapScout_Data_Forever" }, loads)
 		assert.are.same({ "dungeons" }, ns.Packs.Built())

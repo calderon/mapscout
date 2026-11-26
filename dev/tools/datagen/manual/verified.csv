@@ -1,0 +1,19 @@
+# Entrances checked in the game: the point MapScout shows is where players go in.
+# Only checked entrances get a place on the map; every other dungeon or raid is
+# still searchable, with no place, as "entrance to be confirmed".
+#   instance: the instance's map ID (client Map table)
+#   checked: who checked it and when
+instance,name,checked
+33,Shadowfang Keep,Daniel 2026-11-26
+43,Wailing Caverns,Daniel 2026-11-26
+47,Razorfen Kraul,Daniel 2026-11-26
+129,Razorfen Downs,Daniel 2026-11-26
+209,Zul'Farrak,Daniel 2026-11-26
+249,Onyxia's Lair,Daniel 2026-11-26
+289,Scholomance,Daniel 2026-11-26
+309,Zul'Gurub,Daniel 2026-11-26
+349,Maraudon,Daniel 2026-11-26
+389,Ragefire Chasm,Daniel 2026-11-26
+509,Ruins of Ahn'Qiraj,Daniel 2026-11-26
+531,Ahn'Qiraj Temple,Daniel 2026-11-26
+2970,The Drowned City,Daniel 2026-11-26

@@ -27,6 +27,7 @@ Search/Engine.lua
 Search/Coordinates.lua
 Providers/Geography.lua
 Providers/Flights.lua
+Providers/Dungeons.lua
 Providers/Quests.lua
 Adapters/QuestieDB.lua
 Adapters/QuestieDBServices.lua
