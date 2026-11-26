@@ -105,8 +105,19 @@ function ns.CapsReport(caps)
 	return lines
 end
 
+-- Other modules add their own lines to /ms diag (each a function returning lines)
+local sections = {}
+function ns.AddDiagSection(fn)
+	sections[#sections + 1] = fn
+end
+
 ns.RegisterCommand("diag", function()
 	local lines = ns.CapsReport(ns.Caps)
+	for _, section in ipairs(sections) do
+		for _, line in ipairs(section()) do
+			lines[#lines + 1] = "  " .. line
+		end
+	end
 	ns.Print(lines[1])
 	for i = 2, #lines do
 		DEFAULT_CHAT_FRAME:AddMessage(lines[i])

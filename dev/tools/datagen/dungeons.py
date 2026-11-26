@@ -108,21 +108,24 @@ def write(path, version, date, found, names_by_locale, manual_rows=()):
         "the client's Map (Corpse_0/1, CorpseMapID), UiMapAssignment, UiMap, LFGDungeons and ContentTuning tables, through wago.tools",
     ] + ["instance %d: %s" % (row[0], row[4]) for row in manual_rows])]
     lines.append("local _, pack = ...\n")
-    lines.append("pack.dungeons = {")
-    lines.append('\tbuild = %s,' % lua.string(version))
-    lines.append("\t-- [instance mapID] = { kind, uiMapID, x, y, level }: x, y 0-10000 on the map; level 0 = unknown")
-    lines.append("\tentrances = {")
+    lines.append("-- Built only when MapScout asks for it (see Pack.lua)")
+    lines.append("pack.categories.dungeons = function()")
+    lines.append("\treturn {")
+    lines.append('\t\tbuild = %s,' % lua.string(version))
+    lines.append("\t\t-- [instance mapID] = { kind, uiMapID, x, y, level }: x, y 0-10000 on the map; level 0 = unknown")
+    lines.append("\t\tentrances = {")
     for instance, kind, ui_map, x, y, level in found:
-        lines.append("\t\t[%d] = %s," % (instance, lua.row([kind, ui_map, x, y, level])))
-    lines.append("\t},")
-    lines.append("\t-- Names in MapScout's languages; any other uses enUS")
-    lines.append("\tnames = {")
+        lines.append("\t\t\t[%d] = %s," % (instance, lua.row([kind, ui_map, x, y, level])))
+    lines.append("\t\t},")
+    lines.append("\t\t-- Names in MapScout's languages; any other uses enUS")
+    lines.append("\t\tnames = {")
     for locale in sorted(names_by_locale):
-        lines.append("\t\t%s = {" % locale)
+        lines.append("\t\t\t%s = {" % locale)
         for instance in sorted(names_by_locale[locale]):
-            lines.append("\t\t\t[%d] = %s," % (instance, lua.string(names_by_locale[locale][instance])))
-        lines.append("\t\t},")
-    lines.append("\t},")
-    lines.append("}")
+            lines.append("\t\t\t\t[%d] = %s," % (instance, lua.string(names_by_locale[locale][instance])))
+        lines.append("\t\t\t},")
+    lines.append("\t\t},")
+    lines.append("\t}")
+    lines.append("end")
     with open(path, "w", encoding="utf-8", newline="\n") as out:
         out.write("\n".join(lines) + "\n")

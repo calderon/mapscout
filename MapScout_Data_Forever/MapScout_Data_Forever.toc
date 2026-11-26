@@ -1,0 +1,15 @@
+## Interface: 16001
+## Title: MapScout Data (Forever)
+## Notes: MapScout's data for WoW Forever. MapScout loads it by itself, only when a search category needs it.
+## Notes-esES: Datos de MapScout para WoW Forever. MapScout lo carga solo, únicamente cuando una categoría de búsqueda lo necesita.
+## Notes-esMX: Datos de MapScout para WoW Forever. MapScout lo carga solo, únicamente cuando una categoría de búsqueda lo necesita.
+## Author: Daniel Calderón
+# x-release-please-start-version
+## Version: 0.0.0
+# x-release-please-end
+## Category: Map
+## LoadOnDemand: 1
+## Dependencies: MapScout
+
+Pack.lua
+Dungeons.lua

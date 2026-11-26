@@ -18,6 +18,11 @@ local EN = {
 
 	-- /ms diag
 	DIAG_HEADER = "version %s · WoW %s · %s · %s",
+	DIAG_MEMORY = "memory of %s: %s",
+	DIAG_PACK_NONE = "no data pack for this game",
+	DIAG_PACK_NOT_LOADED = "not loaded (no category has needed it)",
+	DIAG_PACK_FAILED = "could not be loaded (%s)",
+	DIAG_PACK_BUILT = "data built: %s",
 	YES = "yes",
 	NO = "no",
 

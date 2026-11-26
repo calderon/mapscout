@@ -107,6 +107,7 @@ class DungeonsTest(unittest.TestCase):
             with open(path, encoding="utf-8") as source:
                 text = source.read()
         self.assertIn("build 1.60.1.1 (2026-01-02). Do not edit.", text)
+        self.assertIn("pack.categories.dungeons = function()", text)
         self.assertIn('[36] = { "dungeon", 11, 8000, 5000, 16 },', text)
         self.assertIn('[36] = "Dead \\"mines\\"",', text)
 

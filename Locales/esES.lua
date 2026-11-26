@@ -21,6 +21,11 @@ L.DEBUG_TITLE = "comprobaciones:"
 
 -- /ms diag
 L.DIAG_HEADER = "versión %s · WoW %s · %s · %s"
+L.DIAG_MEMORY = "memoria de %s: %s"
+L.DIAG_PACK_NONE = "no hay paquete de datos para este juego"
+L.DIAG_PACK_NOT_LOADED = "sin cargar (ninguna categoría lo ha necesitado)"
+L.DIAG_PACK_FAILED = "no se ha podido cargar (%s)"
+L.DIAG_PACK_BUILT = "datos preparados: %s"
 L.YES = "sí"
 L.NO = "no"
 
