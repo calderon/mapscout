@@ -251,3 +251,42 @@ describe("Search engine", function()
 			ChatLog[#ChatLog])
 	end)
 end)
+
+describe("Search engine with the open map", function()
+	local ns
+	local MAPS = dofile("spec/fixtures/maps.lua")
+
+	before_each(function()
+		ResetWoW()
+		StubGlobals({ C_Map = { GetMapInfo = function(id) return MAPS[id] end } })
+		ns = LoadAddonFile("Core/Init.lua")
+		local frame = FakeFrames[1]
+		for _, file in ipairs({ "Core/Util.lua", "Core/DB.lua", "API/MapScoutAPI.lua", "API/Registry.lua",
+			"Search/Query.lua", "Search/Index.lua", "Search/Engine.lua" }) do
+			LoadAddonFile(file, ns)
+		end
+		frame:Fire("ADDON_LOADED", "MapScout")
+		frame:Fire("PLAYER_LOGIN")
+	end)
+
+	it("always keeps the results of the open map, first, even past the limit", function()
+		local list = {}
+		for i = 1, 5 do -- better matches, elsewhere
+			list[#list + 1] = { id = "far" .. i, name = "Buzón", mapID = 1453, x = 0.5, y = 0.5 }
+		end
+		list[#list + 1] = { id = "near", name = "Buzón de la plaza", mapID = 1455, x = 0.5, y = 0.5 }
+		list[#list + 1] = { id = "inside", name = "Buzón del museo", mapID = 9001, x = 0.5, y = 0.5 }
+		MapScoutAPI:RegisterProvider("p", { name = "P" }):SetEntries(list)
+		local results, stats = ns.Engine.Search(ns.Query.Parse("buzon"), { max = 3, zoneMapID = 1455 })
+		assert.are.equal(3, #results)
+		assert.are.equal(2, stats.inZone)
+		assert.is_true(results[1].inZone and results[2].inZone)
+		-- same score: the shorter name first
+		assert.are.same({ "p:inside", "p:near" }, { results[1].item.key, results[2].item.key })
+		assert.is_nil(results[3].inZone)
+		-- without the open map, the better matches win
+		local plain = ns.Engine.Search(ns.Query.Parse("buzon"), { max = 3 })
+		assert.are.equal("Buzón", plain[1].item.entry.name)
+		assert.are.equal(3, #plain)
+	end)
+end)

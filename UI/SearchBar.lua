@@ -36,7 +36,7 @@ function SearchBar.Search()
 	local text = box and box:GetText() or ""
 	local query = ns.Query.Parse(text)
 	local start = debugprofilestop()
-	local results, stats = ns.Engine.Search(query)
+	local results, stats = ns.Engine.Search(query, { zoneMapID = ns.Map.GetMapID() })
 	stats.ms = debugprofilestop() - start
 	SearchBar.last = { text = text, query = query, results = results, stats = stats }
 	for _, fn in ipairs(listeners) do
@@ -150,6 +150,11 @@ ns.Map.Listen(function(what)
 		SearchBar.Create()
 	elseif what == "shown" then
 		C_Timer.After(0, warmIndex)
+	elseif what == "mapChanged" then
+		-- another zone: search again so "In this zone" follows the map
+		if SearchBar.box and SearchBar.box:GetText() ~= "" then
+			SearchBar.Search()
+		end
 	elseif what == "hidden" then
 		if SearchBar.box then
 			SearchBar.box:ClearFocus()

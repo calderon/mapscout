@@ -50,6 +50,13 @@ L.DEBUG_PROVIDERS_LINE = "  %s (%s): %s, %d entradas, %d errores, filtros %s"
 L.SEARCH_PLACEHOLDER = "Buscar en el mapa"
 L.SETTINGS = "Opciones de MapScout"
 
+-- Resultados
+L.RESULTS_IN_ZONE = "En %s"
+L.RESULTS_ELSEWHERE = "En el resto del mundo"
+L.RESULTS_NO_PLACE = "Lugar desconocido"
+L.RESULTS_NONE = "No hay resultados"
+L.RESULTS_HINT = "Prueba con @ o con coordenadas (45 67)"
+
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
 L.PROVIDER_STATE_ON = "activado"
