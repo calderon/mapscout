@@ -8,7 +8,7 @@
 ## Version: 0.0.0
 # x-release-please-end
 ## Category: Map
-## OptionalDeps: Bridge, TomTom
+## OptionalDeps: Bridge, TomTom, QuestieDB
 ## SavedVariables: MapScoutDB
 ## SavedVariablesPerCharacter: MapScoutCharDB
 
@@ -27,6 +27,7 @@ Search/Coordinates.lua
 Providers/Geography.lua
 Providers/Flights.lua
 Providers/Quests.lua
+Adapters/QuestieDB.lua
 UI/Map.lua
 UI/SearchBar.lua
 UI/Preview.lua
