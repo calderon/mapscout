@@ -20,6 +20,7 @@ sys.path.insert(0, HERE)
 import dungeons  # noqa: E402
 import harvest  # noqa: E402
 import places  # noqa: E402
+import transport  # noqa: E402
 from geo import Maps  # noqa: E402
 from wago import Tables, build_date  # noqa: E402
 
@@ -82,6 +83,17 @@ def main(argv=None):
     places.write(os.path.join(OUT, "Places.lua"), args.build, date, found_places, place_names)
     print("Places.lua: %d towns, %d named places" % (
         sum(1 for p in found_places if p[1] == "town"), sum(1 for p in found_places if p[1] == "place")))
+
+    listed = transport.lines(os.path.join(MANUAL, "transport.csv"))
+    stops, heights = transport.path_stops(tables.rows("TaxiPathNode"))
+    for problem in transport.check(listed, stops, heights):
+        print("transport: " + problem)
+    found_docks = transport.docks(maps, listed, stops, tables.rows("AreaTrigger"), pois)
+    dock_names = transport.names({locale: tables.rows("AreaPOI", locale) for locale in LOCALES},
+                                 [d[5] for d in found_docks])
+    transport.write(os.path.join(OUT, "Transport.lua"), args.build, date, found_docks, dock_names)
+    print("Transport.lua: %d docks of %d lines" % (
+        len(found_docks), sum(1 for e in listed if e["kind"] in transport.KINDS)))
 
     placed = sum(1 for e in found if e[2])
     print("Dungeons.lua: %d instances, %d with a checked entrance, %d by hand (build %s, %s)%s" % (
