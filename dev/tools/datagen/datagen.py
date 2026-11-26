@@ -50,10 +50,14 @@ def main(argv=None):
         files.append(os.path.join(MANUAL, "entrances.pending.csv"))
     manual = dungeons.manual([f for f in files if os.path.exists(f)])
     found = dungeons.merge(dungeons.entrances(maps, instances, level_by_name), instances, level_by_name, manual)
+    checked = dungeons.verified(os.path.join(MANUAL, "verified.csv"))
+    if not args.pending:  # local tests with --pending keep every point
+        found = dungeons.checked_only(found, instances, level_by_name, checked)
     names = dungeons.names({locale: tables.rows("Map", locale) for locale in LOCALES}, [e[0] for e in found])
     dungeons.write(os.path.join(OUT, "Dungeons.lua"), args.build, date, found, names, manual)
-    print("Dungeons.lua: %d entrances, %d by hand (build %s, %s)%s" % (
-        len(found), len(manual), args.build, date, "  WITH PENDING ROWS: do not commit" if args.pending else ""))
+    placed = sum(1 for e in found if e[2])
+    print("Dungeons.lua: %d instances, %d with a checked entrance, %d by hand (build %s, %s)%s" % (
+        len(found), placed, len(manual), args.build, date, "  WITH PENDING ROWS: do not commit" if args.pending else ""))
 
 
 if __name__ == "__main__":

@@ -30,6 +30,12 @@ Tables per output:
 
 - `Dungeons.lua`: `Map` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`, plus `manual/entrances.csv`.
 
+`manual/verified.csv` lists the entrances checked in the game. Only those get
+a place on the map; every other dungeon or raid the group finder knows is still
+written, with no place (uiMapID 0), and MapScout shows it as "entrance to be
+confirmed". A point that is not where players walk in (the client's corpse
+point is often the portal deep inside a cave) is worse than none.
+
 `manual/*.pending.csv` (not committed) holds points waiting for their author's
 permission. `--pending` adds them, for tests in the game only: never commit a
 file generated with it.

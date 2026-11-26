@@ -94,6 +94,37 @@ def merge(found, instance_rows, level_by_name, manual_rows):
     return [by_id[k] for k in sorted(by_id)]
 
 
+def verified(path):
+    """Instance IDs whose entrance was checked in the game (manual/verified.csv)."""
+    with open(path, newline="", encoding="utf-8") as source:
+        lines = [line for line in source if line.strip() and not line.lstrip().startswith("#")]
+    return {int(row["instance"]) for row in csv.DictReader(lines)}
+
+
+def known(instance_rows, level_by_name):
+    """The dungeons and raids players can run in this build: those the
+    group finder lists (LFGDungeons, matched by name). {instance: (kind, level)}"""
+    out = {}
+    for row in instance_rows:
+        kind = KINDS.get(int(row["InstanceType"]))
+        name = row["MapName_lang"]
+        level = level_by_name.get(NAMES.get(name, name))
+        if kind and level:
+            out[int(row["ID"])] = (kind, level)
+    return out
+
+
+def checked_only(found, instance_rows, level_by_name, checked):
+    """Checked entrances keep their place; every other one (and every known
+    instance without an entrance) stays, with no place: uiMapID 0."""
+    out = {}
+    for instance, kind, ui_map, x, y, level in found:
+        out[instance] = (instance, kind, ui_map, x, y, level) if instance in checked else (instance, kind, 0, 0, 0, level)
+    for instance, (kind, level) in known(instance_rows, level_by_name).items():
+        out.setdefault(instance, (instance, kind, 0, 0, 0, level))
+    return [out[k] for k in sorted(out)]
+
+
 def names(rows_by_locale, ids):
     """{locale: {instanceMapID: name}} for the instances kept."""
     wanted = set(ids)
@@ -112,7 +143,8 @@ def write(path, version, date, found, names_by_locale, manual_rows=()):
     lines.append("pack.categories.dungeons = function()")
     lines.append("\treturn {")
     lines.append('\t\tbuild = %s,' % lua.string(version))
-    lines.append("\t\t-- [instance mapID] = { kind, uiMapID, x, y, level }: x, y 0-10000 on the map; level 0 = unknown")
+    lines.append("\t\t-- [instance mapID] = { kind, uiMapID, x, y, level }: x, y 0-10000 on the map; level 0 = unknown;\n"
+                 "\t\t-- uiMapID 0 = entrance not confirmed yet (found by name, with no place)")
     lines.append("\t\tentrances = {")
     for instance, kind, ui_map, x, y, level in found:
         lines.append("\t\t\t[%d] = %s," % (instance, lua.row([kind, ui_map, x, y, level])))
