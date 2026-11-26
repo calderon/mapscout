@@ -84,6 +84,14 @@ local EN = {
 	DEBUG_FLIGHTS = "flight masters and the map each one is placed in",
 	DEBUG_FLIGHTS_RESULT = "%d flight masters (%d known) for %s:",
 
+	-- Quests
+	QUESTS_NAME = "Quests",
+	QUESTS_DESCRIPTION = "The quests in your log, where to do them or turn them in",
+	QUESTS_READY = "Ready to turn in",
+	QUESTS_ONGOING = "In progress",
+	QUESTS_SUBTITLE = "Level %d · %s",
+	QUESTS_NO_PLACE = "The game doesn't show where this quest is on the map.",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",
@@ -128,6 +136,8 @@ local WORDS = {
 	OTHERS = { "bg", "area", "battlegrounds", "areas" },
 	FLIGHTS = { "fly", "taxi", "flights" },
 	FLIGHT_MASTER = { "flight master" },
+	QUESTS = { "quests", "mission", "missions" },
+	QUEST = { "quest" },
 }
 
 ns.L_EN = EN

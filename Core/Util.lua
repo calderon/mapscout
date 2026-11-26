@@ -227,6 +227,35 @@ function ns.PositionOnMap(mapID, x, y, openMapID)
 	return px, py
 end
 
+-- The continents of the world map (uiMapIDs)
+function ns.Continents()
+	local list = {}
+	if not (C_Map and C_Map.GetMapChildrenInfo) then
+		return list
+	end
+	for _, root in ipairs({ 946, 947 }) do -- Cosmic (Retail), Azeroth (Forever, Classic)
+		for _, info in ipairs(C_Map.GetMapChildrenInfo(root, nil, true) or {}) do
+			if info.mapType == 2 then
+				list[#list + 1] = info.mapID
+			end
+		end
+	end
+	return list
+end
+
+-- Where a point of a big map (a continent) really is: the most precise map at
+-- that point (a city rather than the zone around it) and the position on it.
+function ns.PlaceOnMap(mapID, x, y)
+	local info = C_Map.GetMapInfoAtPosition and C_Map.GetMapInfoAtPosition(mapID, x, y)
+	if info and info.mapID and info.mapID ~= mapID then
+		local zx, zy = ns.PositionOnMap(mapID, x, y, info.mapID)
+		if zx then
+			return info.mapID, zx, zy
+		end
+	end
+	return mapID, x, y
+end
+
 -- Distance --------------------------------------------------------------------
 
 -- Yards from the player to a point of a map, or nil when it can't be known
