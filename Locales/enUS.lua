@@ -70,6 +70,11 @@ local EN = {
 	GEOGRAPHY_ZONES = "Zones",
 	GEOGRAPHY_OTHERS = "Battlegrounds and others",
 
+	-- Coordinates
+	COORDS_GO = "Go to %s",
+	COORDS_GO_IN = "Go to %s in %s",
+	COORDS_SUBTITLE = "Coordinates",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",
