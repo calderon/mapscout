@@ -227,6 +227,17 @@ local function warmIndex()
 	end
 end
 
+-- Something changed in what can be found (a provider turned on or off, new
+-- entries, also when a provider finishes building, a category turned on or
+-- off): the search typed in the bar runs again, after the same short pause.
+ns.Registry.Listen(function(what)
+	if what == "toggled" or what == "entries" or what == "categories" or what == "removed" then
+		if SearchBar.box and SearchBar.box:GetText() ~= "" then
+			schedule()
+		end
+	end
+end)
+
 ns.Map.Listen(function(what)
 	if what == "attached" then
 		SearchBar.Create()

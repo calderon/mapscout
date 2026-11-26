@@ -35,6 +35,7 @@ UI/Preview.lua
 UI/Results.lua
 UI/Waypoint.lua
 Options/Panel.lua
+Options/Categories.lua
 
 #@do-not-package@
 Debug/Sample.lua

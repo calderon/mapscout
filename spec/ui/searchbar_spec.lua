@@ -141,6 +141,28 @@ describe("UI/SearchBar.lua", function()
 		assert.are.same({ { text = "ban", count = 1 } }, searches)
 	end)
 
+	it("searches again by itself when what can be found changes", function()
+		type("ban")
+		RunTimers()
+		assert.are.equal(1, #searches)
+		-- a provider finishing its build (new entries)
+		MapScoutAPI:RegisterProvider("late", { name = "Late" }):SetEntries({
+			{ id = 1, name = "Banco tardío", mapID = 1455, x = 0.5, y = 0.5 },
+		})
+		RunTimers()
+		assert.are.same({ text = "ban", count = 2 }, searches[#searches])
+		-- a provider turned off
+		ns.Registry.SetEnabled("late", false)
+		RunTimers()
+		assert.are.same({ text = "ban", count = 1 }, searches[#searches])
+		-- nothing typed: nothing to search again
+		box:SetText("")
+		local before = #searches
+		ns.Registry.SetEnabled("late", true)
+		RunTimers()
+		assert.are.equal(before, #searches)
+	end)
+
 	it("doesn't search when the text is changed by code", function()
 		box:SetText("ban")
 		box:Run("OnTextChanged", false)
