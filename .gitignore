@@ -2,3 +2,5 @@ CLAUDE.md
 node_modules/
 .release/
 .DS_Store
+__pycache__/
+dev/tools/datagen/.cache/

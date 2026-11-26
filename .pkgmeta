@@ -12,6 +12,8 @@ manual-changelog:
 
 # Development files: not part of the addon
 ignore:
+  # The data pack's folder, until it ships as its own addon (#39, move-folders)
+  - MapScout_Data_Forever
   - CLAUDE.md
   - Debug
   - .busted

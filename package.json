@@ -5,7 +5,9 @@
   "scripts": {
     "prepare": "husky && git config commit.template .gitmessage",
     "check:lua": "bash scripts/check-lua.sh",
-    "test": "bash scripts/test-lua.sh"
+    "test": "bash scripts/test-lua.sh",
+    "test:data": "python3 -m unittest discover -s dev/tools/datagen",
+    "data": "python3 dev/tools/datagen/datagen.py"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",

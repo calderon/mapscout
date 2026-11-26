@@ -1,8 +1,9 @@
 name: Lua
 
 # Compiles every .lua file with LuaJIT (the game's Lua 5.1), runs luacheck and
-# the unit tests (busted). Same scripts as locally:
-# bash scripts/check-lua.sh and bash scripts/test-lua.sh (npm run check:lua, npm test)
+# the unit tests (busted), and the data generator's tests (Python). Same
+# commands as locally:
+# bash scripts/check-lua.sh, bash scripts/test-lua.sh and npm run test:data
 on:
   pull_request:
   push:
@@ -26,3 +27,5 @@ jobs:
         run: bash scripts/check-lua.sh
       - name: Run unit tests
         run: bash scripts/test-lua.sh
+      - name: Run data generator tests
+        run: python3 -m unittest discover -s dev/tools/datagen
