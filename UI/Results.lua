@@ -17,6 +17,7 @@ Results.ROW_HEIGHT = 20
 Results.HEADER_HEIGHT = 18
 Results.MAX_VISIBLE_ROWS = 12
 Results.WIDTH_EXTRA = 28 -- the gear and some air to the right of the box
+Results.MIN_WIDTH = 300 -- never narrower, even when the box is
 Results.DEFAULT_ICON = "Interface\\Icons\\INV_Misc_Map_01"
 
 local rows = {} -- reused row frames
@@ -171,10 +172,8 @@ function Results.Create()
 	if Results.frame then
 		return
 	end
-	local box = ns.SearchBar.box
 	local frame = CreateFrame("Frame", "MapScoutResults", ns.Map.layer, "BackdropTemplate")
-	frame:SetPoint("TOPLEFT", box, "BOTTOMLEFT", -6, -2)
-	frame:SetFrameLevel(box:GetFrameLevel() + 5)
+	ns.SearchBar.Raise(frame, 5)
 	if frame.SetBackdrop then
 		frame:SetBackdrop({
 			bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -231,7 +230,17 @@ function Results.Show(lines)
 		frame:Hide()
 		return
 	end
-	local width = ns.SearchBar.box:GetWidth() + Results.WIDTH_EXTRA
+	local box = ns.SearchBar.box
+	local width = math.max(box:GetWidth() + Results.WIDTH_EXTRA, Results.MIN_WIDTH)
+	-- In the title strip the bar is at the map's right edge: the list lines up
+	-- with the right edge of the box and grows to the left, so it stays over
+	-- the map. Inside, it hangs from the box.
+	frame:ClearAllPoints()
+	if ns.SearchBar.placement == "title" then
+		frame:SetPoint("TOPRIGHT", box, "BOTTOMRIGHT", 0, -2)
+	else
+		frame:SetPoint("TOPLEFT", box, "BOTTOMLEFT", -6, -2)
+	end
 	local height = 0
 	for _, line in ipairs(lines) do
 		height = height + (line.kind == "result" and Results.ROW_HEIGHT or Results.HEADER_HEIGHT)
