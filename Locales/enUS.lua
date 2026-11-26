@@ -47,6 +47,13 @@ local EN = {
 	SEARCH_PLACEHOLDER = "Search the map",
 	SETTINGS = "MapScout settings",
 
+	-- Results
+	RESULTS_IN_ZONE = "In %s",
+	RESULTS_ELSEWHERE = "Elsewhere",
+	RESULTS_NO_PLACE = "Unknown place",
+	RESULTS_NONE = "No results",
+	RESULTS_HINT = "Try @ or coordinates (45 67)",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",

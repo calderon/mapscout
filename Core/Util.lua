@@ -147,6 +147,95 @@ function ns.FindMapByName(text)
 	end
 end
 
+-- Where a map is -----------------------------------------------------------------
+-- For a uiMapID: its name, its zone (the nearest map of type zone, itself
+-- included) and its continent. Cached: map data doesn't change in a session.
+
+local MAP_TYPE_CONTINENT, MAP_TYPE_ZONE = 2, 3
+local places = {}
+
+function ns.MapPlace(mapID)
+	if not mapID then
+		return nil
+	end
+	local place = places[mapID]
+	if place ~= nil then
+		return place or nil
+	end
+	local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
+	if not info then
+		places[mapID] = false
+		return nil
+	end
+	place = { mapID = mapID, name = info.name, mapType = info.mapType, parent = info.parentMapID, ancestors = {} }
+	local current, guard = info, 0
+	while current and guard < 20 do -- guard: never loop on a broken map tree
+		guard = guard + 1
+		local id = current.mapID or mapID
+		place.ancestors[id] = true
+		if not place.zoneID and current.mapType == MAP_TYPE_ZONE then
+			place.zoneID, place.zoneName = id, current.name
+		end
+		if current.mapType == MAP_TYPE_CONTINENT then
+			place.continentID, place.continentName = id, current.name
+			break
+		end
+		if not current.parentMapID or current.parentMapID == 0 then
+			break
+		end
+		current = C_Map.GetMapInfo(current.parentMapID)
+	end
+	place.zoneID = place.zoneID or mapID
+	place.zoneName = place.zoneName or info.name
+	places[mapID] = place
+	return place
+end
+
+-- Is this map the other one, or inside it (a city in its zone, a zone in its continent)?
+function ns.IsMapInside(mapID, outerID)
+	if not (mapID and outerID) then
+		return false
+	end
+	local place = ns.MapPlace(mapID)
+	return place ~= nil and place.ancestors[outerID] == true
+end
+
+-- Distance --------------------------------------------------------------------
+
+-- Yards from the player to a point of a map, or nil when it can't be known
+-- (another continent, an instance, no position).
+function ns.DistanceToPlayer(mapID, x, y)
+	if not (mapID and x and y and UnitPosition and CreateVector2D and C_Map and C_Map.GetWorldPosFromMapPos) then
+		return nil
+	end
+	local px, py, _, instance = UnitPosition("player")
+	if not px then
+		return nil
+	end
+	local continent, world = C_Map.GetWorldPosFromMapPos(mapID, CreateVector2D(x, y))
+	if not world or continent ~= instance then
+		return nil
+	end
+	local wx, wy = world:GetXY()
+	local dx, dy = px - wx, py - wy
+	return math.sqrt(dx * dx + dy * dy)
+end
+
+-- The game measures in yards: meters for every client but enUS (as Bridge).
+function ns.FormatDistance(yards)
+	if GetLocale() == "enUS" then
+		if yards >= 1000 then
+			return ("%.1fk yd"):format(yards / 1000)
+		end
+		return ("%d yd"):format(math.floor(yards + 0.5))
+	end
+	local meters = yards * 0.9144
+	if meters >= 1000 then
+		return ("%.1f km"):format(meters / 1000)
+	end
+	return ("%d m"):format(math.floor(meters + 0.5))
+end
+
 ns.RegisterDebug("normalize", function(text)
 	ns.Print(L.DEBUG_NORMALIZE_RESULT:format(text, ns.Normalize(text)))
 end, L.DEBUG_NORMALIZE)

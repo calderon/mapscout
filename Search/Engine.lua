@@ -324,15 +324,39 @@ function Top:results()
 	return results
 end
 
--- Searches the index. opts.max: how many results (default: the player's
--- option, or 50). Returns the results (best first) and some numbers for
--- /ms debug bench. Each result: { item, score, fuzzy }; result.item.entry
+-- Searches the index.
+--   opts.max: how many results (default: the player's option, or 50).
+--   opts.zoneMapID: the open map. Results in it (or inside it) are kept apart
+--     and come first, so they are never pushed out of the list by the rest.
+-- Returns the results (best first; this zone's first) and some numbers for
+-- /ms debug bench. Each result: { item, score, fuzzy, inZone }; result.item.entry
 -- is the provider's entry (copy it before handing it to another addon).
 function Engine.Search(query, opts)
 	opts = opts or {}
 	local max = opts.max or (ns.db and ns.db.options.maxResults) or Engine.DEFAULT_MAX
-	local stats = { candidates = 0, narrowed = false, fuzzy = false }
-	local top = newTop(max)
+	local stats = { candidates = 0, narrowed = false, fuzzy = false, inZone = 0 }
+	local zoneMapID = opts.zoneMapID
+	local zoneTop, otherTop = newTop(max), newTop(max)
+	local inZone = {} -- item -> true/false, worked out once per search
+	local function topFor(item)
+		if not zoneMapID then
+			return otherTop
+		end
+		local inside = inZone[item]
+		if inside == nil then
+			inside = ns.IsMapInside(item.entry.mapID, zoneMapID)
+			inZone[item] = inside
+		end
+		return inside and zoneTop or otherTop
+	end
+	local top = {
+		add = function(_, item, points, fuzzy)
+			topFor(item):add(item, points, fuzzy)
+		end,
+		boost = function(_, item, points)
+			return topFor(item):boost(item, points)
+		end,
+	}
 
 	if query.text == "" then
 		-- Only @ filters: everything they select, best weight first
@@ -403,7 +427,17 @@ function Engine.Search(query, opts)
 		end
 	end
 
-	local results = top:results()
+	local results = zoneTop:results()
+	for _, result in ipairs(results) do
+		result.inZone = true
+	end
+	stats.inZone = #results
+	for _, result in ipairs(otherTop:results()) do
+		if #results >= max then
+			break
+		end
+		results[#results + 1] = result
+	end
 	stats.results = #results
 	return results, stats
 end
