@@ -7,9 +7,13 @@ describe("UI/SearchBar.lua", function()
 		m.shown = false
 		m.ScrollContainer = CreateFrame("Frame", nil, m)
 		m.ScrollContainer.level = 5
+		m.BorderFrame = CreateFrame("Frame", nil, m)
+		m.BorderFrame.level = 2
+		m.BorderFrame.GetFrameStrata = function() return "HIGH" end
 		function m:GetMapID()
 			return 1455
 		end
+		function m:OnMapChanged() end
 		return m
 	end
 
@@ -43,13 +47,73 @@ describe("UI/SearchBar.lua", function()
 		box:Run("OnTextChanged", true) -- typed by the player
 	end
 
-	it("is a search box with the game's look at the top centre of the map", function()
+	it("is a search box with the game's look in the map's title strip", function()
 		assert.are.equal("MapScoutSearchBox", box.name)
 		assert.are.equal("SearchBoxTemplate", box.template)
 		assert.are.equal(ns.Map.layer, box.parent)
-		assert.are.same({ "TOP", ns.Map.layer, "TOP", -12, -10 }, box.points[1])
-		assert.is_true(box.level > ns.Map.layer.level)
-		assert.are.equal("MapScoutSettingsButton", ns.SearchBar.gear.name)
+		local gear = ns.SearchBar.gear
+		assert.are.equal("MapScoutSettingsButton", gear.name)
+		assert.are.equal("title", ns.SearchBar.placement)
+		assert.are.same({ "RIGHT", ns.Map.layer, "TOPRIGHT", -30, 11 }, gear.points[1])
+		assert.are.same({ "RIGHT", gear, "LEFT", -4, 0 }, box.points[1])
+	end)
+
+	it("is drawn above the map's border, in its layer, so the title strip doesn't hide it", function()
+		local strata = {}
+		for _, f in ipairs({ box, ns.SearchBar.gear }) do
+			f.SetFrameStrata = function(self, s) strata[self] = s end
+		end
+		ns.SearchBar.Raise(box)
+		ns.SearchBar.Raise(ns.SearchBar.gear)
+		assert.are.equal("HIGH", strata[box])
+		assert.are.equal("HIGH", strata[ns.SearchBar.gear])
+		assert.are.equal(12, box.level) -- border level 2 + 10 (its children are lower here)
+		local high = CreateFrame("Button", nil, map.BorderFrame)
+		high.level = 2008 -- like Blizzard's maximize button
+		map.BorderFrame.GetChildren = function() return high end
+		ns.SearchBar.Raise(box)
+		assert.are.equal(2018, box.level)
+	end)
+
+	describe("room left by the zone path", function()
+		local function withZonePath(crumbRight)
+			ns.SearchBar.gear.GetLeft = function() return 900 end
+			local crumb = CreateFrame("Button")
+			crumb.GetRight = function() return crumbRight end
+			local hidden = CreateFrame("Button")
+			hidden.shown = false
+			hidden.GetRight = function() return 2000 end
+			map.NavBar = { navList = { crumb, hidden } }
+			ns.SearchBar.Layout()
+		end
+
+		it("keeps the widest box when there is room", function()
+			withZonePath(600) -- 900 - 4 - 600 - 12 = 284 of room
+			assert.are.equal("title", ns.SearchBar.placement)
+			assert.are.equal(260, box:GetWidth())
+		end)
+
+		it("gets narrower with a longer zone path", function()
+			withZonePath(700) -- 184 of room
+			assert.are.equal("title", ns.SearchBar.placement)
+			assert.are.equal(184, box:GetWidth())
+		end)
+
+		it("goes inside the map when the zone path leaves too little room", function()
+			withZonePath(800) -- 84 of room
+			assert.are.equal("inside", ns.SearchBar.placement)
+			assert.are.same({ "TOPLEFT", ns.Map.layer, "TOPLEFT", 42, -8 }, box.points[1])
+			assert.are.same({ "LEFT", box, "RIGHT", 4, 0 }, ns.SearchBar.gear.points[1])
+			assert.are.equal(260, box:GetWidth())
+		end)
+
+		it("is placed again when the map changes", function()
+			withZonePath(600)
+			map.NavBar.navList[1].GetRight = function() return 800 end
+			map:OnMapChanged()
+			RunTimers()
+			assert.are.equal("inside", ns.SearchBar.placement)
+		end)
 	end)
 
 	it("falls back to a plain input box without the search template", function()
@@ -109,15 +173,6 @@ describe("UI/SearchBar.lua", function()
 	it("the gear shows the help until the options panel exists", function()
 		ns.SearchBar.gear:Run("OnClick")
 		assert.matches("/ms help", table.concat(ChatLog, "\n"), 1, true)
-	end)
-
-	it("gets narrower on a small map", function()
-		ns.Map.layer:SetSize(500, 400)
-		ns.Map.layer:Run("OnSizeChanged")
-		assert.are.equal(200, box:GetWidth())
-		ns.Map.layer:SetSize(1200, 800)
-		ns.Map.layer:Run("OnSizeChanged")
-		assert.are.equal(260, box:GetWidth())
 	end)
 
 	it("builds the index when the map opens and leaves the box when it closes", function()

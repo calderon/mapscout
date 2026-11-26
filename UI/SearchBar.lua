@@ -1,7 +1,12 @@
 -- MapScout: the search bar in the world map.
 -- A search box with the game's own look (SearchBoxTemplate: magnifier,
--- placeholder, clear button) and a gear button, at the top centre of the map,
--- where Blizzard's buttons (left) and Bridge's (right) are not.
+-- placeholder, clear button) and a gear button, in the map's title strip:
+-- right after the zone path (breadcrumbs), just left of the map's ▲ button,
+-- where Blizzard puts its own quest log search box. Nothing of the map covers
+-- it there (the zone label Blizzard shows on hover is at the top of the map).
+-- The box takes the room left by the zone path, which changes with the map
+-- (longer names, more steps); with too little room it goes inside the map,
+-- top left, next to Blizzard's round buttons.
 -- Typing searches after a short pause (debounce), so fast typing runs one
 -- search, not one per letter. Esc clears the text, then leaves the box: it
 -- never closes the map by accident (the box has the keyboard while focused).
@@ -14,9 +19,11 @@ local SearchBar = {}
 ns.SearchBar = SearchBar
 
 SearchBar.DEBOUNCE = 0.15 -- seconds of pause before searching
-SearchBar.WIDTH = 260
-SearchBar.NARROW_WIDTH = 200 -- when the map is small
-SearchBar.NARROW_MAP = 600 -- map width under which the bar is narrower
+SearchBar.WIDTH = 260 -- widest box
+SearchBar.MIN_WIDTH = 140 -- narrower than this, the bar goes inside the map
+SearchBar.TITLE_X, SearchBar.TITLE_Y = -30, 11 -- gear: left of the ▲ button, above the map's top edge
+SearchBar.INSIDE_X, SearchBar.INSIDE_Y = 42, -8 -- inside the map, after Blizzard's round buttons
+SearchBar.CRUMB_GAP = 12 -- space kept after the last step of the zone path
 
 local listeners = {} -- fn(results, query, stats)
 local timer
@@ -63,10 +70,77 @@ local function openOptions()
 	end
 end
 
+-- Right edge of the last visible step of the map's zone path, or nil
+local function lastCrumbRight()
+	local nav = WorldMapFrame and WorldMapFrame.NavBar
+	local list = type(nav) == "table" and nav.navList
+	if type(list) ~= "table" then
+		return nil
+	end
+	local right
+	for _, button in ipairs(list) do
+		if type(button) == "table" and button:IsShown() then
+			local r = button:GetRight()
+			if r and (not right or r > right) then
+				right = r
+			end
+		end
+	end
+	return right
+end
+
+-- Places the bar: in the title strip when the zone path leaves room for it,
+-- otherwise inside the map. Only MapScout's frames move.
 local function layout()
-	local box, layer = SearchBar.box, ns.Map.layer
-	local width = layer:GetWidth() or 0
-	box:SetWidth(width > 0 and width < SearchBar.NARROW_MAP and SearchBar.NARROW_WIDTH or SearchBar.WIDTH)
+	local box, gear, layer = SearchBar.box, SearchBar.gear, ns.Map.layer
+	gear:ClearAllPoints()
+	gear:SetPoint("RIGHT", layer, "TOPRIGHT", SearchBar.TITLE_X, SearchBar.TITLE_Y)
+	local width = SearchBar.WIDTH
+	local gearLeft, crumbRight = gear:GetLeft(), lastCrumbRight()
+	if gearLeft and crumbRight then
+		width = math.min(width, gearLeft - 4 - crumbRight - SearchBar.CRUMB_GAP)
+	end
+	box:ClearAllPoints()
+	if width >= SearchBar.MIN_WIDTH then
+		SearchBar.placement = "title"
+		box:SetPoint("RIGHT", gear, "LEFT", -4, 0)
+		box:SetWidth(width)
+	else
+		SearchBar.placement = "inside"
+		box:SetPoint("TOPLEFT", layer, "TOPLEFT", SearchBar.INSIDE_X, SearchBar.INSIDE_Y)
+		box:SetWidth(SearchBar.WIDTH)
+		gear:ClearAllPoints()
+		gear:SetPoint("LEFT", box, "RIGHT", 4, 0)
+	end
+end
+SearchBar.Layout = layout
+
+-- The map's border (with its title strip) is drawn in a higher layer (strata)
+-- than the map itself, and its parts (title background, buttons) sit at high
+-- levels in it: the bar goes in the same strata, above the highest of them,
+-- or the title strip hides it. Only MapScout's frames change.
+SearchBar.LEVEL_ABOVE_BORDER = 10
+
+local function highestLevel(frame)
+	local highest = frame:GetFrameLevel() or 0
+	if frame.GetChildren then
+		for _, child in ipairs({ frame:GetChildren() }) do
+			if type(child) == "table" and child.GetFrameLevel then
+				highest = math.max(highest, highestLevel(child))
+			end
+		end
+	end
+	return highest
+end
+
+function SearchBar.Raise(frame, extra)
+	local border = WorldMapFrame and WorldMapFrame.BorderFrame
+	if type(border) == "table" and border.GetFrameStrata then
+		frame:SetFrameStrata(border:GetFrameStrata())
+		frame:SetFrameLevel(highestLevel(border) + SearchBar.LEVEL_ABOVE_BORDER + (extra or 0))
+	else
+		frame:SetFrameLevel(ns.Map.layer:GetFrameLevel() + 10 + (extra or 0))
+	end
 end
 
 -- Builds the bar on MapScout's map layer.
@@ -77,8 +151,7 @@ function SearchBar.Create()
 	local layer = ns.Map.layer
 	local box = CreateFrame("EditBox", "MapScoutSearchBox", layer, ns.Caps.searchBox and "SearchBoxTemplate" or "InputBoxTemplate")
 	box:SetSize(SearchBar.WIDTH, 20)
-	box:SetPoint("TOP", layer, "TOP", -12, -10)
-	box:SetFrameLevel(layer:GetFrameLevel() + 10)
+	SearchBar.Raise(box)
 	box:SetAutoFocus(false)
 	box:SetMaxLetters(80)
 	-- Parts of the template (not in InputBoxTemplate, or in some clients)
@@ -112,8 +185,7 @@ function SearchBar.Create()
 
 	local gear = CreateFrame("Button", "MapScoutSettingsButton", layer)
 	gear:SetSize(20, 20)
-	gear:SetPoint("LEFT", box, "RIGHT", 4, 0)
-	gear:SetFrameLevel(box:GetFrameLevel())
+	SearchBar.Raise(gear)
 	local atlas = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo("questlog-icon-setting")
 	if atlas then
 		gear:SetNormalAtlas("questlog-icon-setting")
@@ -150,7 +222,11 @@ ns.Map.Listen(function(what)
 		SearchBar.Create()
 	elseif what == "shown" then
 		C_Timer.After(0, warmIndex)
+		C_Timer.After(0, layout) -- after the map has placed its zone path
 	elseif what == "mapChanged" then
+		if SearchBar.box then
+			C_Timer.After(0, layout) -- the zone path changes with the map
+		end
 		-- another zone: search again so "In this zone" follows the map
 		if SearchBar.box and SearchBar.box:GetText() ~= "" then
 			SearchBar.Search()
@@ -166,7 +242,23 @@ end)
 
 -- /ms debug bar [live] ------------------------------------------------------------
 
+local function describe(frame)
+	if not frame then
+		return "-"
+	end
+	local left, top = frame:GetLeft(), frame:GetTop()
+	return ("%s %s at %s,%s size %sx%s %s/%s"):format(frame:IsShown() and "shown" or "hidden",
+		frame:IsVisible() and "visible" or "not visible", tostring(left and math.floor(left)),
+		tostring(top and math.floor(top)), tostring(math.floor(frame:GetWidth() or 0)),
+		tostring(math.floor(frame:GetHeight() or 0)), tostring(frame:GetFrameStrata()), tostring(frame:GetFrameLevel()))
+end
+
 ns.RegisterDebug("bar", function(args)
+	if args == "where" then
+		ns.Print(("placement %s · box: %s · gear: %s"):format(tostring(SearchBar.placement), describe(SearchBar.box),
+			describe(SearchBar.gear)))
+		return
+	end
 	if args == "live" then
 		live = not live
 		ns.Print(live and L.DEBUG_BAR_LIVE_ON or L.DEBUG_BAR_LIVE_OFF)
