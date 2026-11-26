@@ -198,6 +198,32 @@ end
 function Frame:HasFocus()
 	return self.focus == true
 end
+function Frame:CreateAnimationGroup()
+	return newFrame("AnimationGroup", nil, self)
+end
+function Frame:CreateAnimation()
+	return newFrame("Animation", nil, self)
+end
+function Frame:SetParent(parent)
+	self.parent = parent
+end
+function Frame:GetParent()
+	return self.parent
+end
+function Frame:SetScale(scale)
+	self.scale = scale
+end
+function Frame:GetHeight()
+	return self.height
+end
+function Frame:SetHeight(height)
+	self.height = height
+end
+function Frame:AddLine(text)
+	local lines = rawget(self, "lines") or {}
+	rawset(self, "lines", lines)
+	table.insert(lines, text)
+end
 function Frame:CreateTexture()
 	return newFrame("Texture", nil, self)
 end

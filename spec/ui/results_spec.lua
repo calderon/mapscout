@@ -20,7 +20,7 @@ describe("UI/Results.lua", function()
 		ns = LoadAddonFile("Core/Init.lua")
 		frame = FakeFrames[before + 1]
 		for _, file in ipairs({ "Core/Caps.lua", "Core/Util.lua", "Core/DB.lua", "API/MapScoutAPI.lua", "API/Registry.lua",
-			"Search/Query.lua", "Search/Index.lua", "Search/Engine.lua", "UI/Map.lua", "UI/SearchBar.lua", "UI/Results.lua" }) do
+			"Search/Query.lua", "Search/Index.lua", "Search/Engine.lua", "UI/Map.lua", "UI/SearchBar.lua", "UI/Preview.lua", "UI/Results.lua" }) do
 			LoadAddonFile(file, ns)
 		end
 		frame:Fire("ADDON_LOADED", "MapScout")
@@ -122,5 +122,52 @@ describe("UI/Results.lua", function()
 		search("buzon")
 		map:Hide()
 		assert.is_false(ns.Results.frame:IsShown())
+	end)
+end)
+
+describe("UI/Results.lua hover", function()
+	it("previews the place and shows a tooltip on result rows only", function()
+		ResetWoW()
+		local MAPS = dofile("spec/fixtures/maps.lua")
+		StubGlobals({
+			C_Map = { GetMapInfo = function(id) return MAPS[id] end },
+			C_XMLUtil = { GetTemplateInfo = function() return {} end },
+		})
+		local map = CreateFrame("Frame", "WorldMapFrame")
+		map.ScrollContainer = CreateFrame("Frame", nil, map)
+		function map:GetMapID() return 1455 end
+		StubGlobals({ WorldMapFrame = map })
+		local before = #FakeFrames
+		local ns = LoadAddonFile("Core/Init.lua")
+		local frame = FakeFrames[before + 1]
+		for _, file in ipairs({ "Core/Caps.lua", "Core/Util.lua", "Core/DB.lua", "API/MapScoutAPI.lua", "API/Registry.lua",
+			"Search/Query.lua", "Search/Index.lua", "Search/Engine.lua", "UI/Map.lua", "UI/SearchBar.lua", "UI/Preview.lua",
+			"UI/Results.lua" }) do
+			LoadAddonFile(file, ns)
+		end
+		frame:Fire("ADDON_LOADED", "MapScout")
+		frame:Fire("PLAYER_LOGIN")
+		MapScoutAPI:RegisterProvider("p", { name = "P" }):SetEntries({
+			{ id = 1, name = "Buzón de Forjaz", mapID = 1455, x = 0.3, y = 0.6 },
+		})
+		local shown, hidden = {}, 0
+		ns.Preview.Show = function(place) shown[#shown + 1] = place.name end
+		ns.Preview.Hide = function() hidden = hidden + 1 end
+		ns.SearchBar.box:SetText("buzon")
+		ns.SearchBar.Search()
+		-- the header row ("In Forjaz") is first, the result second
+		local rows = {}
+		for _, f in ipairs(FakeFrames) do
+			if f.type == "Button" and f.index then
+				rows[f.index] = f
+			end
+		end
+		rows[1]:Run("OnEnter")
+		assert.are.same({}, shown) -- a header: nothing
+		rows[2]:Run("OnEnter")
+		assert.are.same({ "Buzón de Forjaz" }, shown)
+		assert.are.equal("Buzón de Forjaz", GameTooltip:GetText())
+		rows[2]:Run("OnLeave")
+		assert.is_true(hidden >= 1)
 	end)
 end)
