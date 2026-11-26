@@ -77,6 +77,10 @@ L.GEOGRAPHY_CONTINENTS = "Continentes"
 L.GEOGRAPHY_CITIES = "Ciudades"
 L.GEOGRAPHY_ZONES = "Zonas"
 L.GEOGRAPHY_OTHERS = "Campos de batalla y otros"
+L.GEOGRAPHY_TOWNS = "Pueblos y campamentos"
+L.GEOGRAPHY_SUBZONES = "Lugares con nombre"
+L.GEOGRAPHY_TOWN = "Pueblo"
+L.GEOGRAPHY_SUBZONE = "Lugar"
 
 -- Coordenadas
 L.COORDS_GO = "Ir a %s"
@@ -179,6 +183,8 @@ ns.W.CONTINENTS = { "continente", "continentes" }
 ns.W.CITIES = { "ciudad", "capital", "ciudades", "capitales" }
 ns.W.ZONES = { "zona", "zonas" }
 ns.W.OTHERS = { "campo", "area", "campos", "areas" }
+ns.W.TOWNS = { "pueblo", "aldea", "campamento", "poblado", "pueblos", "aldeas", "campamentos", "poblados" }
+ns.W.SUBZONES = { "subzona", "sitio", "subzonas", "sitios" }
 ns.W.INSTANCES = { "instancia", "instancias" }
 ns.W.DUNGEONS = { "mazmorra", "mazmorras" }
 ns.W.RAIDS = { "banda", "bandas" }

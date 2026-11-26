@@ -148,6 +148,27 @@ class ManualTest(unittest.TestCase):
             dungeons.merge(found, rows, {}, [(30, 1, 0.5, 0.5, "s")])  # not an instance
 
 
+def poi(id_, name, flags, continent=0, x=750, y=600, condition=0):
+    return {"ID": str(id_), "Name_lang": name, "Flags": str(flags), "ContinentID": str(continent), "Pos_0": str(x),
+            "Pos_1": str(y), "PlayerConditionID": str(condition), "WorldStateID": "0"}
+
+
+class PlacesTest(unittest.TestCase):
+    def test_towns_and_places_only_once_per_map(self):
+        import places
+        rows = [
+            poi(1, "Goldshire", 5),
+            poi(2, "Stormwind", 29),  # a capital: a map of its own
+            poi(3, "Tower", 135),  # PvP objective
+            poi(4, "Whelgar's Excavation Site", 4),
+            poi(5, "Goldshire", 4, x=760),  # the same name on the same map
+            poi(6, "Hidden camp", 5, condition=77),  # only for some players
+            poi(7, "Elsewhere", 4, continent=30),  # a battleground
+        ]
+        found = places.places(MAPS, rows)
+        self.assertEqual([(p[0], p[1]) for p in found], [(1, "town"), (4, "place")])
+
+
 class LuaTest(unittest.TestCase):
     def test_values(self):
         self.assertEqual(lua.row([1, "a\\b", True]), '{ 1, "a\\\\b", true }')

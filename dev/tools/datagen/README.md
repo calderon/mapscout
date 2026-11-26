@@ -29,6 +29,7 @@ Never data from other addons' databases, emulator databases or wiki scraping
 
 Tables per output:
 
+- `Places.lua`: `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`.
 - `Dungeons.lua`: `Map` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`, plus `manual/entrances.csv`.
 
 `manual/verified.csv` lists the entrances checked in the game. Only those get
@@ -52,6 +53,9 @@ overlap their neighbours: a point is stored on its zone only when a single zone
 map holds it, else on the continent map, and the addon finds its zone in the
 game (`ns.PlaceOnMap`).
 
+- `Places.lua`: towns and camps, and named places (the names the world map
+  writes, where it writes them; a name is kept once per map). Not every subzone
+  is there: some names are part of the map's art.
 - `Dungeons.lua`: dungeon and raid entrances (where the corpse of a player who
   dies inside goes), their kind, recommended level and names. Instances without
   that point (Forever's new ones, Naxxramas, Caverns of Time) come from
