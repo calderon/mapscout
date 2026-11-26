@@ -54,6 +54,10 @@ local EN = {
 	RESULTS_NONE = "No results",
 	RESULTS_HINT = "Try @ or coordinates (45 67)",
 
+	-- Preview
+	PREVIEW_COORDS = "%.1f, %.1f",
+	PREVIEW_DISTANCE = "%s away",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",

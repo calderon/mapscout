@@ -5,7 +5,8 @@
 -- Each row: icon, name, subtitle (category · place) and, in this zone, distance.
 -- With text but no results, a short hint. The list has a limited height and
 -- scrolls; rows are reused (#35 will only lay out the visible ones).
--- Hover and click (preview, travel) come with #36 and #37.
+-- Hovering a row previews the place on the map (UI/Preview.lua); clicking
+-- (travel) comes with #37.
 
 local _, ns = ...
 local L = ns.L
@@ -141,6 +142,21 @@ local function createRow(parent, index)
 	row.Highlight = row:CreateTexture(nil, "HIGHLIGHT")
 	row.Highlight:SetAllPoints()
 	row.Highlight:SetColorTexture(1, 1, 1, 0.08)
+	-- Hover: preview on the map and tooltip (MapScout's own rows)
+	row:SetScript("OnEnter", function(self)
+		local line = self.line
+		if not (line and line.kind == "result") then
+			return
+		end
+		ns.Preview.Show(line.result.item.entry)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		ns.Preview.FillTooltip(GameTooltip, line.result, line.subtitle, line.distance)
+		GameTooltip:Show()
+	end)
+	row:SetScript("OnLeave", function()
+		ns.Preview.Hide()
+		GameTooltip:Hide()
+	end)
 	return row
 end
 
@@ -279,6 +295,7 @@ function Results.Hide()
 	if Results.frame then
 		Results.frame:Hide()
 	end
+	ns.Preview.Hide()
 end
 
 -- Rows created so far (reused between searches)

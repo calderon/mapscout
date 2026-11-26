@@ -25,6 +25,7 @@ Search/Index.lua
 Search/Engine.lua
 UI/Map.lua
 UI/SearchBar.lua
+UI/Preview.lua
 UI/Results.lua
 
 #@do-not-package@
