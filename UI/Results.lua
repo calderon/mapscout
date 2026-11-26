@@ -220,7 +220,11 @@ local function fillRow(row, line)
 	if isResult then
 		setIcon(row.Icon, iconOf(line.result.item))
 		row.Name:SetPoint("LEFT", row.Icon, "RIGHT", 4, 0)
-		row.Name:SetTextColor(1, 1, 1)
+		if line.result.item.entry.dimmed then -- e.g. a flight master not known yet
+			row.Name:SetTextColor(0.6, 0.6, 0.6)
+		else
+			row.Name:SetTextColor(1, 1, 1)
+		end
 		row.Sub:SetText(line.subtitle or "")
 		row.Distance:SetText(line.distance or "")
 	else

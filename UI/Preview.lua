@@ -21,30 +21,9 @@ Preview.GLOW_TEXTURE = "Interface\\Cooldown\\ping4"
 
 local marker
 
--- Where a point of some map is on the open map (0-1), or nil if it isn't on it.
-function Preview.PositionOnMap(mapID, x, y, openMapID)
-	if not (mapID and x and y and openMapID) then
-		return nil
-	end
-	if mapID == openMapID then
-		return x, y
-	end
-	if not (CreateVector2D and C_Map and C_Map.GetWorldPosFromMapPos and C_Map.GetMapPosFromWorldPos) then
-		return nil
-	end
-	local continent, world = C_Map.GetWorldPosFromMapPos(mapID, CreateVector2D(x, y))
-	if not world then
-		return nil
-	end
-	local _, position = C_Map.GetMapPosFromWorldPos(continent, world, openMapID)
-	if not position then
-		return nil
-	end
-	local px, py = position:GetXY()
-	if px < 0 or px > 1 or py < 0 or py > 1 then
-		return nil
-	end
-	return px, py
+-- Where a point of some map is on the open map (kept here for existing callers)
+Preview.PositionOnMap = function(...)
+	return ns.PositionOnMap(...)
 end
 
 local function canvas()
@@ -146,6 +125,10 @@ function Preview.FillTooltip(tooltip, result, subtitle, distance)
 	end
 	if distance then
 		tooltip:AddLine(L.PREVIEW_DISTANCE:format(distance), 0.7, 0.7, 0.7)
+	end
+	-- Extra lines from the provider (#137 adds more sources)
+	for _, line in ipairs(type(entry.details) == "table" and entry.details or {}) do
+		tooltip:AddLine(line, 0.6, 0.8, 1, true)
 	end
 end
 

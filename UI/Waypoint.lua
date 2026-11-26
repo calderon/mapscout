@@ -32,7 +32,7 @@ function Waypoint.PinMap(mapID, x, y)
 		if not parent or parent == 0 then
 			return nil
 		end
-		px, py = ns.Preview.PositionOnMap(mapID, x, y, parent)
+		px, py = ns.PositionOnMap(mapID, x, y, parent)
 		if not px then
 			return nil
 		end
