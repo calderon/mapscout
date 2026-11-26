@@ -53,6 +53,7 @@ local EN = {
 	RESULTS_NO_PLACE = "Unknown place",
 	RESULTS_NONE = "No results",
 	RESULTS_HINT = "Try @ or coordinates (45 67)",
+	RESULTS_WIDENED = "Nothing in %s; showing all of %s",
 
 	-- Preview
 	PREVIEW_COORDS = "%.1f, %.1f",
@@ -60,6 +61,14 @@ local EN = {
 
 	-- Going to a result
 	WAYPOINT_NOT_POSSIBLE = "the game doesn't allow a map pin for %s here; the map shows where it is.",
+
+	-- Places (geography provider)
+	GEOGRAPHY_NAME = "Places",
+	GEOGRAPHY_DESCRIPTION = "Continents, cities, zones and battlegrounds of the world map",
+	GEOGRAPHY_CONTINENTS = "Continents",
+	GEOGRAPHY_CITIES = "Cities",
+	GEOGRAPHY_ZONES = "Zones",
+	GEOGRAPHY_OTHERS = "Battlegrounds and others",
 
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
@@ -96,7 +105,14 @@ local EN = {
 
 -- Search words (ns.Words): English lists, always searchable in every language.
 -- Providers add theirs here (e.g. FILTER_FLIGHTS = { "flights", "flight" }).
-local WORDS = {}
+local WORDS = {
+	-- singular first (the one shown), plurals still work
+	GEOGRAPHY = { "region", "map", "places", "regions", "maps" },
+	CONTINENTS = { "continents" },
+	CITIES = { "capital", "cities", "capitals" },
+	ZONES = { "zones" },
+	OTHERS = { "bg", "area", "battlegrounds", "areas" },
+}
 
 ns.L_EN = EN
 ns.W_EN = WORDS

@@ -112,6 +112,14 @@ describe("Search/Query.lua", function()
 			assert.are.same({ "bank", "near" }, q.words)
 		end)
 
+		it("takes an @ word being typed as the filters it starts", function()
+			assert.are.same({ { provider = "services", category = "mail" } }, Query.Parse("@buz").filters)
+			assert.are.same({ { provider = "flights" } }, Query.Parse("@vue forjaz").filters)
+			assert.are.equal("forjaz", Query.Parse("@vue forjaz").text)
+			local several = Query.Parse("@s").filters -- services (whole provider) and nothing else
+			assert.are.same({ { provider = "services" } }, several)
+		end)
+
 		it("treats an unknown @ word as text", function()
 			local q = Query.Parse("@nonsense mail")
 			assert.are.same({}, q.filters)

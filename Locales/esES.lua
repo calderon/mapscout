@@ -56,12 +56,21 @@ L.RESULTS_ELSEWHERE = "En el resto del mundo"
 L.RESULTS_NO_PLACE = "Lugar desconocido"
 L.RESULTS_NONE = "No hay resultados"
 L.RESULTS_HINT = "Prueba con @ o con coordenadas (45 67)"
+L.RESULTS_WIDENED = "Nada en %s; resultados en todo %s"
 
 -- Vista previa
 L.PREVIEW_DISTANCE = "a %s"
 
 -- Ir a un resultado
 L.WAYPOINT_NOT_POSSIBLE = "el juego no permite poner un punto de destino para %s aquí; el mapa te enseña dónde está."
+
+-- Lugares (proveedor de geografía)
+L.GEOGRAPHY_NAME = "Lugares"
+L.GEOGRAPHY_DESCRIPTION = "Continentes, ciudades, zonas y campos de batalla del mapa del mundo"
+L.GEOGRAPHY_CONTINENTS = "Continentes"
+L.GEOGRAPHY_CITIES = "Ciudades"
+L.GEOGRAPHY_ZONES = "Zonas"
+L.GEOGRAPHY_OTHERS = "Campos de batalla y otros"
 
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
@@ -93,3 +102,10 @@ L.KEY_ALT_MAC = "Opción"
 
 -- Palabras de búsqueda en español (además de las inglesas, que siempre funcionan).
 -- Cada proveedor añade las suyas (p. ej. ns.W.FILTER_FLIGHTS = { "vuelos", "vuelo" }).
+-- Singular primero (la que se enseña), sin acentos (con acento también
+-- funcionan: se comparan sin acentos); los plurales también funcionan
+ns.W.GEOGRAPHY = { "lugar", "region", "mapa", "lugares", "regiones", "mapas" }
+ns.W.CONTINENTS = { "continente", "continentes" }
+ns.W.CITIES = { "ciudad", "capital", "ciudades", "capitales" }
+ns.W.ZONES = { "zona", "zonas" }
+ns.W.OTHERS = { "campo", "area", "campos", "areas" }

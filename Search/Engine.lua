@@ -328,6 +328,8 @@ end
 --   opts.max: how many results (default: the player's option, or 50).
 --   opts.zoneMapID: the open map. Results in it (or inside it) are kept apart
 --     and come first, so they are never pushed out of the list by the rest.
+-- When @ categories find nothing, their whole providers are searched instead
+-- and stats.widened lists the categories that were widened.
 -- Returns the results (best first; this zone's first) and some numbers for
 -- /ms debug bench. Each result: { item, score, fuzzy, inZone }; result.item.entry
 -- is the provider's entry (copy it before handing it to another addon).
@@ -428,6 +430,32 @@ function Engine.Search(query, opts)
 	end
 
 	local results = zoneTop:results()
+	-- Nothing in the chosen categories ("@zone eastern kingdoms", a continent):
+	-- search their whole providers instead, and say so (stats.widened)
+	if #results == 0 and otherTop.n == 0 and query.text ~= "" and not opts.noWiden then
+		local narrowed, providers, whole = {}, {}, {}
+		for _, filter in ipairs(query.filters) do
+			if filter.category then
+				narrowed[#narrowed + 1] = filter
+			end
+			if not providers[filter.provider] then
+				providers[filter.provider] = true
+				whole[#whole + 1] = { provider = filter.provider }
+			end
+		end
+		if #narrowed > 0 then
+			local wider = {}
+			for k, v in pairs(query) do
+				wider[k] = v
+			end
+			wider.filters = whole
+			local widerResults, widerStats = Engine.Search(wider, {
+				max = opts.max, zoneMapID = opts.zoneMapID, noWiden = true,
+			})
+			widerStats.widened = narrowed
+			return widerResults, widerStats
+		end
+	end
 	for _, result in ipairs(results) do
 		result.inZone = true
 	end
