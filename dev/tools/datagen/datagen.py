@@ -20,6 +20,7 @@ sys.path.insert(0, HERE)
 import dungeons  # noqa: E402
 import harvest  # noqa: E402
 import places  # noqa: E402
+import services  # noqa: E402
 import transport  # noqa: E402
 from geo import Maps  # noqa: E402
 from wago import Tables, build_date  # noqa: E402
@@ -94,6 +95,12 @@ def main(argv=None):
     transport.write(os.path.join(OUT, "Transport.lua"), args.build, date, found_docks, dock_names)
     print("Transport.lua: %d docks of %d lines" % (
         len(found_docks), sum(1 for e in listed if e["kind"] in transport.KINDS)))
+
+    found_services, unknown = services.points(HARVEST)
+    for asked in unknown:
+        print("services: unknown guard answer %r (add its words to services.py)" % asked)
+    count = services.write(os.path.join(OUT, "Services.lua"), args.build, date, services.merge(found_services))
+    print("Services.lua: %d places" % count)
 
     placed = sum(1 for e in found if e[2])
     print("Dungeons.lua: %d instances, %d with a checked entrance, %d by hand (build %s, %s)%s" % (

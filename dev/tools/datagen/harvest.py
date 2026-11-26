@@ -18,8 +18,9 @@ FOREVER_SAVED = "/Applications/World of Warcraft/_forever_/WTF/Account/*/SavedVa
 
 FILES = {
     "entrances": ["instance", "name", "kind", "uiMap", "x", "y", "at"],
-    "npcs": ["npc", "name", "faction", "services", "uiMap", "x", "y", "gossip", "at"],
+    "npcs": ["npc", "locale", "name", "faction", "services", "uiMap", "x", "y", "gossip", "at"],
     "objects": ["key", "service", "object", "uiMap", "x", "y", "at"],
+    "directions": ["key", "locale", "asked", "name", "poi", "texture", "guard", "uiMap", "x", "y", "at"],
 }
 
 
@@ -42,13 +43,17 @@ def rows_from_saved(text):
         if isinstance(gossip, dict):
             gossip = [gossip[k] for k in sorted(gossip)]
         out["npcs"][str(npc)] = {
-            "npc": npc, "name": n.get("name", ""), "faction": n.get("faction", ""),
+            "npc": npc, "locale": n.get("locale") or "esES", "name": n.get("name", ""), "faction": n.get("faction", ""),
             "services": " ".join(services), "uiMap": n["map"], "x": n["x"], "y": n["y"],
             "gossip": " | ".join(gossip), "at": n.get("at", 0)}
     for key, o in (data.get("objects") or {}).items():
         out["objects"][key] = {
             "key": key, "service": o.get("service", ""), "object": o.get("objectID") or "",
             "uiMap": o["map"], "x": o["x"], "y": o["y"], "at": o.get("at", 0)}
+    for key, d in (data.get("directions") or {}).items():
+        out["directions"][key] = {
+            "key": key, "locale": d.get("locale") or "esES", "asked": d.get("asked", ""), "name": d.get("name", ""), "poi": d.get("poi") or "", "texture": d.get("texture", ""),
+            "guard": d.get("guard") or "", "uiMap": d["map"], "x": d["x"], "y": d["y"], "at": d.get("at", 0)}
     return out
 
 

@@ -21,7 +21,7 @@ generator changes, and commit what changed.
 |---|---|---|
 | The Forever client's DB2 tables of one exact build (`BUILD`, now 1.60.1.71139) | CSV exports of [wago.tools](https://wago.tools) (`/db2/{table}/csv?version=…`), the build's own client data. Its `robots.txt` and `/llms.txt` allow these downloads. Kept in `.cache/<build>/` (not committed) | Instance entrances, map positions, names, levels |
 | Hand-written entrances (`manual/entrances.csv`) | Single facts from public sources, at least two that agree, cited per row. Never another addon's list | Entrances the client data does not have |
-| Harvest data (`harvest/*.csv`) | Recorded in the game with `/ms harvest on` (Debug/Harvest.lua, development only), brought in with `datagen.py harvest` | Dungeon entrances (they count as checked); service NPCs and mailboxes, for later categories |
+| Harvest data (`harvest/*.csv`) | Recorded in the game with `/ms harvest on` (Debug/Harvest.lua, development only), brought in with `datagen.py harvest` | Dungeon entrances (they count as checked); city services: the places city guards mark when asked for them (`directions.csv`), service NPCs talked to (`npcs.csv`) and mailboxes opened (`objects.csv`) |
 | wow-completionist-data (CC BY-SA 4.0) | Quest and NPC seed (#104) | Not yet |
 
 Never data from other addons' databases, emulator databases or wiki scraping
@@ -31,6 +31,7 @@ Tables per output:
 
 - `Places.lua`: `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`.
 - `Dungeons.lua`: `Map` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`, plus `manual/entrances.csv`.
+- `Services.lua`: only the harvest (the client has no service NPCs nor mailboxes).
 - `Transport.lua`: `TaxiPathNode`, `AreaTrigger`, `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, plus `manual/transport.csv`.
 
 `manual/transport.csv` lists the transport lines players ride, one row each:
@@ -51,6 +52,16 @@ point is often the portal deep inside a cave) is worse than none.
 `manual/*.pending.csv` (not committed) holds points waiting for their author's
 permission. `--pending` adds them, for tests in the game only: never commit a
 file generated with it.
+
+## Harvesting city services
+
+The quickest way to record a city: `/ms harvest on`, then ask a city guard for
+each of its options, submenus too. The guard marks the place on the map, and
+the harvest keeps it with the guard's words ("Banco de Forjaz") and the
+client's language. Repair vendors are not among a guard's options: they are
+recorded by opening their window. `services.py` knows the guards' words in
+English and Spanish (`GUARD_WORDS`); the generator reports an answer it does
+not know, so a new city or language is not missed.
 
 ## Outputs
 
@@ -76,3 +87,9 @@ game (`ns.PlaceOnMap`).
   with the docks it goes to, named after the town or capital next to it (none:
   the addon names it after its map). Stops of one kind at the same pier are one
   dock with every destination.
+- `Services.lua`: banks, auction houses, inns, mailboxes, stable masters and
+  repair vendors, per map, with the faction that can use them (none for
+  mailboxes) and the name of the place as the game wrote it, in the language
+  it was harvested in. For one service on one map, the places a guard gave
+  win over the NPCs talked to (they stand inside); every mailbox opened adds
+  up.

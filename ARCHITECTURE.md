@@ -135,6 +135,8 @@ What the client cannot tell us at runtime (NPC services, mailboxes and other obj
 - Names: types from `L`; NPC and area names from the client when possible, with the English name stored as fallback.
 - Files start with a "Generated, do not edit" header with the source build.
 
+**City services** (`Services.lua`) come only from our harvest mode: the client has neither the service NPCs nor the mailboxes. The quickest source is a city guard: asked for a service, it marks the place on the map (a gossip POI), and the harvest keeps it with the guard's words and the client's language. Repair vendors and mailboxes are recorded by opening them. Place names are shown only to players of the language they were harvested in; everyone else sees the service and its city. Until our data covers the world, the QuestieDB services adapter fills the gaps: it leaves out a service on a map where our pack has that service (while our provider is on), so each city harvested moves to our data by itself, and the adapter can be removed once it adds nothing.
+
 ## Persistence
 
 | SavedVariable | Scope | Contents |

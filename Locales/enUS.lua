@@ -133,9 +133,14 @@ local EN = {
 	DEBUG_QUESTIE = "available quests from QuestieDB",
 	DEBUG_QUESTIE_RESULT = "QuestieDB contract %d: %d quests, %d available now (%d with no known place), built in %.0f ms",
 
-	-- Services (QuestieDB)
+	-- Services (our data pack, and QuestieDB)
 	SERVICES_NAME = "Services",
-	SERVICES_DESCRIPTION = "Banks, inns, trainers and other services, from QuestieDB",
+	SERVICES_DESCRIPTION = "Banks, auction houses, inns, mailboxes, stable masters and repairs in cities",
+	DEBUG_SERVICES = "city services",
+	DEBUG_SERVICES_RESULT = "%d services (data pack: %s)",
+	QUESTIE_SERVICES_NAME = "Services (QuestieDB)",
+	QUESTIE_SERVICES_DESCRIPTION = "Banks, inns, trainers and other services, from QuestieDB, where MapScout has none yet",
+	SERVICE_mailbox = "Mailbox",
 	SERVICE_bank = "Bank",
 	SERVICE_auction = "Auction house",
 	SERVICE_inn = "Inn",
@@ -145,8 +150,8 @@ local EN = {
 	SERVICE_battle = "Battlemaster",
 	SERVICE_guild = "Guild",
 	SERVICE_vendor = "Vendor",
-	DEBUG_SERVICES = "services from QuestieDB",
-	DEBUG_SERVICES_RESULT = "QuestieDB: %d NPCs, %d services, built in %.0f ms",
+	DEBUG_QUESTIE_SERVICES = "services from QuestieDB",
+	DEBUG_QUESTIE_SERVICES_RESULT = "QuestieDB: %d NPCs, %d services, built in %.0f ms",
 
 	-- Options page
 	OPTIONS_ABOUT = "A search bar in the world map. Type a place, a service, a quest or coordinates; @ chooses what to search (@zona, @banco, @mision...).",
@@ -226,6 +231,7 @@ local WORDS = {
 	STABLE = { "stable", "stablemaster", "stables" },
 	TRAINER = { "trainer", "trainers" },
 	REPAIR = { "repair", "repairs" },
+	MAILBOX = { "mailbox", "mail", "mailboxes" },
 	BATTLEMASTER = { "battlemaster", "battle" },
 	GUILD = { "guild", "tabard" },
 	VENDOR = { "vendor", "merchant", "shop", "vendors" },

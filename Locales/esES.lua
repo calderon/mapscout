@@ -137,7 +137,12 @@ L.DEBUG_QUESTIE_RESULT = "QuestieDB contrato %d: %d misiones, %d disponibles aho
 
 -- Servicios (QuestieDB)
 L.SERVICES_NAME = "Servicios"
-L.SERVICES_DESCRIPTION = "Bancos, posadas, instructores y otros servicios, de QuestieDB"
+L.SERVICES_DESCRIPTION = "Bancos, casas de subastas, posadas, buzones, maestros de establos y reparaciones en las ciudades"
+L.DEBUG_SERVICES = "servicios de las ciudades"
+L.DEBUG_SERVICES_RESULT = "%d servicios (paquete de datos: %s)"
+L.QUESTIE_SERVICES_NAME = "Servicios (QuestieDB)"
+L.QUESTIE_SERVICES_DESCRIPTION = "Bancos, posadas, instructores y otros servicios, de QuestieDB, donde MapScout aún no tiene"
+L.SERVICE_mailbox = "Buzón"
 L.SERVICE_bank = "Banco"
 L.SERVICE_auction = "Casa de subastas"
 L.SERVICE_inn = "Posada"
@@ -147,8 +152,8 @@ L.SERVICE_repair = "Reparaciones"
 L.SERVICE_battle = "Maestro de batalla"
 L.SERVICE_guild = "Hermandad"
 L.SERVICE_vendor = "Vendedor"
-L.DEBUG_SERVICES = "servicios de QuestieDB"
-L.DEBUG_SERVICES_RESULT = "QuestieDB: %d PNJ, %d servicios, creado en %.0f ms"
+L.DEBUG_QUESTIE_SERVICES = "servicios de QuestieDB"
+L.DEBUG_QUESTIE_SERVICES_RESULT = "QuestieDB: %d PNJ, %d servicios, creado en %.0f ms"
 
 -- Página de opciones
 L.OPTIONS_ABOUT = "Un buscador en el mapa del mundo. Escribe un lugar, un servicio, una misión o unas coordenadas; con @ eliges qué buscar (@zona, @banco, @mision...)."
@@ -222,6 +227,7 @@ ns.W.INN = { "posada", "posadero", "tabernero", "taberna", "posadas" }
 ns.W.STABLE = { "establo", "establos" }
 ns.W.TRAINER = { "instructor", "instructores" }
 ns.W.REPAIR = { "reparar", "reparacion" }
+ns.W.MAILBOX = { "buzon", "correo", "buzones" }
 ns.W.BATTLEMASTER = { "batalla", "maestro de batalla" }
 ns.W.GUILD = { "hermandad", "tabardo" }
 ns.W.VENDOR = { "vendedor", "tienda", "mercader", "vendedores" }

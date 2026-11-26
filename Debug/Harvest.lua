@@ -12,6 +12,8 @@
 --     trainer, stable, flight master, guild, battlemaster, innkeeper), with
 --     the options of its gossip window, to tell its services apart later
 --   * objects: opening a mailbox
+--   * directions: the place a city guard marks on the map when asked for a
+--     service (the guard's own answer, with the choices that led to it)
 -- Positions are the player's, on the most precise map (an NPC is within a few
 -- steps of whoever talks to it).
 
@@ -102,6 +104,7 @@ function Harvest.RecordNPC(service)
 	data.npcs[id] = record
 	record.name = UnitName("npc")
 	record.faction = UnitFactionGroup("npc") or "Neutral"
+	record.locale = GetLocale()
 	record.map, record.x, record.y, record.at = mapID, round(x), round(y), time()
 	if service == "gossip" then
 		record.gossip = gossipOptions()
@@ -171,14 +174,143 @@ function Harvest.EnteringWorld()
 	return record
 end
 
+-- Directions: a city guard asked for a service ("The bank") marks it on the
+-- map with a gossip POI. After each gossip choice, the POI is looked for on the
+-- player's map and the maps above it, and kept with the choices that led to it
+-- ("Profession trainer > Alchemy"). Several guards giving the same place are
+-- one record (its key is the map and position).
+Harvest.POI_DELAYS = { 0.3, 1 } -- seconds after a choice: the POI may come late
+local listening = false
+local choices = {} -- the options chosen with the current guard, in order
+local warned
+
+-- The options of the gossip window shown last, by option ID and by position:
+-- read when the window opens, because after a choice it already shows the next
+-- page's options
+local shown = { byID = {}, byIndex = {} }
+
+local function noteOptions()
+	shown = { byID = {}, byIndex = {} }
+	for i, option in ipairs(C_GossipInfo.GetOptions() or {}) do
+		if option.gossipOptionID then
+			shown.byID[option.gossipOptionID] = option.name
+		end
+		shown.byIndex[option.orderIndex or (i - 1)] = option.name
+		shown.byIndex[i] = shown.byIndex[i] or option.name
+	end
+end
+
+-- The gossip POI shown now: uiMapID, x, y, name, texture index, POI ID; or nil
+function Harvest.FindPoi()
+	local mapID = C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+	while mapID and mapID > 0 do
+		local poiID = C_GossipInfo.GetPoiForUiMapID(mapID)
+		local info = poiID and C_GossipInfo.GetPoiInfo(mapID, poiID)
+		if info and info.position then
+			local x, y = info.position:GetXY()
+			return mapID, x, y, info.name, info.textureIndex, poiID
+		end
+		local map = C_Map.GetMapInfo(mapID)
+		mapID = map and map.parentMapID
+	end
+	return nil
+end
+
+-- Only a final answer is kept: while the window still has options, the choice
+-- opened a submenu (or the answer has not come yet) and the POI shown is still
+-- the previous one's. Forever gives every POI the ID 0, so it cannot tell them
+-- apart. Two answers at the same place are one record with both.
+function Harvest.RecordPoi(asked)
+	if #(C_GossipInfo.GetOptions() or {}) > 0 then
+		return nil
+	end
+	local mapID, x, y, name, texture, poiID = Harvest.FindPoi()
+	if not mapID then
+		return nil
+	end
+	local key = ("%d:%d:%d"):format(mapID, math.floor(x * 1000), math.floor(y * 1000))
+	asked = asked or ""
+	local directions = store().directions or {}
+	if directions[key] and directions[key].asked:find(asked, 1, true) and asked ~= "" then
+		local parts = "|" .. directions[key].asked:gsub("%s*|%s*", "|") .. "|"
+		if parts:find("|" .. asked .. "|", 1, true) then
+			return nil -- already there (the second check after the same choice)
+		end
+	end
+	store().directions = directions
+	local old = directions[key]
+	local list = {}
+	for part in ((old and old.asked) or ""):gmatch("[^|]+") do
+		part = strtrim(part)
+		if part ~= "" and part ~= asked then
+			list[#list + 1] = part
+		end
+	end
+	list[#list + 1] = asked
+	table.sort(list)
+	local kind, guard = Harvest.ParseGUID(UnitGUID("npc"))
+	local record = {
+		map = mapID, x = round(x), y = round(y), name = name, texture = texture, poi = poiID, locale = GetLocale(),
+		asked = table.concat(list, " | "), guard = kind == "Creature" and guard or nil, at = time(),
+	}
+	directions[key] = record
+	ns.Print(("harvest: dirección «%s» guardada (%s, %d, %.1f, %.1f)"):format(asked, tostring(name), mapID,
+		x * 100, y * 100))
+	return record
+end
+
+local function onChoice(name)
+	if not listening then
+		return
+	end
+	choices[#choices + 1] = name
+	local asked = table.concat(choices, " > ")
+	for _, delay in ipairs(Harvest.POI_DELAYS) do
+		C_Timer.After(delay, function()
+			Harvest.RecordPoi(asked)
+		end)
+	end
+end
+
+local hooked
+local function hookGossip()
+	if hooked then
+		return
+	end
+	if not (C_GossipInfo and C_GossipInfo.GetPoiForUiMapID and C_GossipInfo.GetPoiInfo) then
+		if not warned then
+			warned = true
+			ns.Print("harvest: este cliente no tiene C_GossipInfo.GetPoiForUiMapID: no se pueden guardar direcciones")
+		end
+		return
+	end
+	hooked = true
+	if C_GossipInfo.SelectOption then
+		hooksecurefunc(C_GossipInfo, "SelectOption", function(optionID)
+			onChoice(shown.byID[optionID] or ("id " .. tostring(optionID)))
+		end)
+	end
+	if C_GossipInfo.SelectOptionByIndex then
+		hooksecurefunc(C_GossipInfo, "SelectOptionByIndex", function(index)
+			onChoice(shown.byIndex[index] or ("index " .. tostring(index)))
+		end)
+	end
+end
+
+local function onGossipClosed()
+	choices = {}
+end
+
 local function onService(event)
+	if event == "GOSSIP_SHOW" and hooked then
+		noteOptions()
+	end
 	local service = Harvest.SERVICES[event]
 	if service then
 		Harvest.RecordNPC(service)
 	end
 end
 
-local listening = false
 function Harvest.SetOn(on)
 	store().on = on and true or nil
 	if on == listening then
@@ -210,6 +342,12 @@ function Harvest.SetOn(on)
 		ticker = nil
 	end
 	if on then
+		ns.RegisterEvent("GOSSIP_CLOSED", "Harvest", onGossipClosed)
+		hookGossip()
+	else
+		ns.UnregisterEvent("GOSSIP_CLOSED", "Harvest")
+	end
+	if on then
 		Harvest.NoteOutside()
 		ticker = C_Timer.NewTicker(Harvest.TRACK_EVERY, Harvest.NoteOutside)
 	end
@@ -233,8 +371,9 @@ ns.RegisterCommand("harvest", function(args)
 		store().on = on
 	end
 	local data = store()
-	ns.Print(("harvest %s: %d entradas, %d PNJ, %d objetos"):format(data.on and "|cff00ff00ON|r" or "OFF",
-		count(data.entrances), count(data.npcs), count(data.objects)))
+	ns.Print(("harvest %s: %d entradas, %d PNJ, %d objetos, %d direcciones"):format(
+		data.on and "|cff00ff00ON|r" or "OFF", count(data.entrances), count(data.npcs), count(data.objects),
+		count(data.directions or {})))
 end)
 
 ns.RegisterEvent("PLAYER_LOGIN", "Harvest", function()
