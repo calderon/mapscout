@@ -105,7 +105,28 @@ describe("Search engine", function()
 
 		it("accepts a typo while still typing a long word", function()
 			provider("p", { entry(1, "Ventormenta") })
-			assert.are.same({ "Ventormenta" }, search("vemtor"))
+			assert.are.same({ "Ventormenta" }, search("vetnor")) -- swapped letters
+		end)
+
+		it("in short words, accepts a missing, extra or swapped letter, not a different one", function()
+			provider("p", { entry(1, "Posada"), entry(2, "Mercader de armaduras pesadas") })
+			assert.are.same({ "Posada" }, search("posda")) -- missing
+			assert.are.same({ "Posada" }, search("psoada")) -- swapped
+			assert.are.same({ "Posada" }, search("posadda")) -- extra
+			assert.are.same({}, search("posafa")) -- a different letter
+			assert.are.same({ "Posada" }, search("posada")) -- not "pesadas"
+		end)
+
+		it("always needs the first letter right", function()
+			provider("p", { entry(1, "Ventormenta"), entry(2, "Posada") })
+			assert.are.same({}, search("bentormenta"))
+			assert.are.same({}, search("opsada"))
+		end)
+
+		it("in long words, still accepts up to two of any kind", function()
+			provider("p", { entry(1, "Ventormenta") })
+			assert.are.same({ "Ventormenta" }, search("ventormemta")) -- a different letter, 11 letters
+			assert.are.same({ "Ventormenta" }, search("vemtormemta")) -- two of them
 		end)
 
 		it("doesn't guess with fewer than 4 letters", function()
@@ -132,6 +153,8 @@ describe("Search engine", function()
 			assert.are.equal(1, Engine.Distance("abcd", "abd", 2))
 			assert.are.equal(1, Engine.Distance("abcd", "abxd", 2))
 			assert.are.equal(2, Engine.Distance("kitten", "sitting", 1)) -- over max: max + 1
+			assert.are.equal(2, Engine.Distance("abcd", "abxd", 2, true)) -- a changed letter counts two
+			assert.are.equal(1, Engine.Distance("abcd", "abdc", 2, true)) -- a swap still one
 		end)
 	end)
 

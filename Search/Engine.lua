@@ -7,7 +7,8 @@
 -- plus bonuses when the whole name is the text or starts with it, and the
 -- entry's weight. A text that is one of the player's aliases puts its result first.
 -- Typos: only when the normal match finds few results, words of 4+ letters
--- may differ by one letter (two from 8 letters): swapped, missing, extra or wrong.
+-- may have a missing, extra or swapped letter (from 8 letters, up to two, also
+-- a wrong one); the first letter must always be right.
 -- Narrowing: when the text only grows ("ven" -> "vent") and nothing changed in
 -- the index, only the previous matches are checked again.
 -- Ties keep a stable order: shorter name, then alphabetical, then key.
@@ -32,7 +33,9 @@ local ALIAS_SCORE = 100000
 
 -- Edit distance between two words (insert, delete, change, swap two letters),
 -- giving up as soon as it is over max. Returns the distance or max + 1.
-function Engine.Distance(a, b, max)
+-- noChange: a letter changed into another counts as two (a missing one plus
+-- an extra one), so with max 1 only missing, extra or swapped letters fit.
+function Engine.Distance(a, b, max, noChange)
 	local la, lb = #a, #b
 	if math.abs(la - lb) > max then
 		return max + 1
@@ -47,7 +50,7 @@ function Engine.Distance(a, b, max)
 		local ca = a:byte(i)
 		for j = 1, lb do
 			local cb = b:byte(j)
-			local cost = (ca == cb) and 0 or 1
+			local cost = (ca == cb) and 0 or (noChange and 2 or 1)
 			local value = math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost)
 			if i > 1 and j > 1 and ca == b:byte(j - 1) and a:byte(i - 1) == cb then
 				value = math.min(value, beforePrevious[j - 2] + 1)
@@ -106,14 +109,14 @@ end
 -- each pair of words is compared only once. Reset by Engine.Search.
 local closeCache = {}
 
-local function isDigit(byte)
-	return byte >= 48 and byte <= 57
-end
+-- Typos accepted: the first letter always right; short words (4 to 7 letters)
+-- only a missing, extra or swapped letter ("posda", "psoada" -> "posada", but
+-- not "posada" -> "pesadas"); from 8 letters, up to two of any kind.
+Engine.SHORT_TYPO_WORD = 8 -- shorter words: no letter changed into another
 
 local function isClose(word, candidate, max)
-	-- a word with letters is never a typo of a number (and numbers rarely repeat)
-	if isDigit(candidate:byte(1)) and not isDigit(word:byte(1)) then
-		return false
+	if word:byte(1) ~= candidate:byte(1) then
+		return false -- also: a word with letters is never a typo of a number
 	end
 	local known = closeCache[word]
 	if not known then
@@ -123,8 +126,9 @@ local function isClose(word, candidate, max)
 	local close = known[candidate]
 	if close == nil then
 		-- the whole word, or its start (a typo while still typing it)
-		close = Engine.Distance(word, candidate, max) <= max
-			or (#candidate > #word and Engine.Distance(word, candidate:sub(1, #word), max) <= max)
+		local noChange = #word < Engine.SHORT_TYPO_WORD
+		close = Engine.Distance(word, candidate, max, noChange) <= max
+			or (#candidate > #word and Engine.Distance(word, candidate:sub(1, #word), max, noChange) <= max)
 		known[candidate] = close
 	end
 	return close
