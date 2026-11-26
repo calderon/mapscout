@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -167,6 +168,95 @@ class PlacesTest(unittest.TestCase):
         ]
         found = places.places(MAPS, rows)
         self.assertEqual([(p[0], p[1]) for p in found], [(1, "town"), (4, "place")])
+
+
+def path_node(path, index, continent, x, y, z=0, flags=0):
+    return {"PathID": str(path), "NodeIndex": str(index), "ContinentID": str(continent), "Loc_0": str(x),
+            "Loc_1": str(y), "Loc_2": str(z), "Flags": str(flags)}
+
+
+def line(id_, kind, path=0, triggers=()):
+    return {"line": id_, "kind": kind, "path": path, "triggers": list(triggers)}
+
+
+class TransportTest(unittest.TestCase):
+    # path 1: a boat between a dock in zone 11 and one in zone 12; path 2: a
+    # zeppelin up high, from the same pier as path 1's first stop and back
+    NODES = [
+        path_node(1, 0, 0, 750, 600, flags=2), path_node(1, 1, 0, 400, 300), path_node(1, 2, 0, 100, 100, flags=2),
+        path_node(2, 0, 0, 755, 600, z=80, flags=2), path_node(2, 1, 0, 600, 900, z=90),
+        path_node(2, 2, 0, 900, 900, z=80, flags=2),
+        path_node(3, 0, 0, 100, 100), path_node(3, 1, 0, 200, 200),  # a flight path: no stops
+    ]
+
+    def stops(self):
+        import transport
+        return transport.path_stops(self.NODES)
+
+    def test_stops_in_order_and_height(self):
+        stops, heights = self.stops()
+        self.assertEqual(sorted(stops), [1, 2])
+        self.assertEqual([s[:3] for s in stops[1]], [(0, 750, 600), (0, 100, 100)])
+        self.assertEqual(heights[1], 0)
+        self.assertEqual(heights[2], 80)
+
+    def test_check_kinds_and_unlisted_paths(self):
+        import transport
+        stops, heights = self.stops()
+        self.assertEqual(transport.check([line(1, "boat", 1), line(2, "zeppelin", 2)], stops, heights), [])
+        problems = transport.check([line(1, "zeppelin", 1), line(9, "boat", 9)], stops, heights)
+        self.assertEqual(len(problems), 3)  # 1 is not up high, 9 has no stops, 2 is not listed
+        self.assertEqual(transport.check([line(1, "boat", 1), line(2, "none", 2)], stops, heights), [])
+
+    def test_docks_named_after_towns_with_their_destinations(self):
+        import transport
+        stops, _ = self.stops()
+        pois = [poi(40, "Booty Bay", 5, x=760, y=610), poi(41, "Faraway", 5, x=100, y=900),
+                poi(33, "Orgrimmar", 29, x=900, y=950), poi(42, "Hamlet", 5, x=890, y=900)]
+        triggers = [{"ID": "7", "ContinentID": "0", "Pos_0": "800", "Pos_1": "800"},
+                    {"ID": "8", "ContinentID": "0", "Pos_0": "200", "Pos_1": "100"}]
+        with mock.patch.object(transport, "NEAR_TOWN", 100):  # the test world is only 1000 yards wide
+            found = transport.docks(MAPS, [line(2, "zeppelin", 2), line(1, "boat", 1), line(5, "tram", 0, (7, 8)),
+                                           line(4, "none", 2)], stops, triggers, pois)
+        self.assertEqual(found, [
+            (11, "boat", 11, 8000, 5000, 40, [12]),
+            (12, "boat", 12, 8333, 6667, 0, [11]),  # no town near it
+            (21, "zeppelin", 11, 8000, 4900, 40, [22]),  # same pier, another kind: a dock of its own
+            (22, "zeppelin", 11, 2000, 2000, 33, [21]),  # the capital wins over the nearer town
+            (51, "tram", 11, 4000, 4000, 0, [52]),  # the tram's entrances: area triggers
+            (52, "tram", 12, 8333, 3333, 0, [51]),
+        ])
+
+    def test_lines_of_one_pier_share_a_dock(self):
+        import transport
+        nodes = self.NODES + [path_node(4, 0, 0, 760, 600, flags=2), path_node(4, 1, 0, 900, 900, flags=2)]
+        stops, _ = transport.path_stops(nodes)
+        found = transport.docks(MAPS, [line(1, "boat", 1), line(4, "boat", 4)], stops, [], [])
+        self.assertEqual([(d[0], d[6]) for d in found], [(11, [12, 42]), (12, [11]), (42, [11])])
+
+    def test_lines_file(self):
+        import transport
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "transport.csv")
+            with open(path, "w", encoding="utf-8") as out:
+                out.write("line,kind,path,triggers,note\n241,boat,241,,x\n369,tram,,2173 2175,y\n")
+            self.assertEqual(transport.lines(path), [line(241, "boat", 241), line(369, "tram", 0, (2173, 2175))])
+            with open(path, "w", encoding="utf-8") as out:
+                out.write("line,kind,path,triggers,note\n1,rocket,1,,x\n")
+            with self.assertRaises(ValueError):
+                transport.lines(path)
+
+    def test_write(self):
+        import transport
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "Transport.lua")
+            transport.write(path, "1.60.1.1", "2026-01-02", [(11, "boat", 11, 8000, 5000, 40, [12])],
+                            {"enUS": {40: "Booty Bay"}})
+            with open(path, encoding="utf-8") as source:
+                text = source.read()
+        self.assertIn("pack.categories.transport = function()", text)
+        self.assertIn('[11] = { "boat", 11, 8000, 5000, 40, 12 },', text)
+        self.assertIn('[40] = "Booty Bay",', text)
 
 
 class LuaTest(unittest.TestCase):

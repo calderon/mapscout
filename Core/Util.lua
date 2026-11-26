@@ -256,6 +256,22 @@ function ns.PlaceOnMap(mapID, x, y)
 	return mapID, x, y
 end
 
+-- The same, but always on an outdoor zone (or city): the game may answer with
+-- the map of a building or of an instance (Blackrock Mountain), which is not
+-- where players walk in. Dungeon entrances, the tram's entrances...
+function ns.PlaceOutdoors(mapID, x, y)
+	local placedID, px, py = ns.PlaceOnMap(mapID, x, y)
+	local place = ns.MapPlace(placedID)
+	if not place or place.mapType == MAP_TYPE_ZONE or place.zoneID == placedID then
+		return placedID, px, py
+	end
+	local zx, zy = ns.PositionOnMap(mapID, x, y, place.zoneID)
+	if zx then
+		return place.zoneID, zx, zy
+	end
+	return mapID, x, y
+end
+
 -- Distance --------------------------------------------------------------------
 
 -- Yards from the player to a point of a map, or nil when it can't be known

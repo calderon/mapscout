@@ -12,9 +12,8 @@
 -- for the rest): those are still found by name, "entrance to be confirmed",
 -- and lead nowhere, so MapScout never shows a wrong point.
 -- A point on a continent map (the pack stores it there when zone maps overlap)
--- is placed in its zone by the game (ns.PlaceOnMap). Always on the outdoor
--- zone (or city): the game may answer with the map of a building or of the
--- instance itself (Blackrock Mountain), which is not where you walk in.
+-- is placed in its zone by the game, always on the outdoor zone or city
+-- (ns.PlaceOutdoors).
 
 local _, ns = ...
 local L = ns.L
@@ -28,22 +27,8 @@ Dungeons.ICONS = {
 }
 local CATEGORY = { dungeon = "dungeons", raid = "raids" }
 
-local MAP_TYPE_ZONE = 3
-
 -- Where an entrance goes on the map: (mapID, x, y), always a zone or city
-function Dungeons.Place(uiMap, x, y)
-	local mapID, px, py = ns.PlaceOnMap(uiMap, x, y)
-	local place = ns.MapPlace(mapID)
-	if not place or place.mapType == MAP_TYPE_ZONE or place.zoneID == mapID then
-		return mapID, px, py
-	end
-	-- inside a building or an instance map: its zone instead
-	local zx, zy = ns.PositionOnMap(uiMap, x, y, place.zoneID)
-	if zx then
-		return place.zoneID, zx, zy
-	end
-	return uiMap, x, y
-end
+Dungeons.Place = ns.PlaceOutdoors
 
 function Dungeons.Entries(data)
 	local entries = {}
