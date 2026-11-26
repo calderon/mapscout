@@ -36,7 +36,7 @@ describe("Providers/Geography.lua", function()
 		local before = #FakeFrames
 		ns = LoadAddonFile("Core/Init.lua")
 		frame = FakeFrames[before + 1]
-		for _, file in ipairs({ "Core/Caps.lua", "Core/Util.lua", "Core/DB.lua", "API/MapScoutAPI.lua", "API/Registry.lua",
+		for _, file in ipairs({ "Core/Caps.lua", "Core/Util.lua", "Core/DB.lua", "Core/Packs.lua", "API/MapScoutAPI.lua", "API/Registry.lua",
 			"Search/Query.lua", "Search/Index.lua", "Search/Engine.lua", "Providers/Geography.lua", "UI/Map.lua",
 			"UI/SearchBar.lua", "UI/Preview.lua", "UI/Results.lua", "UI/Waypoint.lua" }) do
 			LoadAddonFile(file, ns)

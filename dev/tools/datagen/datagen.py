@@ -19,6 +19,7 @@ sys.path.insert(0, HERE)
 
 import dungeons  # noqa: E402
 import harvest  # noqa: E402
+import places  # noqa: E402
 from geo import Maps  # noqa: E402
 from wago import Tables, build_date  # noqa: E402
 
@@ -75,6 +76,13 @@ def main(argv=None):
         found = dungeons.checked_only(found, instances, level_by_name, checked)
     names = dungeons.names({locale: tables.rows("Map", locale) for locale in LOCALES}, [e[0] for e in found])
     dungeons.write(os.path.join(OUT, "Dungeons.lua"), args.build, date, found, names, manual)
+    pois = tables.rows("AreaPOI")
+    found_places = places.places(maps, pois)
+    place_names = places.names({locale: tables.rows("AreaPOI", locale) for locale in LOCALES}, [p[0] for p in found_places])
+    places.write(os.path.join(OUT, "Places.lua"), args.build, date, found_places, place_names)
+    print("Places.lua: %d towns, %d named places" % (
+        sum(1 for p in found_places if p[1] == "town"), sum(1 for p in found_places if p[1] == "place")))
+
     placed = sum(1 for e in found if e[2])
     print("Dungeons.lua: %d instances, %d with a checked entrance, %d by hand (build %s, %s)%s" % (
         len(found), placed, len(manual), args.build, date, "  WITH PENDING ROWS: do not commit" if args.pending else ""))

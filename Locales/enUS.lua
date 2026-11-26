@@ -75,6 +75,10 @@ local EN = {
 	GEOGRAPHY_CITIES = "Cities",
 	GEOGRAPHY_ZONES = "Zones",
 	GEOGRAPHY_OTHERS = "Battlegrounds and others",
+	GEOGRAPHY_TOWNS = "Towns and camps",
+	GEOGRAPHY_SUBZONES = "Named places",
+	GEOGRAPHY_TOWN = "Town",
+	GEOGRAPHY_SUBZONE = "Place",
 
 	-- Coordinates
 	COORDS_GO = "Go to %s",
@@ -182,6 +186,8 @@ local WORDS = {
 	CITIES = { "capital", "cities", "capitals" },
 	ZONES = { "zones" },
 	OTHERS = { "bg", "area", "battlegrounds", "areas" },
+	TOWNS = { "towns", "village", "camp", "villages", "camps" },
+	SUBZONES = { "subzones", "spot", "spots" },
 	INSTANCES = { "instances" },
 	DUNGEONS = { "dungeons" },
 	RAIDS = { "raids" },
