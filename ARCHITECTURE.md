@@ -107,13 +107,17 @@ OnTextChanged
 
 ## Data sources
 
-In this order of preference:
+In this order of preference (research and links: #104):
 
 1. **Live game APIs** — nothing stored. `C_Map` (map tree, subzone names), `C_EncounterJournal.GetDungeonEntrancesForMap`, `C_TaxiMap`, `C_QuestLog`, `C_AreaPoiInfo`, `C_VignetteInfo`, later `C_TaskQuest` (Retail). Every live provider checks `ns.Caps` first and is hidden from the options when its API is missing.
-2. **The Forever client's own data files** — DB2 tables of the installed build (UiMap, UiMapAssignment, AreaTable, AreaPOI, TaxiNodes, JournalInstance…), converted by our generator in `dev/tools` (#38). Native and ours.
-3. **Our in-game harvest mode** — positions of NPCs and objects recorded when interacting with them (#40). Ours.
-4. **External sources with a public API** whose terms allow the use, each checked first (#104).
-5. **Never** other addons' databases (Questie, HandyNotes, EasyFind…): they have their own licences. They can only be read at runtime by optional adapters, or better, register themselves as providers.
+2. **The Forever client's own data files** — DB2 tables of the installed build, read through **wago.tools' published API** (its `robots.txt` disallows the CSV pages). Maps, areas, flight nodes, instances. `QuestV2` only has quest IDs, no titles.
+3. **Open data under CC BY-SA 4.0: [wow-completionist-data](https://github.com/danielalanbates/wow-completionist-data)** — quests (givers, enders, objectives, prerequisites) and NPC/object positions for Forever, built from Warcraft Wiki and client data, with no emulator nor addon databases. Seed for quests and NPCs (#38). Forever coverage when checked: 3,483 quests, start located 48 %, start and end 40 %, NPCs located 47 %, few high-confidence points (many come from Retail-era wiki pages). No services (vendors, trainers, innkeepers, bankers).
+4. **Our in-game harvest mode** — NPCs and objects recorded when interacting with them (#40): services, Forever-only content, and corrections to the seed.
+5. **Other addons, only read at runtime** — never copied. **QuestieDB** (by the Questie team, GPLv3, a separate addon, supports Forever) for available quests (#83).
+
+Not used: **Warcraft Wiki directly** (its text is CC BY-SA 4.0, but wiki.gg's terms forbid crawling, scraping and automated access; we'd need their permission), **Wowhead** (no public API, scraping is against its terms), **emulator databases** (licences incompatible with ours, and no Forever-only content), **other addons' databases** (their own licences).
+
+**Licences.** A data pack built from CC BY-SA 4.0 data is CC BY-SA 4.0 as a whole, including what our harvest adds to it. So the packs are a **separate module** (`MapScout_Data_Forever`) with their own LICENSE and attribution (Warcraft Wiki contributors, wow-completionist-data), credited in the README (#88). MapScout's code keeps its own licence.
 
 ### Static data packs
 
