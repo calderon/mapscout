@@ -1,5 +1,5 @@
 -- MapScout: going to a result (click on it, or Enter for the first one).
---   1. opens its map, if it isn't the open one
+--   1. opens its map, if it isn't the open one (for a whole map, isMap, that's all)
 --   2. shows the golden halo on the place, until the map closes or changes
 --   3. only if the player turns them on (off by default, so nothing clashes
 --      with Bridge's own pins): the game's map pin, tracking it (the on-screen
@@ -100,6 +100,10 @@ function Waypoint.Go(result, text)
 	ns.Results.Hide() -- ...and is closed after that
 	if ns.SearchBar.box then
 		ns.SearchBar.box:ClearFocus()
+	end
+	if entry.isMap then -- a whole map (a zone, a continent): opening it is all
+		Waypoint.Remember(result, text)
+		return true
 	end
 	local options = ns.db and ns.db.options.waypoint or {}
 	if not Waypoint.Set(entry) and options.native then

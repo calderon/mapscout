@@ -48,8 +48,35 @@ local function subtitle(result)
 	return table.concat(parts, " · ")
 end
 
+local function categoryLabel(providerID, categoryID)
+	local record = ns.Registry.Get(providerID)
+	if record then
+		for _, category in ipairs(record.spec.categories or {}) do
+			if category.id == categoryID then
+				return category.name
+			end
+		end
+		return record.spec.name
+	end
+	return categoryID
+end
+
+-- "Nothing in Zones; showing all of Places"
+local function widenedNote(widened)
+	local narrowed, wide, seen = {}, {}, {}
+	for _, filter in ipairs(widened) do
+		narrowed[#narrowed + 1] = categoryLabel(filter.provider, filter.category)
+		if not seen[filter.provider] then
+			seen[filter.provider] = true
+			local record = ns.Registry.Get(filter.provider)
+			wide[#wide + 1] = record and record.spec.name or filter.provider
+		end
+	end
+	return L.RESULTS_WIDENED:format(table.concat(narrowed, ", "), table.concat(wide, ", "))
+end
+
 -- Turns the engine's results into the lines of the list.
-function Results.Build(results, query)
+function Results.Build(results, query, stats)
 	local lines = {}
 	if #results == 0 then
 		if query and (query.text ~= "" or #query.filters > 0) then
@@ -59,6 +86,10 @@ function Results.Build(results, query)
 		return lines
 	end
 
+	if stats and stats.widened then
+		lines[#lines + 1] = { kind = "hint", text = widenedNote(stats.widened) }
+	end
+
 	local openPlace = ns.MapPlace(ns.Map.GetMapID())
 	local zone, groups, order = {}, {}, {}
 	for _, result in ipairs(results) do
@@ -66,7 +97,16 @@ function Results.Build(results, query)
 			zone[#zone + 1] = result
 		else
 			local place = ns.MapPlace(result.item.entry.mapID)
-			local key = place and ((place.continentName or "?") .. " › " .. place.zoneName) or L.RESULTS_NO_PLACE
+			local key
+			if not place then
+				key = L.RESULTS_NO_PLACE
+			elseif result.item.entry.isMap then
+				-- a whole map: under the map above it (continents under the world)
+				local parent = ns.MapPlace(place.parent)
+				key = parent and parent.name or place.name
+			else
+				key = (place.continentName or "?") .. " › " .. place.zoneName
+			end
 			if not groups[key] then
 				groups[key] = {}
 				order[#order + 1] = key
@@ -78,7 +118,7 @@ function Results.Build(results, query)
 	local function addResult(result)
 		local entry = result.item.entry
 		local line = { kind = "result", result = result, text = entry.name, subtitle = subtitle(result) }
-		if result.inZone then
+		if result.inZone and not entry.isMap then
 			local yards = ns.DistanceToPlayer(entry.mapID, entry.x, entry.y)
 			line.distance = yards and ns.FormatDistance(yards)
 		end
@@ -330,6 +370,6 @@ ns.Map.Listen(function(what)
 	end
 end)
 
-ns.SearchBar.Listen(function(results, query)
-	Results.Show(Results.Build(results, query))
+ns.SearchBar.Listen(function(results, query, stats)
+	Results.Show(Results.Build(results, query, stats))
 end)

@@ -380,6 +380,44 @@ function Registry.FindByFilter(word)
 	return found
 end
 
+-- What an @ word being typed selects: the filters whose word starts with it
+-- ("zon" -> zones, zonas). Same list form as FindByFilter.
+function Registry.FindByFilterPrefix(start)
+	start = ns.Normalize(start)
+	local found, seen = {}, {}
+	if start == "" then
+		return found
+	end
+	local function add(id, category)
+		local key = id .. "." .. tostring(category)
+		if not seen[key] then
+			seen[key] = true
+			found[#found + 1] = { provider = id, category = category }
+		end
+	end
+	for _, id in ipairs(order) do
+		local record = providers[id]
+		local whole = false
+		for _, filter in ipairs(record.filters) do
+			if filter:sub(1, #start) == start then
+				whole = true
+				add(id)
+				break
+			end
+		end
+		if not whole then
+			for word, categories in pairs(record.categoryFilters) do
+				if word:sub(1, #start) == start then
+					for _, categoryID in ipairs(categories) do
+						add(id, categoryID)
+					end
+				end
+			end
+		end
+	end
+	return found
+end
+
 -- /ms debug providers ------------------------------------------------------------
 
 ns.RegisterDebug("providers", function()

@@ -2,6 +2,7 @@
 --   Query.Parse("@services bank")      -> filters { services }, text "bank"
 --   Query.Parse("45.2, 67.8")          -> coords { x = .452, y = .678 } (open map)
 --   Query.Parse("Elwynn 42 65")        -> coords + mapID of Elwynn Forest
+--   Query.Parse("@zon")                -> an @ word being typed: zones (it starts "zones")
 --   Query.Parse("@nonsense mail")      -> unknown @ word: text "nonsense mail"
 -- Result: { raw, filters = { { provider, category }, ... }, coords = { x, y } or nil,
 --   zoneText, mapID (when a zone was named with the coordinates), text, words }.
@@ -50,10 +51,14 @@ function Query.Parse(raw, opts)
 	raw = raw or ""
 	local result = { raw = raw, filters = {} }
 
-	-- @ words: known ones select providers or categories, unknown ones stay as text
+	-- @ words: known ones select providers or categories; a word being typed
+	-- selects the filters it starts ("@zon" -> zones); others stay as text
 	local seen = {}
 	local rest = raw:gsub("@([^%s@]+)", function(word)
 		local matches = ns.Registry.FindByFilter(word)
+		if #matches == 0 then
+			matches = ns.Registry.FindByFilterPrefix(word)
+		end
 		if #matches == 0 then
 			return word
 		end
