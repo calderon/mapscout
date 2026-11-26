@@ -29,6 +29,7 @@ Providers/Geography.lua
 Providers/Flights.lua
 Providers/Dungeons.lua
 Providers/Transport.lua
+Providers/Services.lua
 Providers/Quests.lua
 Adapters/QuestieDB.lua
 Adapters/QuestieDBServices.lua

@@ -9,6 +9,10 @@
 -- finds it under any of them. Flight masters have their own provider.
 -- Only NPCs friendly to the player, placed where they stand. Built once per
 -- session, in small steps.
+-- A stopgap until MapScout's own data covers the world: where MapScout's
+-- services (Providers/Services.lua, on) have a service on a map, this adapter
+-- leaves that service out on that map. Each city harvested moves to our data
+-- by itself; turning our services on or off builds this list again.
 
 local _, ns = ...
 local L = ns.L
@@ -79,6 +83,9 @@ function Services.EntryFor(npcID, who)
 	if not mapID then
 		return nil
 	end
+	if who.covered and who.covered(mapID, main.id) then
+		return nil -- MapScout's own data has this service here
+	end
 	local subName = DB.Npc.subName(npcID)
 	if subName and subName ~= "" then
 		keywords[#keywords + 1] = subName
@@ -133,9 +140,27 @@ step = function(build)
 	end
 end
 
+-- What MapScout's own services cover: fn(mapID, service), or nil when they
+-- are off (or have no data)
+local function ownCoverage()
+	local own = ns.Registry.Get("services")
+	if not (own and own.enabled and ns.Services) then
+		return nil
+	end
+	local data = ns.Packs.Get("services")
+	if not data then
+		return nil
+	end
+	return function(mapID, kind)
+		return ns.Services.Covers(data, mapID, kind)
+	end
+end
+
 function Services.Build()
+	local who = Adapter.Player()
+	who.covered = ownCoverage()
 	local build = {
-		ids = DB.Npc.GetAllIds() or {}, index = 1, entries = {}, who = Adapter.Player(), start = debugprofilestop(),
+		ids = DB.Npc.GetAllIds() or {}, index = 1, entries = {}, who = who, start = debugprofilestop(),
 	}
 	building = build
 	C_Timer.After(0, function()
@@ -155,8 +180,8 @@ for _, service in ipairs(Services.SERVICES) do
 end
 
 provider = MapScoutAPI:RegisterProvider("questiedb-services", {
-	name = L.SERVICES_NAME,
-	description = L.SERVICES_DESCRIPTION,
+	name = L.QUESTIE_SERVICES_NAME,
+	description = L.QUESTIE_SERVICES_DESCRIPTION,
 	icon = Services.SERVICES[1].icon,
 	filter = "service",
 	filterAliases = ns.Words("SERVICES"),
@@ -167,7 +192,14 @@ provider = MapScoutAPI:RegisterProvider("questiedb-services", {
 	end,
 })
 
-ns.RegisterDebug("services", function()
+-- Our services turned on or off: what they cover changed
+ns.Registry.Listen(function(what, id)
+	if what == "toggled" and id == "services" and provider and provider:IsEnabled() then
+		Services.Build()
+	end
+end)
+
+ns.RegisterDebug("questieservices", function()
 	local s = Services.stats
-	ns.Print(L.DEBUG_SERVICES_RESULT:format(s.npcs or 0, s.services or 0, s.ms or 0))
-end, L.DEBUG_SERVICES)
+	ns.Print(L.DEBUG_QUESTIE_SERVICES_RESULT:format(s.npcs or 0, s.services or 0, s.ms or 0))
+end, L.DEBUG_QUESTIE_SERVICES)

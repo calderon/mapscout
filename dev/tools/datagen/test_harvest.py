@@ -33,6 +33,18 @@ MapScoutDB = {
 ["at"] = 5,
 },
 },
+["directions"] = {
+["1455:356:609"] = {
+["map"] = 1455,
+["x"] = 0.3561,
+["y"] = 0.6093,
+["name"] = "Banco de Forjaz",
+["texture"] = 7,
+["asked"] = "Banco de Forjaz",
+["guard"] = 5595,
+["at"] = 9,
+},
+},
 ["on"] = true,
 ["npcs"] = {
 [5099] = {
@@ -90,6 +102,8 @@ class HarvestTest(unittest.TestCase):
             self.assertEqual(npc["services"], "bank")
             self.assertEqual(npc["gossip"], "132053:Banco | 132053:La posada")
             self.assertEqual(harvest.read(folder, "objects")["mailbox:1455:330:668"]["service"], "mailbox")
+            direction = harvest.read(folder, "directions")["1455:356:609"]
+            self.assertEqual((direction["name"], direction["guard"], direction["uiMap"]), ("Banco de Forjaz", "5595", "1455"))
 
 
 if __name__ == "__main__":

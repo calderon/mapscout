@@ -1,7 +1,10 @@
-npc,name,faction,services,uiMap,x,y,gossip,at
-2460,Barnum Mantopétreo,Alliance,bank,1455,0.3459,0.5922,,1795717407
-2461,Bailey Mantopétreo,Alliance,bank,1455,0.3544,0.6076,,1795717432
-2784,Rey Magni Barbabronce,Alliance,,1455,0.3941,0.5575,,1795717553
-5099,Soleil Mantopétreo,Alliance,bank,1455,0.3631,0.6228,,1795717435
-5595,Guardia de Forjaz,Alliance,,1455,0.3306,0.6339,132053:Instructor de profesiones | 132053:Instructor de clases | 132053:Maestro de batalla | 132053:Instructor de armas | 132053:Maestro de establos | 132053:Buzón | 132053:La posada | 132053:Maestro de la hermandad | 132053:Maestro de grifos | 132053:Tren subterráneo | 132053:Banco de Forjaz | 132053:Casa de subastas | 132053:Peluquería,1795717445
-8720,Subastador Redmuse,Alliance,auction,1455,0.2446,0.743,,1795717461
+npc,locale,name,faction,services,uiMap,x,y,gossip,at
+2460,esES,Barnum Mantopétreo,Alliance,bank,1455,0.3452,0.5893,,1795733173
+2461,esES,Bailey Mantopétreo,Alliance,bank,1455,0.3544,0.6076,,1795717432
+2784,esES,Rey Magni Barbabronce,Alliance,,1455,0.3941,0.5575,,1795717553
+5099,esES,Soleil Mantopétreo,Alliance,bank,1455,0.3619,0.6221,,1795733181
+5109,esES,Myra Tyrngaarde,Alliance,vendor,1455,0.2756,0.7192,,1795733143
+5595,esES,Guardia de Forjaz,Alliance,,1455,0.3279,0.6321,132053:Instructor de profesiones | 132053:Instructor de clases | 132053:Maestro de batalla | 132053:Instructor de armas | 132053:Maestro de establos | 132053:Buzón | 132053:La posada | 132053:Maestro de la hermandad | 132053:Maestro de grifos | 132053:Tren subterráneo | 132053:Banco de Forjaz | 132053:Casa de subastas | 132053:Peluquería,1795734347
+6491,esES,Ángel de la Resurrección,Neutral,,1426,0.5409,0.3882,132054:Devuélveme a la vida.,1795723980
+8720,esES,Subastador Redmuse,Alliance,auction,1455,0.2444,0.7443,,1795719302
+274781,esES,Guardia regio férreo,Alliance,,1455,0.4108,0.5064,,1795732758

@@ -17,8 +17,11 @@ describe("Adapters/QuestieDBServices.lua", function()
 		[9] = { name = "Nadie", flags = 0, friendly = "AH", spawns = HERE },
 	}
 
-	local function load(withDB)
+	local OWN = { maps = { [1455] = { { "bank", 3515, 6116, "Alliance", "esES", 1 } } }, names = { esES = { "Las Arcas" } } }
+
+	local function load(withDB, withOwn)
 		ResetWoW()
+		rawset(_G, "MapScoutDataForever", nil)
 		local db = withDB and {
 			RequireContract = function(n) return n == 4 end,
 			contractVersion = 4,
@@ -56,6 +59,16 @@ describe("Adapters/QuestieDBServices.lua", function()
 			UnitFactionGroup = function() return "Alliance" end,
 			GetLocale = function() return "esES" end,
 			LibQuestieDB = db,
+			WOW_PROJECT_ID = 18,
+			C_XMLUtil = { GetTemplateInfo = function() return {} end },
+			C_AddOns = {
+				LoadAddOn = function()
+					rawset(_G, "MapScoutDataForever", { categories = { services = function() return OWN end } })
+					return true
+				end,
+				IsAddOnLoadOnDemand = function() return true end,
+				GetAddOnMetadata = function() end,
+			},
 		})
 		local map = CreateFrame("Frame", "WorldMapFrame")
 		map.ScrollContainer = CreateFrame("Frame", nil, map)
@@ -64,12 +77,26 @@ describe("Adapters/QuestieDBServices.lua", function()
 		local before = #FakeFrames
 		ns = LoadAddonFile("Core/Init.lua")
 		local frame = FakeFrames[before + 1]
-		for _, file in ipairs({ "Core/Util.lua", "Core/DB.lua", "API/MapScoutAPI.lua", "API/Registry.lua", "Search/Query.lua",
-			"Search/Index.lua", "Search/Engine.lua", "Adapters/QuestieDB.lua", "Adapters/QuestieDBServices.lua", "UI/Map.lua" }) do
+		local files = { "Core/Caps.lua", "Core/Util.lua", "Core/DB.lua", "Core/Packs.lua", "API/MapScoutAPI.lua",
+			"API/Registry.lua", "Search/Query.lua", "Search/Index.lua", "Search/Engine.lua" }
+		if withOwn then
+			files[#files + 1] = "Providers/Services.lua"
+		end
+		for _, file in ipairs({ "Adapters/QuestieDB.lua", "Adapters/QuestieDBServices.lua", "UI/Map.lua" }) do
+			files[#files + 1] = file
+		end
+		for _, file in ipairs(files) do
 			LoadAddonFile(file, ns)
 		end
 		frame:Fire("ADDON_LOADED", "MapScout")
 		frame:Fire("PLAYER_LOGIN")
+		for _ = 1, 20 do
+			if PendingTimers() == 0 then break end
+			RunTimers()
+		end
+	end
+
+	local function settle()
 		for _ = 1, 20 do
 			if PendingTimers() == 0 then break end
 			RunTimers()
@@ -128,5 +155,18 @@ describe("Adapters/QuestieDBServices.lua", function()
 		-- by subname (first; "Herrero" follows as a near match: few results allow typos)
 		assert.are.equal("Bixi", (ns.Engine.Search(ns.Query.Parse("herreria")))[1].item.entry.name)
 		assert.are.equal(5, #search("@servicio"))
+	end)
+
+	it("leaves out what MapScout's own services have on that map, while they are on", function()
+		load(true, true)
+		local list = byName()
+		assert.is_nil(list.Olthran) -- our pack has a bank in Ironforge
+		assert.is_truthy(list["Tabernero Brebefuego"]) -- but no inn: still from QuestieDB
+		ns.Registry.SetEnabled("services", false)
+		settle()
+		assert.is_truthy(byName().Olthran) -- ours off: QuestieDB's again
+		ns.Registry.SetEnabled("services", true)
+		settle()
+		assert.is_nil(byName().Olthran)
 	end)
 end)

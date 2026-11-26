@@ -46,7 +46,7 @@ pack.categories.dungeons = function()
 			[2999] = { "dungeon", 0, 0, 0, 15 },
 			[3001] = { "dungeon", 0, 0, 0, 60 },
 			[3039] = { "dungeon", 0, 0, 0, 40 },
-			[3065] = { "dungeon", 1455, 2748, 4789, 13 },
+			[3065] = { "dungeon", 1455, 2756, 4805, 13 },
 		},
 		-- Names in MapScout's languages; any other uses enUS
 		names = {
