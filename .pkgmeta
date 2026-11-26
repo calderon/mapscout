@@ -13,6 +13,7 @@ manual-changelog:
 # Development files: not part of the addon
 ignore:
   - CLAUDE.md
+  - Debug
   - .busted
   - .claude
   - .github
