@@ -72,6 +72,11 @@ L.GEOGRAPHY_CITIES = "Ciudades"
 L.GEOGRAPHY_ZONES = "Zonas"
 L.GEOGRAPHY_OTHERS = "Campos de batalla y otros"
 
+-- Coordenadas
+L.COORDS_GO = "Ir a %s"
+L.COORDS_GO_IN = "Ir a %s en %s"
+L.COORDS_SUBTITLE = "Coordenadas"
+
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
 L.PROVIDER_STATE_ON = "activado"

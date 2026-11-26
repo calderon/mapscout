@@ -466,6 +466,13 @@ function Engine.Search(query, opts)
 		end
 		results[#results + 1] = result
 	end
+	-- Coordinates typed: going to that point comes first
+	local point = ns.Coordinates and ns.Coordinates.Result(query, zoneMapID)
+	if point then
+		table.insert(results, 1, point)
+		results[max + 1] = nil
+		stats.coordinates = true
+	end
 	stats.results = #results
 	return results, stats
 end

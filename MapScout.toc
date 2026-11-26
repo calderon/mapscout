@@ -23,6 +23,7 @@ API/Registry.lua
 Search/Query.lua
 Search/Index.lua
 Search/Engine.lua
+Search/Coordinates.lua
 Providers/Geography.lua
 UI/Map.lua
 UI/SearchBar.lua

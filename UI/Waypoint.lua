@@ -66,6 +66,9 @@ end
 -- Remembers that the player chose this result (account: how often and when;
 -- character: recent choices, newest first, without repeats).
 function Waypoint.Remember(result, text)
+	if result.noRemember then
+		return
+	end
 	local key = result.item.key
 	if ns.db then
 		local frequency = ns.db.frequency[key] or { count = 0 }
