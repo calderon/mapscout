@@ -86,6 +86,14 @@ L.FLIGHTS_HOW_TO_LEARN = "Abre una vez el mapa de vuelo de cualquier maestro de 
 L.DEBUG_FLIGHTS = "maestros de vuelo y el mapa donde se coloca cada uno"
 L.DEBUG_FLIGHTS_RESULT = "%d maestros de vuelo (%d conocidos) para %s:"
 
+-- Misiones
+L.QUESTS_NAME = "Misiones"
+L.QUESTS_DESCRIPTION = "Las misiones de tu registro, dónde hacerlas o entregarlas"
+L.QUESTS_READY = "Lista para entregar"
+L.QUESTS_ONGOING = "En curso"
+L.QUESTS_SUBTITLE = "Nivel %d · %s"
+L.QUESTS_NO_PLACE = "El juego no indica en el mapa dónde está esta misión."
+
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
 L.PROVIDER_STATE_ON = "activado"
@@ -125,3 +133,5 @@ ns.W.ZONES = { "zona", "zonas" }
 ns.W.OTHERS = { "campo", "area", "campos", "areas" }
 ns.W.FLIGHTS = { "vuelo", "volar", "vuelos" }
 ns.W.FLIGHT_MASTER = { "maestro de vuelo" }
+ns.W.QUESTS = { "mision", "misiones" }
+ns.W.QUEST = { "mision" }

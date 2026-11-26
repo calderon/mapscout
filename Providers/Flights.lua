@@ -25,35 +25,10 @@ Flights.ICON_UNKNOWN = "Interface\\TaxiFrame\\UI-Taxi-Icon-Gray"
 local FACTION_HORDE, FACTION_ALLIANCE = 1, 2
 local STATE_UNREACHABLE = 2
 
-local function continents()
-	local list = {}
-	for _, root in ipairs({ 946, 947 }) do
-		for _, info in ipairs(C_Map.GetMapChildrenInfo(root, nil, true) or {}) do
-			if info.mapType == 2 then
-				list[#list + 1] = info.mapID
-			end
-		end
-	end
-	return list
-end
-
 local function hostile(node)
 	local faction = UnitFactionGroup("player")
 	return (faction == "Alliance" and node.faction == FACTION_HORDE)
 		or (faction == "Horde" and node.faction == FACTION_ALLIANCE)
-end
-
--- Where a node of a continent really is: the most precise map at its point
--- (a city rather than its zone) and the position on that map.
-function Flights.Place(continentID, x, y)
-	local info = C_Map.GetMapInfoAtPosition and C_Map.GetMapInfoAtPosition(continentID, x, y)
-	if info and info.mapID and info.mapID ~= continentID then
-		local zx, zy = ns.PositionOnMap(continentID, x, y, info.mapID)
-		if zx then
-			return info.mapID, zx, zy
-		end
-	end
-	return continentID, x, y
 end
 
 local function known()
@@ -66,14 +41,14 @@ function Flights.Entries()
 		return entries
 	end
 	local knownNodes = known()
-	for _, continentID in ipairs(continents()) do
+	for _, continentID in ipairs(ns.Continents()) do
 		for _, node in ipairs(C_TaxiMap.GetTaxiNodesForMap(continentID) or {}) do
 			local position = node.position
 			local x, y = position and position.x, position and position.y
 			if node.nodeID and not seen[node.nodeID] and x and x >= 0 and x <= 1 and y >= 0 and y <= 1
 				and not hostile(node) then
 				seen[node.nodeID] = true
-				local mapID, px, py = Flights.Place(continentID, x, y)
+				local mapID, px, py = ns.PlaceOnMap(continentID, x, y)
 				local isKnown = knownNodes[node.nodeID] == true
 				local details
 				if not isKnown and not (ns.charDB and ns.charDB.taxiLearnt) then
