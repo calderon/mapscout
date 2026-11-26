@@ -6,7 +6,7 @@
 -- With text but no results, a short hint. The list has a limited height and
 -- scrolls; rows are reused (#35 will only lay out the visible ones).
 -- Hovering a row previews the place on the map (UI/Preview.lua); clicking
--- (travel) comes with #37.
+-- it goes there (UI/Waypoint.lua).
 
 local _, ns = ...
 local L = ns.L
@@ -157,6 +157,14 @@ local function createRow(parent, index)
 		ns.Preview.Hide()
 		GameTooltip:Hide()
 	end)
+	-- Click: go there (the right button is for the menu, #61)
+	row:RegisterForClicks("LeftButtonUp")
+	row:SetScript("OnClick", function(self)
+		local line = self.line
+		if line and line.kind == "result" then
+			ns.Waypoint.Go(line.result, ns.SearchBar.box:GetText())
+		end
+	end)
 	return row
 end
 
@@ -296,6 +304,15 @@ function Results.Hide()
 		Results.frame:Hide()
 	end
 	ns.Preview.Hide()
+end
+
+-- The first result shown (what Enter goes to), or nil
+function Results.FirstResult()
+	for _, line in ipairs(Results.lines) do
+		if line.kind == "result" then
+			return line.result
+		end
+	end
 end
 
 -- Rows created so far (reused between searches)

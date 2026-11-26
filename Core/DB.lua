@@ -15,13 +15,13 @@ local DB = {}
 ns.DB = DB
 
 -- Raise SCHEMA and add DB.migrations.account[n] / .char[n] when the layout changes.
-DB.SCHEMA = 1
+DB.SCHEMA = 2
 
 DB.ACCOUNT_DEFAULTS = {
 	options = {
 		providers = {}, -- providerID -> false when the player turned it off
 		categories = {}, -- "providerID.categoryID" -> false when turned off
-		waypoint = { native = true, superTrack = true, tomtom = false },
+		waypoint = { native = false, superTrack = false, tomtom = false }, -- going to a result only shows it
 		bar = { position = "TOPLEFT", x = 0, y = 0, scale = 1 },
 		maxResults = 50,
 	},
@@ -44,6 +44,16 @@ DB.migrations = { account = {}, char = {} }
 -- dev/audit) saved data here; it is not needed any more.
 DB.migrations.account[1] = function(db)
 	db.audit, db.audit2 = nil, nil
+end
+
+-- 1 -> 2: going to a result no longer sets the game's map pin by default
+-- (it would clash with Bridge's own pins): turned off. No player could have
+-- chosen these yet (no options panel), so nothing chosen is lost.
+DB.migrations.account[2] = function(db)
+	local waypoint = db.options and db.options.waypoint
+	if type(waypoint) == "table" then
+		waypoint.native, waypoint.superTrack = false, false
+	end
 end
 
 local copy = ns.CopyTable

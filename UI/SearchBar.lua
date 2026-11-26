@@ -166,6 +166,12 @@ function SearchBar.Create()
 			schedule()
 		end
 	end)
+	-- Back to a box that still has text: show its results again
+	box:HookScript("OnEditFocusGained", function(self)
+		if self:GetText() ~= "" then
+			SearchBar.Search()
+		end
+	end)
 	box:SetScript("OnEscapePressed", function(self)
 		if self:GetText() ~= "" then
 			self:SetText("")
@@ -174,8 +180,12 @@ function SearchBar.Create()
 			self:ClearFocus()
 		end
 	end)
-	box:SetScript("OnEnterPressed", function()
-		SearchBar.Search() -- choosing the first result comes with #37
+	box:SetScript("OnEnterPressed", function(self)
+		SearchBar.Search()
+		local first = ns.Results and ns.Results.FirstResult()
+		if first then
+			ns.Waypoint.Go(first, self:GetText()) -- Enter: the first result
+		end
 	end)
 	if type(box.clearButton) == "table" then
 		box.clearButton:HookScript("OnClick", function()

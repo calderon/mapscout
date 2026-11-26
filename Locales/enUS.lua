@@ -58,6 +58,9 @@ local EN = {
 	PREVIEW_COORDS = "%.1f, %.1f",
 	PREVIEW_DISTANCE = "%s away",
 
+	-- Going to a result
+	WAYPOINT_NOT_POSSIBLE = "the game doesn't allow a map pin for %s here; the map shows where it is.",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",

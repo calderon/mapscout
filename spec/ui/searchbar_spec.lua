@@ -165,6 +165,16 @@ describe("UI/SearchBar.lua", function()
 		assert.is_false(box:HasFocus())
 	end)
 
+	it("shows the results again when the box gets the focus back with text", function()
+		box:SetText("ban")
+		box:Run("OnEditFocusGained")
+		assert.are.same({ text = "ban", count = 1 }, searches[#searches])
+		local before = #searches
+		box:SetText("")
+		box:Run("OnEditFocusGained")
+		assert.are.equal(before, #searches) -- an empty box doesn't search
+	end)
+
 	it("keeps the template's own text handling (hook, not replace)", function()
 		assert.is_nil(box.scripts.OnTextChanged)
 		assert.are.equal(1, #box.hooks.OnTextChanged)

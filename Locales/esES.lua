@@ -60,6 +60,9 @@ L.RESULTS_HINT = "Prueba con @ o con coordenadas (45 67)"
 -- Vista previa
 L.PREVIEW_DISTANCE = "a %s"
 
+-- Ir a un resultado
+L.WAYPOINT_NOT_POSSIBLE = "el juego no permite poner un punto de destino para %s aquí; el mapa te enseña dónde está."
+
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
 L.PROVIDER_STATE_ON = "activado"
