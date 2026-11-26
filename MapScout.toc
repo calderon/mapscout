@@ -27,6 +27,7 @@ UI/Map.lua
 UI/SearchBar.lua
 UI/Preview.lua
 UI/Results.lua
+UI/Waypoint.lua
 
 #@do-not-package@
 Debug/Sample.lua

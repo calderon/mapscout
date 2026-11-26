@@ -63,14 +63,14 @@ local function createMarker(parent)
 	glow:SetPoint("CENTER")
 	glow:SetVertexColor(1, 0.82, 0)
 
+	-- The game's waypoint diamond, centred on the point like the halo
 	local pin = frame:CreateTexture(nil, "ARTWORK")
 	pin:SetSize(Preview.SIZE, Preview.SIZE)
-	pin:SetPoint("BOTTOM", frame, "CENTER") -- the pin's tip on the point
+	pin:SetPoint("CENTER")
 	if C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(Preview.PIN_ATLAS) then
 		pin:SetAtlas(Preview.PIN_ATLAS)
 	else
 		pin:SetTexture(Preview.PIN_TEXTURE)
-		pin:SetPoint("CENTER")
 	end
 
 	local pulse = glow:CreateAnimationGroup()

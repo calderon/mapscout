@@ -115,11 +115,12 @@ describe("Core/DB.lua", function()
 
 		it("keeps the player's saved values", function()
 			load()
-			_G.MapScoutDB = { schema = 1, aliases = { ah = "key" }, options = { maxResults = 20 } }
+			_G.MapScoutDB = { schema = 2, aliases = { ah = "key" }, options = { maxResults = 20, waypoint = { tomtom = true } } }
 			addonLoaded()
 			assert.are.equal("key", MapScoutDB.aliases.ah)
 			assert.are.equal(20, MapScoutDB.options.maxResults)
-			assert.is_true(MapScoutDB.options.waypoint.native)
+			assert.is_true(MapScoutDB.options.waypoint.tomtom) -- kept
+			assert.is_false(MapScoutDB.options.waypoint.native) -- completed from the defaults
 		end)
 
 		it("ignores other addons and listens only once", function()
@@ -149,17 +150,25 @@ describe("Core/DB.lua", function()
 		addonLoaded()
 		assert.is_nil(MapScoutDB.audit)
 		assert.is_nil(MapScoutDB.audit2)
-		assert.are.equal(1, MapScoutDB.schema)
+		assert.are.equal(2, MapScoutDB.schema)
 		assert.are.equal("upgraded", ns.DB.state.account)
+	end)
+
+	it("turns the game's map pin and its tracking off when upgrading to schema 2", function()
+		load()
+		_G.MapScoutDB = { schema = 1, options = { waypoint = { native = true, superTrack = true, tomtom = true } } }
+		addonLoaded()
+		assert.are.same({ native = false, superTrack = false, tomtom = true }, MapScoutDB.options.waypoint)
+		assert.are.equal(2, MapScoutDB.schema)
 	end)
 
 	it("/ms debug db shows the state and sizes", function()
 		load()
-		_G.MapScoutCharDB = { schema = 1, history = { "bank", "mail" } }
+		_G.MapScoutCharDB = { schema = 2, history = { "bank", "mail" } }
 		addonLoaded()
 		SlashCmdList.MAPSCOUT("debug db")
 		local out = table.concat(ChatLog, "\n")
-		assert.matches("schema 1 (current 1), account new, character current", out, 1, true)
+		assert.matches("schema 2 (current 2), account new, character current", out, 1, true)
 		assert.matches("2 recent searches", out, 1, true)
 	end)
 

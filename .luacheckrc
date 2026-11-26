@@ -23,7 +23,7 @@ files["spec/helpers/"] = {
 	globals = {
 		"LoadAddonFile", "NewNamespace", "ResetWoW", "StubGlobals", "RunTimers", "PendingTimers", "FakeFrames", "ChatLog", "ReportedErrors", "GameTooltip",
 		-- WoW API stubs
-		"GetLocale", "GetBuildInfo", "IsMacClient", "debugprofilestop", "hooksecurefunc", "InCombatLockdown", "C_Timer", "CreateFrame", "DEFAULT_CHAT_FRAME", "geterrorhandler", "strtrim",
+		"GetLocale", "GetBuildInfo", "IsMacClient", "debugprofilestop", "time", "hooksecurefunc", "InCombatLockdown", "C_Timer", "CreateFrame", "DEFAULT_CHAT_FRAME", "geterrorhandler", "strtrim",
 		"xpcall", "jit", "unpack",
 	},
 }

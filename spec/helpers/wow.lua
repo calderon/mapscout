@@ -41,6 +41,7 @@ local function baseStubs()
 	debugprofilestop = function()
 		return os.clock() * 1000
 	end
+	time = os.time -- the game's time() is Lua's os.time()
 	C_Timer = newTimerAPI()
 end
 
