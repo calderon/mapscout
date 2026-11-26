@@ -43,7 +43,7 @@ describe("Locales", function()
 
 	it("defines in English every text the addon code uses", function()
 		local en = NewNamespace().L_EN
-		local files = io.popen("ls Core/*.lua Search/*.lua API/*.lua Providers/*.lua UI/*.lua Options/*.lua 2>/dev/null")
+		local files = io.popen("ls Core/*.lua Search/*.lua API/*.lua Providers/*.lua UI/*.lua Options/*.lua Debug/*.lua 2>/dev/null")
 		for path in files:lines() do
 			local source = io.open(path):read("*a")
 			for key in source:gmatch("%f[%w_]L%.([%w_]+)") do

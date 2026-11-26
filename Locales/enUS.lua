@@ -74,6 +74,9 @@ local EN = {
 	DEBUG_BAR_LIVE_ON = "every search of the bar will be shown in chat (/ms debug bar live to stop)",
 	DEBUG_BAR_LIVE_OFF = "searches of the bar no longer shown in chat",
 	DEBUG_BAR_NOTHING = "the bar hasn't searched anything yet",
+	DEBUG_SAMPLE = "test places (development only): /ms debug sample [big]",
+	DEBUG_SAMPLE_ON = "sample provider on: %d places (/ms debug sample again to turn it off, @sample to see them)",
+	DEBUG_SAMPLE_OFF = "sample provider off",
 	DEBUG_NORMALIZE = "how a text is searched: /ms debug normalize <text>",
 	DEBUG_NORMALIZE_RESULT = "\"%s\" is searched as \"%s\"",
 

@@ -26,3 +26,7 @@ Search/Engine.lua
 UI/Map.lua
 UI/SearchBar.lua
 UI/Results.lua
+
+#@do-not-package@
+Debug/Sample.lua
+#@end-do-not-package@
