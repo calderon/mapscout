@@ -100,6 +100,21 @@ local EN = {
 	DEBUG_QUESTIE = "available quests from QuestieDB",
 	DEBUG_QUESTIE_RESULT = "QuestieDB contract %d: %d quests, %d available now (%d with no known place), built in %.0f ms",
 
+	-- Services (QuestieDB)
+	SERVICES_NAME = "Services",
+	SERVICES_DESCRIPTION = "Banks, inns, trainers and other services, from QuestieDB",
+	SERVICE_bank = "Bank",
+	SERVICE_auction = "Auction house",
+	SERVICE_inn = "Inn",
+	SERVICE_stable = "Stable master",
+	SERVICE_trainer = "Trainer",
+	SERVICE_repair = "Repairs",
+	SERVICE_battle = "Battlemaster",
+	SERVICE_guild = "Guild",
+	SERVICE_vendor = "Vendor",
+	DEBUG_SERVICES = "services from QuestieDB",
+	DEBUG_SERVICES_RESULT = "QuestieDB: %d NPCs, %d services, built in %.0f ms",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",
@@ -147,6 +162,17 @@ local WORDS = {
 	QUESTS = { "quests", "mission", "missions" },
 	QUEST = { "quest" },
 	AVAILABLE = { "availables" },
+	-- services: the first word is the main @ word (singular)
+	SERVICES = { "services" },
+	BANK = { "bank", "banks", "banker" },
+	AUCTION = { "auction", "ah", "auctioneer", "auctions" },
+	INN = { "inn", "innkeeper", "inns", "tavern" },
+	STABLE = { "stable", "stablemaster", "stables" },
+	TRAINER = { "trainer", "trainers" },
+	REPAIR = { "repair", "repairs" },
+	BATTLEMASTER = { "battlemaster", "battle" },
+	GUILD = { "guild", "tabard" },
+	VENDOR = { "vendor", "merchant", "shop", "vendors" },
 }
 
 ns.L_EN = EN

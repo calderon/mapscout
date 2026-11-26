@@ -102,6 +102,21 @@ L.AVAILABLE_GIVER = "La da: %s"
 L.DEBUG_QUESTIE = "misiones disponibles de QuestieDB"
 L.DEBUG_QUESTIE_RESULT = "QuestieDB contrato %d: %d misiones, %d disponibles ahora (%d sin sitio conocido), creado en %.0f ms"
 
+-- Servicios (QuestieDB)
+L.SERVICES_NAME = "Servicios"
+L.SERVICES_DESCRIPTION = "Bancos, posadas, instructores y otros servicios, de QuestieDB"
+L.SERVICE_bank = "Banco"
+L.SERVICE_auction = "Casa de subastas"
+L.SERVICE_inn = "Posada"
+L.SERVICE_stable = "Maestro de establos"
+L.SERVICE_trainer = "Instructor"
+L.SERVICE_repair = "Reparaciones"
+L.SERVICE_battle = "Maestro de batalla"
+L.SERVICE_guild = "Hermandad"
+L.SERVICE_vendor = "Vendedor"
+L.DEBUG_SERVICES = "servicios de QuestieDB"
+L.DEBUG_SERVICES_RESULT = "QuestieDB: %d PNJ, %d servicios, creado en %.0f ms"
+
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
 L.PROVIDER_STATE_ON = "activado"
@@ -144,3 +159,13 @@ ns.W.FLIGHT_MASTER = { "maestro de vuelo" }
 ns.W.QUESTS = { "mision", "misiones" }
 ns.W.QUEST = { "mision" }
 ns.W.AVAILABLE = { "disponible", "disponibles" }
+ns.W.SERVICES = { "servicio", "servicios" }
+ns.W.BANK = { "banco", "banquero", "bancos" }
+ns.W.AUCTION = { "subasta", "subastador", "subastas" }
+ns.W.INN = { "posada", "posadero", "tabernero", "taberna", "posadas" }
+ns.W.STABLE = { "establo", "establos" }
+ns.W.TRAINER = { "instructor", "instructores" }
+ns.W.REPAIR = { "reparar", "reparacion" }
+ns.W.BATTLEMASTER = { "batalla", "maestro de batalla" }
+ns.W.GUILD = { "hermandad", "tabardo" }
+ns.W.VENDOR = { "vendedor", "tienda", "mercader", "vendedores" }

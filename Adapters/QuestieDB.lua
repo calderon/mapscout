@@ -61,7 +61,7 @@ end
 
 -- The first position of a spawn list ({ [areaID] = { {x, y}, ... } }) on a
 -- known map: lowest AreaID first, so the result doesn't change between builds
-local function firstSpawn(spawns)
+function QuestieAdapter.FirstSpawn(spawns)
 	if type(spawns) ~= "table" then
 		return nil
 	end
@@ -81,7 +81,7 @@ local function firstSpawn(spawns)
 end
 
 -- Who the player is, for the availability checks
-local function player()
+function QuestieAdapter.Player()
 	local _, _, raceID = UnitRace("player")
 	local _, _, classID = UnitClass("player")
 	local faction = UnitFactionGroup("player")
@@ -175,7 +175,7 @@ function QuestieAdapter.Giver(questID, who)
 	for _, npcID in ipairs(starters[1] or {}) do
 		local friendly = DB.Npc.friendlyToFaction(npcID)
 		if not friendly or not who.faction or friendly:find(who.faction, 1, true) then
-			local mapID, x, y = firstSpawn(DB.Npc.spawns(npcID))
+			local mapID, x, y = QuestieAdapter.FirstSpawn(DB.Npc.spawns(npcID))
 			if mapID then
 				return DB.Npc.name(npcID), mapID, x, y
 			end
@@ -183,7 +183,7 @@ function QuestieAdapter.Giver(questID, who)
 	end
 	for _, objectID in ipairs(starters[2] or {}) do
 		if DB.Object then
-			local mapID, x, y = firstSpawn(DB.Object.spawns(objectID))
+			local mapID, x, y = QuestieAdapter.FirstSpawn(DB.Object.spawns(objectID))
 			if mapID then
 				return DB.Object.name(objectID), mapID, x, y
 			end
@@ -301,7 +301,7 @@ function QuestieAdapter.Build()
 	outOfDate = false
 	local build = {
 		ids = DB.Quest.GetAllIds() or {}, index = 1, entries = {}, unplaced = 0,
-		who = player(), inLog = questsInLog(), start = debugprofilestop(),
+		who = QuestieAdapter.Player(), inLog = questsInLog(), start = debugprofilestop(),
 	}
 	building = build
 	C_Timer.After(0, function()
