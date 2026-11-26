@@ -97,8 +97,8 @@ describe("Providers/Dungeons.lua", function()
 		assert.are.equal("Mazmorra · nivel 16 · entrada por confirmar", deadmines.subtitle)
 		assert.is_nil(deadmines.mapID)
 		assert.are.same({ ns.L.DUNGEONS_NO_ENTRANCE }, deadmines.details)
-		local thanes = entry(3065) -- one of Forever's new dungeons
-		assert.are.equal("Mazmorra · nivel 13 · entrada por confirmar", thanes.subtitle)
+		local alcaz = entry(2994) -- one of Forever's new dungeons
+		assert.are.equal("Mazmorra · nivel 48 · entrada por confirmar", alcaz.subtitle)
 	end)
 
 	it("never leaves an entrance on the map of a building or an instance", function()

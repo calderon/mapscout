@@ -41,4 +41,5 @@ Options/Categories.lua
 
 #@do-not-package@
 Debug/Sample.lua
+Debug/Harvest.lua
 #@end-do-not-package@
