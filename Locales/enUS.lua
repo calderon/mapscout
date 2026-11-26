@@ -115,6 +115,10 @@ local EN = {
 	DEBUG_SERVICES = "services from QuestieDB",
 	DEBUG_SERVICES_RESULT = "QuestieDB: %d NPCs, %d services, built in %.0f ms",
 
+	-- Options page
+	OPTIONS_ABOUT = "A search bar in the world map. Type a place, a service, a quest or coordinates; @ chooses what to search (@zona, @banco, @mision...).",
+	OPTIONS_AFTER_COMBAT = "the options will open when combat ends.",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",

@@ -112,6 +112,8 @@ function ns.HandleSlash(text)
 	local command = commands[name]
 	if command then
 		command.fn(rest)
+	elseif name == "" and ns.OpenOptions then
+		ns.OpenOptions() -- /ms alone: the options page
 	else
 		printHelp()
 	end
