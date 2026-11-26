@@ -338,6 +338,26 @@ function Engine.Search(query, opts)
 	local max = opts.max or (ns.db and ns.db.options.maxResults) or Engine.DEFAULT_MAX
 	local stats = { candidates = 0, narrowed = false, fuzzy = false, inZone = 0 }
 	local zoneMapID = opts.zoneMapID
+
+	-- Typing exactly a kind that is turned off ("posada" with Inn off) is
+	-- searching that kind: no results, and stats.disabledByText says which
+	if #query.filters == 0 and query.text ~= "" then
+		local matches = ns.Registry.FindByFilter(query.text, true) -- query.text is normalized
+		local allOff = #matches > 0
+		for _, match in ipairs(matches) do
+			local record = ns.Registry.Get(match.provider)
+			if record and record.enabled and (not match.category or ns.Registry.IsCategoryEnabled(match.provider, match.category)) then
+				allOff = false
+			end
+		end
+		if allOff then
+			stats.disabledByText = matches
+			stats.results = 0
+			last = nil
+			return {}, stats
+		end
+	end
+
 	local zoneTop, otherTop = newTop(max), newTop(max)
 	local inZone = {} -- item -> true/false, worked out once per search
 	local function topFor(item)

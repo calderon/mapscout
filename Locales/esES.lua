@@ -57,6 +57,7 @@ L.RESULTS_NO_PLACE = "Lugar desconocido"
 L.RESULTS_NONE = "No hay resultados"
 L.RESULTS_HINT = "Prueba con @ o con coordenadas (45 67)"
 L.RESULTS_WIDENED = "Nada en %s; resultados en todo %s"
+L.RESULTS_DISABLED = "%s: desactivado en las opciones (/ms)"
 
 -- Vista previa
 L.PREVIEW_DISTANCE = "a %s"
@@ -87,7 +88,8 @@ L.DEBUG_FLIGHTS = "maestros de vuelo y el mapa donde se coloca cada uno"
 L.DEBUG_FLIGHTS_RESULT = "%d maestros de vuelo (%d conocidos) para %s:"
 
 -- Misiones
-L.QUESTS_NAME = "Misiones"
+L.QUESTS_NAME = "En tu registro"
+L.GROUP_QUESTS = "Misiones"
 L.QUESTS_DESCRIPTION = "Las misiones de tu registro, dónde hacerlas o entregarlas"
 L.QUESTS_READY = "Lista para entregar"
 L.QUESTS_ONGOING = "En curso"
@@ -95,7 +97,7 @@ L.QUESTS_SUBTITLE = "Nivel %d · %s"
 L.QUESTS_NO_PLACE = "El juego no indica en el mapa dónde está esta misión."
 
 -- Misiones disponibles (QuestieDB)
-L.AVAILABLE_NAME = "Misiones disponibles"
+L.AVAILABLE_NAME = "Disponibles"
 L.AVAILABLE_DESCRIPTION = "Misiones que puedes coger ahora, de QuestieDB"
 L.AVAILABLE_SUBTITLE = "Disponible · Nivel %d · %s"
 L.AVAILABLE_GIVER = "La da: %s"
@@ -120,6 +122,9 @@ L.DEBUG_SERVICES_RESULT = "QuestieDB: %d PNJ, %d servicios, creado en %.0f ms"
 -- Página de opciones
 L.OPTIONS_ABOUT = "Un buscador en el mapa del mundo. Escribe un lugar, un servicio, una misión o unas coordenadas; con @ eliges qué buscar (@zona, @banco, @mision...)."
 L.OPTIONS_AFTER_COMBAT = "las opciones se abrirán al terminar el combate."
+L.OPTIONS_CATEGORIES_TITLE = "Qué buscar"
+L.OPTIONS_CATEGORIES_HELP = "Lo que desactives no se carga ni ocupa memoria. Desactivar un tipo (Banco, Posada...) solo lo quita de los resultados."
+L.OPTIONS_RESET = "Valores por defecto"
 
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
@@ -162,6 +167,7 @@ ns.W.FLIGHTS = { "vuelo", "volar", "vuelos" }
 ns.W.FLIGHT_MASTER = { "maestro de vuelo" }
 ns.W.QUESTS = { "mision", "misiones" }
 ns.W.QUEST = { "mision" }
+ns.W.QUEST_LOG = { "registro" }
 ns.W.AVAILABLE = { "disponible", "disponibles" }
 ns.W.SERVICES = { "servicio", "servicios" }
 ns.W.BANK = { "banco", "banquero", "bancos" }

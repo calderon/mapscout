@@ -73,5 +73,7 @@ ns.Registry.Listen(function(what, providerID)
 	if what == "entries" or what == "toggled" or what == "removed" then
 		buckets[providerID] = nil -- rebuilt on the next search (or gone if off)
 		Index.version = Index.version + 1
+	elseif what == "categories" then
+		Index.version = Index.version + 1 -- same entries, but searches must not reuse earlier matches
 	end
 end)

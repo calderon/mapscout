@@ -9,6 +9,7 @@
 --       filterAliases = { "mine" },        -- more @ words
 --       categories = { { id = "shops", name = "Shops", filter = "shops" } }, -- sub-toggles, own @ words
 --       defaultEnabled = true,
+--       group = "quests", groupName = "Quests", -- optional: one checkbox for several providers
 --       OnEnable = function() provider:SetEntries(...) end, -- on, at login too
 --       OnDisable = function() end,        -- off: stop events, drop data
 --       Collect = function(ctx, add) end,  -- live results, asked per search
@@ -68,6 +69,8 @@ local function validateSpec(id, spec)
 	end
 	optional(id, spec, "description", "string")
 	optional(id, spec, "icon", "string")
+	optional(id, spec, "group", "string") -- providers of one group share a checkbox in the options
+	optional(id, spec, "groupName", "string")
 	optional(id, spec, "filter", "string")
 	optional(id, spec, "filterAliases", "table")
 	optional(id, spec, "categories", "table")
@@ -356,10 +359,42 @@ function Registry.IsCategoryEnabled(id, categoryID)
 	return not (options and options.categories[id .. "." .. categoryID] == false)
 end
 
+-- Turns one category of a provider on or off (on is the default: only "off"
+-- is saved). Its entries stay indexed; searches leave them out.
+function Registry.SetCategoryEnabled(id, categoryID, on)
+	local options = savedOptions()
+	if options then
+		if on then
+			options.categories[id .. "." .. categoryID] = nil
+		else
+			options.categories[id .. "." .. categoryID] = false -- ("x and false or nil" is always nil)
+		end
+	end
+	notify("categories", id, categoryID)
+end
+
+-- Back to the defaults: every saved choice of providers and categories forgotten.
+function Registry.ResetChoices()
+	local options = savedOptions()
+	if options then
+		for key in pairs(options.categories) do
+			options.categories[key] = nil
+		end
+	end
+	for _, id in ipairs(order) do
+		local record = providers[id]
+		Registry.SetEnabled(id, record.spec.defaultEnabled ~= false)
+	end
+	notify("categories")
+end
+
 -- What an @ word selects: a list of { provider = id, category = id or nil }.
 -- A provider's word selects the whole provider; a category's word, that category.
-function Registry.FindByFilter(word)
-	word = ns.Normalize(word)
+-- normalized: the word is already normalized (skips doing it again).
+function Registry.FindByFilter(word, normalized)
+	if not normalized then
+		word = ns.Normalize(word)
+	end
 	local found = {}
 	for _, id in ipairs(order) do
 		local record = providers[id]

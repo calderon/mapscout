@@ -54,6 +54,7 @@ local EN = {
 	RESULTS_NONE = "No results",
 	RESULTS_HINT = "Try @ or coordinates (45 67)",
 	RESULTS_WIDENED = "Nothing in %s; showing all of %s",
+	RESULTS_DISABLED = "%s: turned off in the options (/ms)",
 
 	-- Preview
 	PREVIEW_COORDS = "%.1f, %.1f",
@@ -85,7 +86,8 @@ local EN = {
 	DEBUG_FLIGHTS_RESULT = "%d flight masters (%d known) for %s:",
 
 	-- Quests
-	QUESTS_NAME = "Quests",
+	QUESTS_NAME = "In your log",
+	GROUP_QUESTS = "Quests",
 	QUESTS_DESCRIPTION = "The quests in your log, where to do them or turn them in",
 	QUESTS_READY = "Ready to turn in",
 	QUESTS_ONGOING = "In progress",
@@ -93,7 +95,7 @@ local EN = {
 	QUESTS_NO_PLACE = "The game doesn't show where this quest is on the map.",
 
 	-- Available quests (QuestieDB)
-	AVAILABLE_NAME = "Available quests",
+	AVAILABLE_NAME = "Available",
 	AVAILABLE_DESCRIPTION = "Quests you can take now, from QuestieDB",
 	AVAILABLE_SUBTITLE = "Available · Level %d · %s",
 	AVAILABLE_GIVER = "Given by %s",
@@ -118,6 +120,9 @@ local EN = {
 	-- Options page
 	OPTIONS_ABOUT = "A search bar in the world map. Type a place, a service, a quest or coordinates; @ chooses what to search (@zona, @banco, @mision...).",
 	OPTIONS_AFTER_COMBAT = "the options will open when combat ends.",
+	OPTIONS_CATEGORIES_TITLE = "What to search",
+	OPTIONS_CATEGORIES_HELP = "What you turn off is not loaded nor kept in memory. Turning off a kind (Bank, Inn...) only leaves it out of the results.",
+	OPTIONS_RESET = "Restore defaults",
 
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
@@ -165,6 +170,7 @@ local WORDS = {
 	FLIGHT_MASTER = { "flight master" },
 	QUESTS = { "quests", "mission", "missions" },
 	QUEST = { "quest" },
+	QUEST_LOG = { "log" },
 	AVAILABLE = { "availables" },
 	-- services: the first word is the main @ word (singular)
 	SERVICES = { "services" },

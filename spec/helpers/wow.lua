@@ -212,7 +212,7 @@ function Frame:SetWidth(width)
 	self.width = width
 end
 function Frame:GetText()
-	return self.text or ""
+	return rawget(self, "text") or "" -- rawget: unknown keys of fake frames are functions
 end
 function Frame:SetText(text)
 	self.text = text
@@ -225,6 +225,26 @@ function Frame:ClearFocus()
 end
 function Frame:HasFocus()
 	return self.focus == true
+end
+function Frame:SetChecked(checked)
+	self.checked = checked and true or false
+end
+function Frame:GetChecked()
+	return rawget(self, "checked") == true
+end
+function Frame:Enable()
+	self.disabled = false
+end
+function Frame:Disable()
+	self.disabled = true
+end
+function Frame:IsEnabled()
+	return rawget(self, "disabled") ~= true
+end
+function Frame:GetStringHeight()
+	-- about 14 per line of 40 characters of the text, for wrapping notes
+	local text = rawget(self, "text") or ""
+	return 14 * math.max(1, math.ceil(#text / 40))
 end
 function Frame:CreateAnimationGroup()
 	return newFrame("AnimationGroup", nil, self)

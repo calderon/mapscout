@@ -143,8 +143,16 @@ provider = MapScoutAPI:RegisterProvider("quests", {
 	name = L.QUESTS_NAME,
 	description = L.QUESTS_DESCRIPTION,
 	icon = Quests.ICON_ONGOING,
-	filter = "quest",
-	filterAliases = ns.Words("QUESTS"),
+	group = "quests",
+	groupName = L.GROUP_QUESTS,
+	filter = "quest", -- @quest / @mision: all quests (with the available ones)
+	filterAliases = (function()
+		local words = ns.Words("QUESTS")
+		for _, word in ipairs(ns.Words("QUEST_LOG")) do
+			words[#words + 1] = word -- @registro / @log: only these
+		end
+		return words
+	end)(),
 	OnEnable = function()
 		followMap()
 		Quests.Rebuild()

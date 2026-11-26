@@ -75,11 +75,28 @@ local function widenedNote(widened)
 	return L.RESULTS_WIDENED:format(table.concat(narrowed, ", "), table.concat(wide, ", "))
 end
 
+-- The names of the @ filters of a query that are turned off in the options
+local function disabledFilters(filters)
+	local names = {}
+	for _, filter in ipairs(filters or {}) do
+		local record = ns.Registry.Get(filter.provider)
+		if record and not record.enabled then
+			names[#names + 1] = record.spec.name
+		elseif record and filter.category and not ns.Registry.IsCategoryEnabled(filter.provider, filter.category) then
+			names[#names + 1] = categoryLabel(filter.provider, filter.category)
+		end
+	end
+	return names
+end
+
 -- Turns the engine's results into the lines of the list.
 function Results.Build(results, query, stats)
 	local lines = {}
 	if #results == 0 then
-		if query and (query.text ~= "" or #query.filters > 0) then
+		local off = disabledFilters(stats and stats.disabledByText or (query and query.filters))
+		if #off > 0 then
+			lines[1] = { kind = "empty", text = L.RESULTS_DISABLED:format(table.concat(off, ", ")) }
+		elseif query and (query.text ~= "" or #query.filters > 0) then
 			lines[1] = { kind = "empty", text = L.RESULTS_NONE }
 			lines[2] = { kind = "hint", text = L.RESULTS_HINT }
 		end
@@ -227,12 +244,25 @@ local function fillRow(row, line)
 		end
 		row.Sub:SetText(line.subtitle or "")
 		row.Distance:SetText(line.distance or "")
+	elseif line.kind == "empty" or line.kind == "hint" then
+		-- notes wrap onto more lines when they don't fit (the row grows)
+		row.Name:SetPoint("TOPLEFT", 4, -3)
+		row.Name:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+		row.Name:SetTextColor(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3])
 	else
 		row.Name:SetPoint("LEFT", line.kind == "group" and 12 or 4, 0)
 		local color = line.kind == "group" and GROUP_COLOR or HEADER_COLOR
 		row.Name:SetTextColor(color[1], color[2], color[3])
 	end
+	local wraps = line.kind == "empty" or line.kind == "hint"
+	row.Name:SetWordWrap(wraps)
 	row.Name:SetText(line.text)
+	if wraps then
+		row.height = math.max(Results.HEADER_HEIGHT, (row.Name:GetStringHeight() or 0) + 6)
+	else
+		row.height = isResult and Results.ROW_HEIGHT or Results.HEADER_HEIGHT
+	end
+	row:SetHeight(row.height)
 	row:Show()
 end
 
@@ -368,29 +398,33 @@ function Results.Show(lines)
 	else
 		frame:SetPoint("TOPLEFT", box, "BOTTOMLEFT", -6, -2)
 	end
-	local height = 0
-	for _, line in ipairs(lines) do
-		height = height + (line.kind == "result" and Results.ROW_HEIGHT or Results.HEADER_HEIGHT)
-	end
 	local maxHeight = Results.MAX_VISIBLE_ROWS * Results.ROW_HEIGHT
-	Results.overflows = height > maxHeight
-	local inner = width - 8 - (Results.overflows and SCROLL_BAR_SPACE or 0)
-
 	local scroll, content = Results.scroll, Results.content
+
+	-- Lays the rows out for a width; notes that wrap make their rows taller,
+	-- so the height is known only after filling them
+	local function layout(inner)
+		local y = 0
+		for i, line in ipairs(lines) do
+			local row = rows[i] or createRow(content, i)
+			rows[i] = row
+			row:ClearAllPoints()
+			row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -y)
+			row:SetWidth(inner) -- before filling: wrapping depends on it
+			fillRow(row, line)
+			y = y + row.height
+		end
+		return y
+	end
+	local y = layout(width - 8)
+	Results.overflows = y > maxHeight
+	if Results.overflows then
+		y = layout(width - 8 - SCROLL_BAR_SPACE) -- narrower, room for the scroll bar
+	end
+	local inner = width - 8 - (Results.overflows and SCROLL_BAR_SPACE or 0)
 	scroll:ClearAllPoints()
 	scroll:SetPoint("TOPLEFT", 4, -4)
 	scroll:SetPoint("BOTTOMRIGHT", -4 - (Results.overflows and SCROLL_BAR_SPACE or 0), 4)
-
-	local y = 0
-	for i, line in ipairs(lines) do
-		local row = rows[i] or createRow(content, i)
-		rows[i] = row
-		fillRow(row, line)
-		row:ClearAllPoints()
-		row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -y)
-		row:SetWidth(inner)
-		y = y + (line.kind == "result" and Results.ROW_HEIGHT or Results.HEADER_HEIGHT)
-	end
 	for i = #lines + 1, #rows do
 		rows[i]:Hide()
 		rows[i].line = nil
