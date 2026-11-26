@@ -16,6 +16,7 @@
       ],
       "extra-files": [
         { "type": "generic", "path": "MapScout.toc" },
+        { "type": "generic", "path": "MapScout_Data_Forever/MapScout_Data_Forever.toc" },
         { "type": "generic", "path": "Core/Init.lua" }
       ]
     }

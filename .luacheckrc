@@ -33,6 +33,7 @@ globals = {
 	"MapScoutAPI",
 	"MapScoutDB",
 	"MapScoutCharDB",
+	"MapScoutDataForever", -- set by the data pack (MapScout_Data_Forever/Pack.lua)
 	"SLASH_MAPSCOUT1",
 	"SLASH_MAPSCOUT2",
 	"SlashCmdList",
