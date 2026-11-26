@@ -92,6 +92,14 @@ local EN = {
 	QUESTS_SUBTITLE = "Level %d · %s",
 	QUESTS_NO_PLACE = "The game doesn't show where this quest is on the map.",
 
+	-- Available quests (QuestieDB)
+	AVAILABLE_NAME = "Available quests",
+	AVAILABLE_DESCRIPTION = "Quests you can take now, from QuestieDB",
+	AVAILABLE_SUBTITLE = "Available · Level %d · %s",
+	AVAILABLE_GIVER = "Given by %s",
+	DEBUG_QUESTIE = "available quests from QuestieDB",
+	DEBUG_QUESTIE_RESULT = "QuestieDB contract %d: %d quests, %d available now (%d with no known place), built in %.0f ms",
+
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
 	PROVIDER_STATE_ON = "on",
@@ -138,6 +146,7 @@ local WORDS = {
 	FLIGHT_MASTER = { "flight master" },
 	QUESTS = { "quests", "mission", "missions" },
 	QUEST = { "quest" },
+	AVAILABLE = { "availables" },
 }
 
 ns.L_EN = EN

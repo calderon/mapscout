@@ -100,6 +100,22 @@ if not jit then
 	-- luacheck: pop
 end
 
+-- The game's bit library (LuaJIT has it; plain Lua 5.1 in GitHub doesn't)
+if not bit then
+	bit = {
+		band = function(a, b)
+			local result, value = 0, 1
+			while a > 0 and b > 0 do
+				if a % 2 == 1 and b % 2 == 1 then
+					result = result + value
+				end
+				a, b, value = math.floor(a / 2), math.floor(b / 2), value * 2
+			end
+			return result
+		end,
+	}
+end
+
 function strtrim(s)
 	return (s:gsub("^%s+", ""):gsub("%s+$", ""))
 end

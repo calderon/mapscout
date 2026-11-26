@@ -94,6 +94,14 @@ L.QUESTS_ONGOING = "En curso"
 L.QUESTS_SUBTITLE = "Nivel %d · %s"
 L.QUESTS_NO_PLACE = "El juego no indica en el mapa dónde está esta misión."
 
+-- Misiones disponibles (QuestieDB)
+L.AVAILABLE_NAME = "Misiones disponibles"
+L.AVAILABLE_DESCRIPTION = "Misiones que puedes coger ahora, de QuestieDB"
+L.AVAILABLE_SUBTITLE = "Disponible · Nivel %d · %s"
+L.AVAILABLE_GIVER = "La da: %s"
+L.DEBUG_QUESTIE = "misiones disponibles de QuestieDB"
+L.DEBUG_QUESTIE_RESULT = "QuestieDB contrato %d: %d misiones, %d disponibles ahora (%d sin sitio conocido), creado en %.0f ms"
+
 -- Proveedores de búsqueda
 L.PROVIDER_FAILED = "la fuente de búsqueda «%s» ha fallado %d veces y queda desactivada hasta que recargues la interfaz."
 L.PROVIDER_STATE_ON = "activado"
@@ -135,3 +143,4 @@ ns.W.FLIGHTS = { "vuelo", "volar", "vuelos" }
 ns.W.FLIGHT_MASTER = { "maestro de vuelo" }
 ns.W.QUESTS = { "mision", "misiones" }
 ns.W.QUEST = { "mision" }
+ns.W.AVAILABLE = { "disponible", "disponibles" }

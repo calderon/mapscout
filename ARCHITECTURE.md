@@ -49,10 +49,12 @@ MapScout/
     Preview.lua                # hover marker on the map canvas (own frames)
     Menu.lua                   # right-click menu (MenuUtil) and row action buttons
     Waypoint.lua               # C_Map.SetUserWaypoint + super-track, optional TomTom
+  Adapters/                    # other addons read at runtime (QuestieDB...), inert when absent
+    QuestieDB.lua
   Options/
     Panel.lua                  # Settings canvas category (fallback if missing)
 MapScout_Data_Forever/         # LoadOnDemand static data packs (data-only providers), one file per category
-MapScout_<Addon>/              # LoadOnDemand adapters for addons that don't integrate themselves (3.0)
+
 dev/tools/                     # data generators (not packaged, not checked)
 spec/                          # unit tests (busted), not packaged
 ```

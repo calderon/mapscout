@@ -23,7 +23,7 @@ files["spec/helpers/"] = {
 	globals = {
 		"LoadAddonFile", "NewNamespace", "ResetWoW", "StubGlobals", "RunTimers", "PendingTimers", "FakeFrames", "ChatLog", "ReportedErrors", "GameTooltip",
 		-- WoW API stubs
-		"GetLocale", "GetBuildInfo", "IsMacClient", "debugprofilestop", "time", "hooksecurefunc", "InCombatLockdown", "C_Timer", "CreateFrame", "DEFAULT_CHAT_FRAME", "geterrorhandler", "strtrim",
+		"GetLocale", "GetBuildInfo", "IsMacClient", "debugprofilestop", "bit", "time", "hooksecurefunc", "InCombatLockdown", "C_Timer", "CreateFrame", "DEFAULT_CHAT_FRAME", "geterrorhandler", "strtrim",
 		"xpcall", "jit", "unpack",
 	},
 }
@@ -48,7 +48,7 @@ read_globals = {
 	"C_AddOns", "C_AreaPoiInfo", "C_XMLUtil", "C_Texture", "C_EncounterJournal", "C_Map", "C_QuestLog", "C_SuperTrack",
 	"C_TaskQuest", "C_TaxiMap", "C_Timer", "C_VignetteInfo",
 	-- Functions
-	"CreateFrame", "CreateFramePool", "GetTaxiMapID", "NumTaxiNodes", "TaxiNodeName", "TaxiNodeGetType", "CreateVector2D", "UnitPosition", "GetLocale", "GetTime", "InCombatLockdown", "IsMacClient",
+	"CreateFrame", "CreateFramePool", "GetTaxiMapID", "bit", "UnitLevel", "UnitRace", "UnitClass", "UnitQuestTrivialLevelRange", "NumTaxiNodes", "TaxiNodeName", "TaxiNodeGetType", "CreateVector2D", "UnitPosition", "GetLocale", "GetTime", "InCombatLockdown", "IsMacClient",
 	"IsAltKeyDown", "IsControlKeyDown", "IsShiftKeyDown", "PlaySound", "UnitFactionGroup",
 	"UnitGUID", "UnitName", "UpdateAddOnMemoryUsage", "GetAddOnMemoryUsage",
 	-- Frames and UI
