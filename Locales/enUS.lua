@@ -135,7 +135,7 @@ local EN = {
 
 	-- Services (our data pack, and QuestieDB)
 	SERVICES_NAME = "Services",
-	SERVICES_DESCRIPTION = "Banks, auction houses, inns, mailboxes, stable masters and repairs in cities",
+	SERVICES_DESCRIPTION = "Banks, auction houses, inns, mailboxes, stable masters, repairs, barbers, guild masters and battlemasters in cities",
 	DEBUG_SERVICES = "city services",
 	DEBUG_SERVICES_RESULT = "%d services (data pack: %s)",
 	QUESTIE_SERVICES_NAME = "Services (QuestieDB)",
@@ -150,6 +150,10 @@ local EN = {
 	SERVICE_battle = "Battlemaster",
 	SERVICE_guild = "Guild",
 	SERVICE_vendor = "Vendor",
+	SERVICE_barber = "Barber",
+	BATTLE_alterac = "Alterac Valley battlemaster",
+	BATTLE_arathi = "Arathi Basin battlemaster",
+	BATTLE_warsong = "Warsong Gulch battlemaster",
 	DEBUG_QUESTIE_SERVICES = "services from QuestieDB",
 	DEBUG_QUESTIE_SERVICES_RESULT = "QuestieDB: %d NPCs, %d services, built in %.0f ms",
 
@@ -292,8 +296,12 @@ local WORDS = {
 	TRAINER_MINING = { "mining" },
 	REPAIR = { "repair", "repairs" },
 	MAILBOX = { "mailbox", "mail", "mailboxes" },
-	BATTLEMASTER = { "battlemaster", "battle" },
-	GUILD = { "guild", "tabard" },
+	BATTLEMASTER = { "battlemaster", "battle", "battlemasters" },
+	BATTLEGROUND_ALTERAC = { "alterac valley", "alterac", "av" },
+	BATTLEGROUND_ARATHI = { "arathi basin", "arathi", "ab" },
+	BATTLEGROUND_WARSONG = { "warsong gulch", "warsong", "wsg" },
+	BARBER = { "barber", "barbershop", "haircut", "barbers" },
+	GUILD = { "guild", "tabard", "guild master" },
 	VENDOR = { "vendor", "merchant", "shop", "vendors" },
 }
 

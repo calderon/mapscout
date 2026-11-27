@@ -96,12 +96,14 @@ game (`ns.PlaceOnMap`).
   with the docks it goes to, named after the town or capital next to it (none:
   the addon names it after its map). Stops of one kind at the same pier are one
   dock with every destination.
-- `Services.lua`: banks, auction houses, inns, mailboxes, stable masters and
-  repair vendors, per map, with the faction that can use them (none for
-  mailboxes) and the name of the place as the game wrote it, in the language
-  it was harvested in. For one service on one map, the places a guard gave
-  win over the NPCs talked to (they stand inside); every mailbox opened adds
-  up.
+- `Services.lua`: banks, auction houses, inns, mailboxes, stable masters,
+  repair vendors, barbers, guild masters and battlemasters, per map, with the
+  faction that can use them (none for mailboxes) and the name of the place as
+  the game wrote it, in the language it was harvested in. Battlemasters also
+  say their battleground (the guard's submenu, `BATTLEGROUNDS` in
+  `services.py`), one point each. For one service on one map, the places a
+  guard gave win over the NPCs talked to (they stand inside); every mailbox
+  opened adds up.
 - `Trainers.lua`: class, profession, riding and weapon trainers, per map, with
   what they teach (class token or profession), the faction and the place's
   name, as in `Services.lua`. The guard's place wins over the NPC talked to.
