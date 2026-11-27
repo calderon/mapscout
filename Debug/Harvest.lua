@@ -150,6 +150,25 @@ function Harvest.TrainerSkill()
 	return nil
 end
 
+Harvest.SIGHTINGS = 10 -- most places kept per NPC
+Harvest.SAME_SPOT = 0.002 -- closer places on one map are the same (map units)
+
+-- Keeps where an NPC was talked to ({ map, x, y } in record.seen), so the
+-- generator can tell one who walks a route (seen far apart) from one who
+-- stands still. The same spot again is not added.
+function Harvest.AddSighting(record, mapID, x, y)
+	local seen = record.seen or {}
+	record.seen = seen
+	for _, spot in ipairs(seen) do
+		if spot[1] == mapID and math.abs(spot[2] - x) < Harvest.SAME_SPOT and math.abs(spot[3] - y) < Harvest.SAME_SPOT then
+			return
+		end
+	end
+	if #seen < Harvest.SIGHTINGS then
+		seen[#seen + 1] = { mapID, x, y }
+	end
+end
+
 function Harvest.RecordNPC(service, unit)
 	unit = unit or "npc"
 	local kind, id = Harvest.ParseGUID(UnitGUID(unit))
@@ -173,6 +192,7 @@ function Harvest.RecordNPC(service, unit)
 	record.title = Harvest.UnitTitle(unit) or record.title
 	record.locale = GetLocale()
 	record.map, record.x, record.y, record.at = mapID, round(x), round(y), time()
+	Harvest.AddSighting(record, mapID, record.x, record.y)
 	if service == "gossip" then
 		record.gossip = gossipOptions()
 	elseif service == "trainer" then

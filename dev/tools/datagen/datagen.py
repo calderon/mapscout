@@ -21,6 +21,7 @@ import dungeons  # noqa: E402
 import graveyards  # noqa: E402
 import harvest  # noqa: E402
 import places  # noqa: E402
+import roams  # noqa: E402
 import services  # noqa: E402
 import terrain  # noqa: E402
 import trainers  # noqa: E402
@@ -126,14 +127,16 @@ def main(argv=None):
     print("Transport.lua: %d docks of %d lines" % (
         len(found_docks), sum(1 for e in listed if e["kind"] in transport.KINDS)))
 
-    found_services, unknown = services.points(HARVEST)
+    roaming = roams.npcs(HARVEST, maps, os.path.join(MANUAL, "roams.csv"))
+    print("NPCs who walk a route: %d" % len(roaming))
+    found_services, unknown = services.points(HARVEST, roaming)
     for asked in unknown:
         print("services: unknown guard answer %r (add its words to services.py)" % asked)
     found_services = services.with_manual(found_services, services.manual(os.path.join(MANUAL, "services.csv")))
     count = services.write(os.path.join(OUT, "Services.lua"), args.build, date, services.merge(found_services))
     print("Services.lua: %d places" % count)
 
-    found_trainers, unknown = trainers.points(HARVEST)
+    found_trainers, unknown = trainers.points(HARVEST, roaming)
     for asked in unknown:
         print("trainers: unknown guard answer %r (add its words to trainers.py)" % asked)
     count = trainers.write(os.path.join(OUT, "Trainers.lua"), args.build, date, trainers.merge(found_trainers))

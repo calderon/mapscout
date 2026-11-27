@@ -8,7 +8,7 @@ describe("Providers/Services.lua", function()
 			[1455] = {
 				{ "bank", 3515, 6116, "Alliance", "esES", 1 },
 				{ "mailbox", 3316, 6521, "", "", 0 },
-				{ "stable", 6937, 8358, "Alliance", "esES", 2 },
+				{ "stable", 6937, 8358, "Alliance", "esES", 2, "", true }, -- walks a route
 				{ "barber", 2670, 5028, "Alliance", "esES", 4 },
 				{ "battle", 6959, 9072, "Alliance", "esES", 5, "alterac" },
 				{ "battle", 7099, 8870, "Alliance", "esES", 6, "warsong" },
@@ -95,6 +95,8 @@ describe("Providers/Services.lua", function()
 		assert.are.equal(1455, bank.mapID)
 		assert.are.equal(0.3515, bank.x)
 		assert.are.equal("Forjaz", entry("mailbox:1455:2").subtitle) -- no place name: its city
+		assert.is_nil(bank.roams)
+		assert.is_true(entry("stable:1455:3").roams) -- an NPC who walks a route
 	end)
 
 	it("leaves out what only the other faction can use, but not mailboxes", function()

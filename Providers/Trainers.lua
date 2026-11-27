@@ -98,6 +98,7 @@ function Trainers.Entries(data)
 					mapID = mapID,
 					x = row[3] / 10000,
 					y = row[4] / 10000,
+					roams = row[8] == true or nil, -- an NPC who walks a route
 					icon = Trainers.ICONS[kind],
 				}
 			end

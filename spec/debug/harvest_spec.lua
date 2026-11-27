@@ -75,6 +75,21 @@ describe("Debug/Harvest.lua", function()
 		assert.matches("1 PNJ", ChatLog[#ChatLog], 1, true)
 	end)
 
+	it("keeps every place an NPC was talked to, once each", function()
+		SlashCmdList.MAPSCOUT("harvest on")
+		frame:Fire("BANKFRAME_OPENED")
+		frame:Fire("BANKFRAME_OPENED") -- the same spot again
+		position.x, position.y = 0.40, 0.70
+		frame:Fire("BANKFRAME_OPENED")
+		local record = ns.db.harvest.npcs[4092]
+		assert.are.same({ { 1455, 0.3561, 0.6043 }, { 1455, 0.4, 0.7 } }, record.seen)
+		assert.are.same({ 0.4, 0.7 }, { record.x, record.y }) -- the last one
+		for i = 1, 20 do
+			ns.Harvest.AddSighting(record, 1455, i / 100, 0.1)
+		end
+		assert.are.equal(ns.Harvest.SIGHTINGS, #record.seen)
+	end)
+
 	it("adds services to the same NPC, repair included, and keeps its gossip options", function()
 		SlashCmdList.MAPSCOUT("harvest on")
 		npc.repair = true

@@ -98,6 +98,22 @@ class ServicesTest(unittest.TestCase):
         self.assertEqual(merged[2][4:6], ("", "esES"))  # a mailbox is for anyone; harvested before records said their language
         self.assertEqual(merged[3][4:6], ("", ""))
 
+    def test_an_npc_who_walks_a_route(self):
+        with tempfile.TemporaryDirectory() as folder:
+            write_csv(folder, "npcs", NPCS)
+            found, _ = services.points(folder, {9, 2460})
+        repair = [p for p in found if p[1] == "repair"][0]
+        self.assertEqual(repair[6:], ("Herrero", "", True))
+        bank = [p for p in found if p[1] == "bank" and p[0] == 1454][0]
+        self.assertEqual(len(bank), 8)  # stands still
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "Services.lua")
+            services.write(path, "1.2.3.4", "2026-01-01", services.merge(found))
+            with open(path, encoding="utf-8") as source:
+                text = source.read()
+        self.assertIn('{ "repair", 5000, 5000, "Alliance", "esES", 3, "", true },', text)
+        self.assertIn('{ "bank", 4000, 4000, "Horde", "esES", 1 },', text)
+
     def test_manual_only_where_not_harvested(self):
         with tempfile.TemporaryDirectory() as folder:
             path = os.path.join(folder, "services.csv")

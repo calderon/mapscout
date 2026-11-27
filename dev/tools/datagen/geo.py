@@ -65,6 +65,21 @@ class Maps:
                 return self._convert(a, world_x, world_y)
         return self.place(continent, world_x, world_y)
 
+    def yards(self, ui_map, x1, y1, x2, y2):
+        """Distance in yards between two points (0..1) of one map, or None when
+        the map's size is not known."""
+        found = [a for a in self.assignments if a["uiMap"] == ui_map]
+        if not found:
+            return None
+        a = max(found, key=lambda f: f["area"])
+        min_x, min_y, _, max_x, max_y, _ = a["region"]
+        ui_min_x, ui_min_y, ui_max_x, ui_max_y = a["ui"]
+        if ui_max_x <= ui_min_x or ui_max_y <= ui_min_y:
+            return None
+        width = (max_y - min_y) / (ui_max_x - ui_min_x)  # yards across the whole map
+        height = (max_x - min_x) / (ui_max_y - ui_min_y)
+        return math.hypot((x2 - x1) * width, (y2 - y1) * height)
+
     @staticmethod
     def _convert(a, world_x, world_y):
         min_x, min_y, _, max_x, max_y, _ = a["region"]
