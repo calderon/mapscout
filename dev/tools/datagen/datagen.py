@@ -72,6 +72,10 @@ def main(argv=None):
         files.append(os.path.join(MANUAL, "entrances.pending.csv"))
     manual = dungeons.manual([f for f in files if os.path.exists(f)])
     harvested = harvest.entrances(HARVEST)  # measured in the game: they win, and count as checked
+    with_doors = {row[0] for row in manual if row[5]}
+    for row in [r for r in harvested if r[0] in with_doors and not r[5]]:
+        print("harvest: instance %d has several doors: write the wing of its entries in harvest/entrances.csv" % row[0])
+        harvested.remove(row)
     manual = sorted({(row[0], row[5]): row for row in manual + harvested}.values())
     found = dungeons.merge(dungeons.entrances(maps, instances, level_by_name), instances, level_by_name, manual)
     checked = dungeons.verified(os.path.join(MANUAL, "verified.csv")) | {(row[0], row[5]) for row in harvested}

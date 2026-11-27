@@ -56,6 +56,18 @@ point is often the portal deep inside a cave) is worse than none.
 permission. `--pending` adds them, for tests in the game only: never commit a
 file generated with it.
 
+## Harvesting dungeon entrances
+
+Every entry into a dungeon or raid is a record of its own in
+`harvest/entrances.csv`: the point is where the player stood just before the
+loading screen (up to a few seconds before), so it changes a little with the
+side of the portal they walked in by. The generator uses the average of an
+entrance's records: entering two or three times, from either side, gives a
+better point. For an instance with several doors (Dire Maul), write each
+record's `wing` by hand after importing (a new import keeps it); the
+generator reports the records of such an instance that have none, and leaves
+them out.
+
 ## Harvesting city services
 
 The quickest way to record a city: `/ms harvest on`, then ask a city guard for
