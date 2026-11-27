@@ -42,7 +42,8 @@ describe("Options/Categories.lua", function()
 		for _, f in ipairs(FakeFrames) do
 			local line = rawget(f, "line")
 			if f.type == "CheckButton" and line then
-				list[#list + 1] = { (line.category and line.category.name or line.record.spec.name), f:GetChecked(), f:IsEnabled(), f }
+				local name = line.category and line.category.name or line.setting and line.setting.name or line.record.spec.name
+				list[#list + 1] = { name, f:GetChecked(), f:IsEnabled(), f }
 			end
 		end
 		table.sort(list, function(a, b) return a[4].index < b[4].index end)
@@ -112,6 +113,32 @@ describe("Options/Categories.lua", function()
 		assert.is_true(ns.Registry.Get("flights").enabled)
 		assert.is_true(ns.Registry.IsCategoryEnabled("services", "bank"))
 		assert.is_true(row("Vuelos"):GetChecked())
+	end)
+
+	it("shows a provider's settings after its categories, off by default, saved only when changed", function()
+		local changed = {}
+		ns.Registry.Listen(function(what, id, settingID)
+			if what == "setting" then changed[#changed + 1] = id .. "." .. tostring(settingID) end
+		end)
+		ns.Registry.AddSettings("flights", { { id = "far", name = "Lejanos", tooltip = "Los de lejos", default = false } })
+		ns.OptionsCategories.Refresh()
+		local names = {}
+		for i, r in ipairs(rowsShown()) do
+			names[i] = r[1]
+		end
+		assert.are.same({ "Servicios", "Banco", "Posada", "Vuelos", "Lejanos" }, names)
+		assert.is_false(row("Lejanos"):GetChecked())
+		assert.are.equal("Los de lejos", row("Lejanos").tooltip)
+		row("Lejanos"):Run("OnClick")
+		assert.is_true(ns.Registry.GetSetting("flights", "far"))
+		assert.is_true(MapScoutDB.options.settings["flights.far"])
+		assert.are.same({ "flights.far" }, changed)
+		row("Vuelos"):Run("OnClick") -- provider off: its setting greyed
+		assert.is_false(row("Lejanos"):IsEnabled())
+		ns.OptionsCategories.Reset()
+		assert.is_false(ns.Registry.GetSetting("flights", "far"))
+		assert.is_nil(rawget(MapScoutDB.options.settings, "flights.far"))
+		assert.are.equal("flights.nil", changed[2]) -- told on reset
 	end)
 
 	it("adds providers registered later by themselves", function()

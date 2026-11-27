@@ -7,6 +7,8 @@
 --   * A category turned off is left out of the results.
 --   * A provider with some categories off shows its check dimmed (partial);
 --     clicking it turned off turns it on with all its categories.
+--   * A provider's settings (which available quests to show...) come after
+--     its categories, greyed while it is off.
 --   * "Restore defaults" forgets every choice.
 -- Changes apply at once (the search bar runs its search again by itself,
 -- when the registry tells it). Only choices that differ
@@ -74,15 +76,19 @@ local function groupState(records)
 end
 
 -- What the list shows, in order:
--- { kind = "group"|"provider"|"category", level = 0..2, record, category, records }
+-- { kind = "group"|"provider"|"category"|"setting", level = 0..2, record, category, setting, records }
+local function addProvider(into, record, level)
+	into[#into + 1] = { kind = "provider", record = record, level = level }
+	for _, category in ipairs(record.spec.categories or {}) do
+		into[#into + 1] = { kind = "category", record = record, category = category, level = level + 1 }
+	end
+	for _, setting in ipairs(ns.Registry.Settings(record.id)) do
+		into[#into + 1] = { kind = "setting", record = record, setting = setting, level = level + 1 }
+	end
+end
+
 function Categories.Lines()
 	local lines, groups = {}, {}
-	local function addProvider(record, level)
-		lines[#lines + 1] = { kind = "provider", record = record, level = level }
-		for _, category in ipairs(record.spec.categories or {}) do
-			lines[#lines + 1] = { kind = "category", record = record, category = category, level = level + 1 }
-		end
-	end
 	for _, record in ipairs(ns.Registry.List()) do
 		local group = record.spec.group
 		if group then
@@ -93,7 +99,7 @@ function Categories.Lines()
 			end
 			table.insert(groups[group].records, record)
 		else
-			addProvider(record, 0)
+			addProvider(lines, record, 0)
 		end
 	end
 	-- put each group's providers right after the group line
@@ -101,10 +107,7 @@ function Categories.Lines()
 	for _, line in ipairs(lines) do
 		if line.kind == "groupEnd" then
 			for _, record in ipairs(groups[line.group].records) do
-				ordered[#ordered + 1] = { kind = "provider", record = record, level = 1 }
-				for _, category in ipairs(record.spec.categories or {}) do
-					ordered[#ordered + 1] = { kind = "category", record = record, category = category, level = 2 }
-				end
+				addProvider(ordered, record, 1)
 			end
 		else
 			ordered[#ordered + 1] = line
@@ -137,6 +140,9 @@ function Categories.Toggle(line)
 		else
 			turnOn(record) -- turned on again: with all its categories
 		end
+	elseif line.kind == "setting" then
+		local id = line.setting.id
+		ns.Registry.SetSetting(record.id, id, not ns.Registry.GetSetting(record.id, id))
 	else
 		local on = ns.Registry.IsCategoryEnabled(record.id, line.category.id)
 		ns.Registry.SetCategoryEnabled(record.id, line.category.id, not on)
@@ -170,6 +176,10 @@ function Categories.Refresh()
 				label = label .. " (" .. L.PROVIDER_STATE_FAILED .. ")"
 				enabled = false
 			end
+		elseif line.kind == "setting" then
+			checked = ns.Registry.GetSetting(record.id, line.setting.id)
+			label, tooltip = line.setting.name, line.setting.tooltip
+			enabled = record.enabled -- greyed while its provider is off
 		else
 			checked = ns.Registry.IsCategoryEnabled(record.id, line.category.id)
 			label = line.category.name

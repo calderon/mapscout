@@ -7,8 +7,10 @@
 -- Available quests are the ones the character can take now: not done, not in
 -- the log, level, race and class allowed, prerequisites done, no exclusive
 -- quest done (profession quests are left out for now). Like Questie, hidden
--- by default (options later): seasonal and repeatable quests, quests far above
--- the player's level, and gray (trivial) ones. Quests without a level are always left out:
+-- by default, each with its own setting in the options: quests far above the
+-- player's level, gray (trivial) ones, seasonal ones (and even when shown,
+-- only while their holiday is on, if the game's calendar says so) and
+-- repeatable ones. Quests without a level are always left out:
 -- QuestieDB hardly knows them. Each one is placed
 -- where its giver stands (an NPC friendly to the player, or an object).
 -- QuestieDB groups positions by area (AreaID); they are matched to world map
@@ -29,8 +31,28 @@ QuestieAdapter.THROTTLE = 1 -- seconds after a change before rebuilding
 QuestieAdapter.ICON = "Interface\\GossipFrame\\AvailableQuestIcon"
 QuestieAdapter.HIGH_LEVEL_GAP = 10 -- more levels above the player than this: hidden
 QuestieAdapter.TRIVIAL_GAP = 8 -- gray quests, when the game doesn't say its own range
-QuestieAdapter.SEASONAL_SORT = -22 -- QuestieDB's sort for seasonal (holiday) quests
 QuestieAdapter.REPEATABLE_FLAG = 1 -- QuestieDB's special flag for repeatable quests
+
+-- QuestieDB's sorts (zoneOrSort) of holiday quests -> holiday. SEASONAL is a
+-- holiday quest of no known holiday: never shown.
+QuestieAdapter.HOLIDAY_SORTS = {
+	[-22] = "SEASONAL",
+	[-21] = "HALLOWS_END",
+	[-41] = "DAY_OF_THE_DEAD",
+	[-364] = "DARKMOON_FAIRE",
+	[-366] = "LUNAR_FESTIVAL",
+	[-369] = "MIDSUMMER",
+	[-370] = "BREWFEST",
+	[-374] = "NOBLEGARDEN",
+	[-375] = "PILGRIMS_BOUNTY",
+	[-376] = "LOVE_IS_IN_THE_AIR",
+	[-378] = "CHILDRENS_WEEK",
+	[-402] = "HARVEST_FESTIVAL",
+	[-404] = "WINTER_VEIL",
+}
+
+-- The settings of the options (all off by default, as in Questie)
+QuestieAdapter.SETTINGS = { "highLevel", "lowLevel", "seasonal", "repeatable" }
 
 local DB = rawget(_G, "LibQuestieDB")
 if not (DB and DB.RequireContract and DB.RequireContract(QuestieAdapter.CONTRACT) and DB.Quest and DB.Npc) then
@@ -80,18 +102,95 @@ function QuestieAdapter.FirstSpawn(spawns)
 	return nil
 end
 
+-- What the options say to show: setting -> true/false
+function QuestieAdapter.Shown()
+	local show = {}
+	for _, id in ipairs(QuestieAdapter.SETTINGS) do
+		show[id] = ns.Registry.GetSetting("questiedb", id) == true
+	end
+	return show
+end
+
+-- The game's calendar holidays (Holidays table of the Forever client) -> QuestieDB's
+-- holiday. Forever has no Brewfest, Pilgrim's Bounty nor Day of the Dead.
+QuestieAdapter.CALENDAR_HOLIDAYS = {
+	[141] = "WINTER_VEIL",
+	[181] = "NOBLEGARDEN",
+	[201] = "CHILDRENS_WEEK",
+	[263] = "DARKMOON_FAIRE",
+	[264] = "DARKMOON_FAIRE",
+	[321] = "HARVEST_FESTIVAL",
+	[324] = "HALLOWS_END",
+	[327] = "LUNAR_FESTIVAL",
+	[335] = "LOVE_IS_IN_THE_AIR",
+	[341] = "MIDSUMMER",
+}
+
+local function minutes(t)
+	return (t.hour or 0) * 60 + (t.minute or 0)
+end
+
+-- Is a calendar event of today on at this time? (now: the game's calendar time)
+-- It starts at its start time on its first day and ends at its end time on its last.
+function QuestieAdapter.EventIsOn(event, now)
+	local sequence = event.sequenceType
+	if sequence == "START" and event.startTime then
+		return minutes(now) >= minutes(event.startTime)
+	elseif sequence == "END" and event.endTime then
+		return minutes(now) < minutes(event.endTime)
+	end
+	return true -- "ONGOING", or a one-day event
+end
+
+-- Holidays on now, from the game's calendar: holiday -> true.
+-- Without a calendar (or before it has loaded), none: seasonal quests stay hidden.
+-- The calendar's shown month is not changed (the player may have it open):
+-- today is found by its distance to that month.
+local calendarAsked = false
+function QuestieAdapter.ActiveHolidays()
+	local on = {}
+	local now = C_DateAndTime and C_DateAndTime.GetCurrentCalendarTime and C_DateAndTime.GetCurrentCalendarTime()
+	if not (now and C_Calendar and C_Calendar.GetMonthInfo and C_Calendar.GetNumDayEvents) then
+		return on
+	end
+	if not calendarAsked and C_Calendar.OpenCalendar then
+		calendarAsked = true -- loaded in the background: build again when it is
+		ns.RegisterEvent("CALENDAR_UPDATE_EVENT_LIST", "QuestieAdapterCalendar", function()
+			ns.UnregisterEvent("CALENDAR_UPDATE_EVENT_LIST", "QuestieAdapterCalendar")
+			QuestieAdapter.Changed()
+		end)
+		C_Calendar.OpenCalendar()
+	end
+	local shown = C_Calendar.GetMonthInfo(0)
+	if not shown then
+		return on
+	end
+	local offset = (now.year - shown.year) * 12 + now.month - shown.month
+	for i = 1, C_Calendar.GetNumDayEvents(offset, now.monthDay) or 0 do
+		local event = C_Calendar.GetDayEvent(offset, now.monthDay, i)
+		local holiday = event and event.calendarType == "HOLIDAY" and QuestieAdapter.CALENDAR_HOLIDAYS[event.eventID]
+		if holiday and QuestieAdapter.EventIsOn(event, now) then
+			on[holiday] = true
+		end
+	end
+	return on
+end
+
 -- Who the player is, for the availability checks
 function QuestieAdapter.Player()
 	local _, _, raceID = UnitRace("player")
 	local _, _, classID = UnitClass("player")
 	local faction = UnitFactionGroup("player")
 	local trivial = UnitQuestTrivialLevelRange and UnitQuestTrivialLevelRange("player")
+	local show = QuestieAdapter.Shown()
 	return {
 		level = UnitLevel("player") or 1,
 		trivialGap = trivial or QuestieAdapter.TRIVIAL_GAP,
 		raceMask = DB.Enum and DB.Enum.raceMaskById and DB.Enum.raceMaskById[raceID] or 0,
 		classMask = classID and 2 ^ (classID - 1) or 0,
 		faction = faction == "Alliance" and "A" or faction == "Horde" and "H" or nil,
+		show = show,
+		holidays = show.seasonal and QuestieAdapter.ActiveHolidays() or {},
 	}
 end
 
@@ -127,27 +226,27 @@ function QuestieAdapter.IsAvailable(questID, who, inLog)
 	if inLog[questID] or done(questID) then
 		return false
 	end
-	if (Q.requiredLevel(questID) or 0) > who.level then
-		return false
+	local show = who.show or {}
+	if not show.highLevel and (Q.requiredLevel(questID) or 0) > who.level then
+		return false -- not yet: shown only with the high-level setting
 	end
-	if Q.zoneOrSort(questID) == QuestieAdapter.SEASONAL_SORT then
-		return false -- holiday quests (until we can tell when an event is on)
+	local holiday = QuestieAdapter.HOLIDAY_SORTS[Q.zoneOrSort(questID)]
+	if holiday and (holiday == "SEASONAL" or not (show.seasonal and who.holidays and who.holidays[holiday])) then
+		return false -- holiday quests: only while their holiday is on
 	end
 	local special = Q.specialFlags(questID)
-	if special and band and band(special, QuestieAdapter.REPEATABLE_FLAG) ~= 0 then
+	if not show.repeatable and special and band and band(special, QuestieAdapter.REPEATABLE_FLAG) ~= 0 then
 		return false -- repeatable turn-ins (war effort, reputation...)
 	end
 	local questLevel = Q.questLevel(questID)
 	if not questLevel or questLevel <= 0 then
 		return false -- no level: QuestieDB hardly knows it (system quests, missing data)
 	end
-	do
-		if questLevel > who.level + QuestieAdapter.HIGH_LEVEL_GAP then
-			return false -- far above the player
-		end
-		if who.level - questLevel > who.trivialGap then
-			return false -- gray: too low to be worth it
-		end
+	if not show.highLevel and questLevel > who.level + QuestieAdapter.HIGH_LEVEL_GAP then
+		return false -- far above the player
+	end
+	if not show.lowLevel and who.level - questLevel > who.trivialGap then
+		return false -- gray: too low to be worth it
 	end
 	local maxLevel = Q.requiredMaxLevel(questID)
 	if maxLevel and maxLevel > 0 and who.level > maxLevel then
@@ -227,6 +326,10 @@ local function entryFor(questID, who)
 		details[#details + 1] = line
 	end
 	details[#details + 1] = L.AVAILABLE_GIVER:format(giver or "?")
+	local required = Q.requiredLevel(questID) or 0
+	if required > who.level then
+		details[#details + 1] = L.AVAILABLE_REQUIRES:format(required)
+	end
 	local keywords = ns.Words("AVAILABLE")
 	keywords[#keywords + 1] = giver
 	return {
@@ -368,6 +471,20 @@ provider = MapScoutAPI:RegisterProvider("questiedb", {
 		end
 	end,
 })
+
+local settings = {}
+for _, id in ipairs(QuestieAdapter.SETTINGS) do
+	local key = "AVAILABLE_SHOW_" .. id:upper()
+	settings[#settings + 1] = { id = id, name = L[key], tooltip = L[key .. "_TIP"], default = false }
+end
+ns.Registry.AddSettings("questiedb", settings)
+
+-- A setting changed in the options (or all restored): build again
+ns.Registry.Listen(function(what, id)
+	if what == "setting" and id == "questiedb" and provider:IsEnabled() then
+		QuestieAdapter.Build()
+	end
+end)
 
 -- /ms debug questie areas: zones that couldn't be matched to a map
 local function debugAreas()
