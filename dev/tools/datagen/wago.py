@@ -9,6 +9,8 @@ the cache folder, so running the generator again does not ask for it again.
 import csv
 import json
 import os
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -57,3 +59,31 @@ class Tables:
                 out.write(data)
         with open(path, newline="", encoding="utf-8") as source:
             return list(csv.DictReader(source))
+
+
+class Files:
+    """Loose client files (CASC, by FileDataID) of one build, slowly.
+
+    wago.tools answers 429 when asked for many files in a row: at least
+    DELAY seconds between requests, and a longer wait when it says so."""
+
+    DELAY = 1.5
+
+    def __init__(self, version):
+        self.version = version
+        self._last = 0.0
+
+    def get(self, file_id):
+        url = "%s/api/casc/%d?%s" % (SITE, file_id, urllib.parse.urlencode({"version": self.version}))
+        for attempt in range(6):
+            wait = self._last + self.DELAY - time.monotonic()
+            if wait > 0:
+                time.sleep(wait)
+            self._last = time.monotonic()
+            try:
+                return _get(url)
+            except urllib.error.HTTPError as error:
+                if error.code != 429 or attempt == 5:
+                    raise
+                time.sleep(30 * (attempt + 1))
+        return None

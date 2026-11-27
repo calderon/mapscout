@@ -11,7 +11,9 @@
 -- Whelgar's Excavation Site...) come from the static data pack (category
 -- "places": the names the world map writes, where it writes them). They are
 -- points, with the halo, not maps. The pack is only loaded while one of these
--- two categories is on.
+-- two categories is on. Subzones whose name is part of the map's art
+-- (Saldean's Farm) come from the pack too ("areas": a point inside each one,
+-- from the terrain), as named places.
 --   @town  @subzone (plurals work too)
 
 local _, ns = ...
@@ -106,6 +108,31 @@ function Geography.PackEntries(data)
 				y = y,
 				icon = ICONS[category],
 				weight = category == "towns" and 0.6 or 0.45,
+			}
+		end
+	end
+	-- Subzones the map writes no label for (from the terrain): named places too
+	local areaNames = data.areaNames or {}
+	local localArea, englishArea = areaNames[GetLocale()] or areaNames.enUS or {}, areaNames.enUS or {}
+	for area, row in pairs(data.areas or {}) do
+		local name = localArea[area] or englishArea[area]
+		if name then
+			local mapID, x, y = ns.PlaceOnMap(row[1], row[2] / 10000, row[3] / 10000)
+			local keywords
+			if englishArea[area] and englishArea[area] ~= name then
+				keywords = { englishArea[area]:lower() }
+			end
+			entries[#entries + 1] = {
+				id = "area:" .. area,
+				name = name,
+				subtitle = L.GEOGRAPHY_SUBZONE,
+				category = "subzones",
+				keywords = keywords,
+				mapID = mapID,
+				x = x,
+				y = y,
+				icon = ICONS.subzones,
+				weight = 0.45,
 			}
 		end
 	end

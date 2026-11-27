@@ -65,6 +65,15 @@ describe("Providers/Geography.lua: towns and places", function()
 		assert.are.equal("Villadorada", search("goldshire")[1].name)
 	end)
 
+	it("finds subzones without a label on the map, from the terrain", function()
+		local farm = search("finca de saldean")[1]
+		assert.are.equal("Finca de Saldean", farm.name)
+		assert.are.equal("subzones", farm.category)
+		assert.are.equal("Lugar", farm.subtitle)
+		assert.is_number(farm.x)
+		assert.are.equal("Finca de Saldean", search("saldean's farm")[1].name)
+	end)
+
 	it("filters towns and named places with @ words", function()
 		local towns = search("@pueblo")
 		assert.is_true(#towns > 40)
