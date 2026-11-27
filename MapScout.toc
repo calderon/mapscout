@@ -20,6 +20,7 @@ Core/Util.lua
 Core/DB.lua
 Core/Packs.lua
 Core/Recorder.lua
+Core/Contribute.lua
 API/MapScoutAPI.lua
 API/Registry.lua
 Search/Query.lua
@@ -43,6 +44,7 @@ UI/Preview.lua
 UI/Results.lua
 UI/Waypoint.lua
 Options/Panel.lua
+Options/Contribute.lua
 Options/Categories.lua
 
 #@do-not-package@
