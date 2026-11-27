@@ -42,6 +42,9 @@ end
 local function subtitle(result)
 	local entry, parts = result.item.entry, {}
 	parts[#parts + 1] = entry.subtitle or categoryName(result.item)
+	if entry.roams or entry.route then
+		parts[#parts + 1] = L.RESULTS_ROAMS -- one spot of its route, not where it is now
+	end
 	local place = ns.MapPlace(entry.mapID)
 	if place and result.inZone and place.mapID ~= ns.Map.GetMapID() then
 		parts[#parts + 1] = place.name -- a city or place inside the open map

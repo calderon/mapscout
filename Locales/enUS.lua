@@ -60,6 +60,7 @@ local EN = {
 	RESULTS_HINT = "Try @ or coordinates (45 67)",
 	RESULTS_WIDENED = "Nothing in %s; showing all of %s",
 	RESULTS_DISABLED = "%s: turned off in the options (/ms)",
+	RESULTS_ROAMS = "Walks a route · approximate position",
 
 	-- Preview
 	PREVIEW_COORDS = "%.1f, %.1f",

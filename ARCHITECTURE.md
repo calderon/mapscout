@@ -89,7 +89,7 @@ The full public contract (functions, result fields, events, versioning) is in `A
 
 ### Result fields (summary)
 
-`id` and `name` are required; `mapID`, `x`, `y` (uiMapID and 0–1 coordinates) for anything that has a place. Optional: `category`, `subtitle`, `keywords`, `icon`, `weight`, `data` (opaque, for the provider's own actions). MapScout adds `provider`, `zoneName`, `continentID` and a stable `key` used by favorites, aliases, blacklist and frequency. Results handed to other addons are copies.
+`id` and `name` are required; `mapID`, `x`, `y` (uiMapID and 0–1 coordinates) for anything that has a place. Optional: `category`, `subtitle`, `keywords`, `icon`, `weight`, `data` (opaque, for the provider's own actions). An NPC who walks a route sets `roams = true` (its point is one spot of the route: the row says the position is approximate) and, when known, `route`: a list of paths, each on a map, with its points as `x1, y1, x2, y2…` (`{ { mapID = 1455, points = { 0.2, 0.3, 0.25, 0.3 } } }`). The map draws the part of the route on the open map instead of the pin, or, with no route there, a big soft circle without the pin. MapScout adds `provider`, `zoneName`, `continentID` and a stable `key` used by favorites, aliases, blacklist and frequency. Results handed to other addons are copies.
 
 ## Search pipeline
 
@@ -120,7 +120,7 @@ In this order of preference (research and links: #104):
 3. **Open data under CC BY-SA 4.0: [wow-completionist-data](https://github.com/danielalanbates/wow-completionist-data)** — quests (givers, enders, objectives, prerequisites) and NPC/object positions for Forever, built from Warcraft Wiki and client data, with no emulator nor addon databases. Seed for quests and NPCs (#38). Forever coverage when checked: 3,483 quests, start located 48 %, start and end 40 %, NPCs located 47 %, few high-confidence points (many come from Retail-era wiki pages). No services (vendors, trainers, innkeepers, bankers).
 4. **Our in-game harvest mode** — NPCs and objects recorded when interacting with them (#40): services, Forever-only content, and corrections to the seed.
 5. **Single facts from public sources, by hand** — a point the client lacks (e.g. the entrance of a Forever dungeon) written in `dev/tools/datagen/manual/`, only when at least two public sources agree, each row citing them. Never another addon's list: data from an addon needs its author's written permission, and is credited.
-6. **Other addons, only read at runtime** — never copied. **QuestieDB** (by the Questie team, GPLv3, a separate addon, supports Forever) for available quests (#83).
+6. **Other addons, only read at runtime** — never copied. **QuestieDB** (by the Questie team, GPLv3, a separate addon, supports Forever) for available quests (#83); its NPCs' waypoints are the route of a quest giver or service NPC who walks one (#179).
 
 Not used: **Warcraft Wiki directly** (its text is CC BY-SA 4.0, but wiki.gg's terms forbid crawling, scraping and automated access; we'd need their permission), **Wowhead** (no public API, scraping is against its terms), **emulator databases** (licences incompatible with ours, and no Forever-only content), **other addons' databases** (their own licences).
 
@@ -160,7 +160,7 @@ What the client cannot tell us at runtime (NPC services, mailboxes and other obj
 
 - MapScout's frames are parented to `WorldMapFrame` (or its border frame) and anchored; they adapt to the maximized and minimized map.
 - Hooks: `OnShow`/`OnHide` of the map and `hooksecurefunc` on map changes. No `SetScript` on Blizzard frames (it would also wipe other addons' hooks).
-- The hover marker and highlights are MapScout's own frames over the map canvas, not map pins.
+- The hover marker and highlights are MapScout's own frames over the map canvas, not map pins. A route is MapScout's own frame of lines (`CreateLine`) on the canvas, scaled like the marker so the lines keep their thickness on screen.
 - The search box never closes the map by accident (Esc clears, then loses focus) and keys typed in it never move the character.
 - Destination: `C_Map.SetUserWaypoint` + `C_SuperTrack`, falling back to the parent zone when the map does not allow user waypoints; optional TomTom waypoint.
 - Must work in combat and inside instances with no taint warnings (checked with `/console taintLog 1`).

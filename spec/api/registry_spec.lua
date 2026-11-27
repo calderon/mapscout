@@ -128,6 +128,29 @@ describe("API/Registry.lua", function()
 			assert.are.equal(1, #ReportedErrors) -- only once per provider
 		end)
 
+		it("checks the roams flag and the route of an entry", function()
+			load()
+			login()
+			local provider = MapScoutAPI:RegisterProvider("p", { name = "P" })
+			local route = { { mapID = 1455, points = { 0.1, 0.2, 0.3, 0.4 } } }
+			provider:SetEntries({
+				entry(1, { roams = true }),
+				entry(2, { route = route }),
+				entry(3, { roams = "yes" }),
+				entry(4, { route = { { mapID = 1455, points = { 0.1, 0.2 } } } }), -- one point
+				entry(5, { route = { { points = { 0.1, 0.2, 0.3, 0.4 } } } }), -- no map
+				entry(6, { route = { { mapID = 1455, points = { 0.1, 0.2, 3, 0.4 } } } }), -- off the map
+				entry(7, { route = { 5 } }),
+			})
+			local stored = Registry.Get("p").entries
+			assert.are.equal(2, #stored)
+			assert.are.same(route, stored[2].route)
+			assert.are.equal(5, Registry.Get("p").skipped)
+			assert.matches("first problem: roams must be true or false", ReportedErrors[1], 1, true)
+			assert.is_nil(Registry.RouteProblem(route))
+			assert.matches("route[1]: points must be numbers from 0 to 1", Registry.RouteProblem({ { mapID = 1, points = { 0, 0, 2, 0 } } }), 1, true)
+		end)
+
 		it("forwards Invalidate to the listeners", function()
 			load()
 			login()

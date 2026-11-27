@@ -278,6 +278,17 @@ end
 function Frame:CreateFontString()
 	return newFrame("FontString", nil, self)
 end
+function Frame:CreateLine(_, layer)
+	local line = newFrame("Line", nil, self)
+	line.layer = layer
+	return line
+end
+function Frame:SetStartPoint(...)
+	self.startPoint = { ... }
+end
+function Frame:SetEndPoint(...)
+	self.endPoint = { ... }
+end
 
 local FrameMeta = {
 	__index = function(_, key)
