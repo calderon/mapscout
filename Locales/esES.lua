@@ -276,4 +276,4 @@ ns.W.REPAIR = { "reparar", "reparacion" }
 ns.W.MAILBOX = { "buzon", "correo", "buzones" }
 ns.W.BATTLEMASTER = { "batalla", "maestro de batalla" }
 ns.W.GUILD = { "hermandad", "tabardo" }
-ns.W.VENDOR = { "vendedor", "tienda", "mercader", "vendedores" }
+ns.W.VENDOR = { "vendedor", "proveedor", "tienda", "mercader", "vendedores", "proveedores" }
