@@ -1,6 +1,6 @@
 -- Providers/Transport.lua: boats, zeppelins and trams from the static data pack
 describe("Providers/Transport.lua", function()
-	local ns, frame, loads
+	local ns, frame, loads, faction
 	local MAPS = dofile("spec/fixtures/maps.lua")
 	local STRANGLETHORN = { mapID = 1434, name = "Vega de Tuercespina", mapType = 3, parentMapID = 1415 }
 	local ZEPHRAS = { mapID = 2521, name = "Isla de Zephras", mapType = 2, parentMapID = 947 }
@@ -16,8 +16,10 @@ describe("Providers/Transport.lua", function()
 		ResetWoW()
 		rawset(_G, "MapScoutDataForever", nil)
 		loads = 0
+		faction = nil -- no faction yet (as in the first moments of a login): everything
 		StubGlobals({
 			WOW_PROJECT_ID = 18,
+			UnitFactionGroup = function() return faction end,
 			GetLocale = function() return "esES" end,
 			C_Map = {
 				GetMapInfo = function(id)
@@ -140,6 +142,33 @@ describe("Providers/Transport.lua", function()
 		assert.is_true(has(zeppelins, 114571)) -- skyships too
 		assert.are.equal(2, #search("@tranvia"))
 		assert.are.equal(27, #search("@transporte"))
+	end)
+
+	local function asFaction(side)
+		faction = side
+		ns.Registry.SetEnabled("transport", false)
+		ns.Registry.SetEnabled("transport", true)
+	end
+
+	it("leaves out the docks of the other faction, also as destinations", function()
+		asFaction("Alliance")
+		assert.is_nil(entry(2851)) -- Grom'gol zeppelin
+		assert.is_nil(entry(3021)) -- Orgrimmar - Undercity
+		assert.is_truthy(entry(3691)) -- Deeprun Tram
+		assert.is_truthy(entry(2921)) -- Menethil - Theramore
+		assert.is_truthy(entry(2412)) -- Booty Bay: anyone
+		assert.is_truthy(entry(114571)) -- a pending line: anyone until checked
+		assert.is_false(has(search("orgrimmar"), 2852))
+		asFaction("Horde")
+		assert.is_truthy(entry(2851))
+		assert.is_nil(entry(3691))
+		assert.is_nil(entry(2921))
+		assert.is_truthy(entry(2412))
+		assert.is_truthy(entry(114571))
+		assert.are.equal(0, #search("@tranvia"))
+		for _, e in ipairs(ns.Registry.Get("transport").entries) do
+			assert.is_nil(e.subtitle:find("Forjaz", 1, true)) -- no destination of the other faction
+		end
 	end)
 
 	it("lets the data go when turned off, and loads it again when turned on", function()

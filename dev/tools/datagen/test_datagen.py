@@ -330,8 +330,8 @@ def path_node(path, index, continent, x, y, z=0, flags=0):
             "Loc_1": str(y), "Loc_2": str(z), "Flags": str(flags)}
 
 
-def line(id_, kind, path=0, triggers=()):
-    return {"line": id_, "kind": kind, "path": path, "triggers": list(triggers)}
+def line(id_, kind, path=0, triggers=(), faction=""):
+    return {"line": id_, "kind": kind, "faction": faction, "path": path, "triggers": list(triggers)}
 
 
 class TransportTest(unittest.TestCase):
@@ -374,12 +374,12 @@ class TransportTest(unittest.TestCase):
             found = transport.docks(MAPS, [line(2, "zeppelin", 2), line(1, "boat", 1), line(5, "tram", 0, (7, 8)),
                                            line(4, "none", 2)], stops, triggers, pois)
         self.assertEqual(found, [
-            (11, "boat", 11, 8000, 5000, 40, [12]),
-            (12, "boat", 12, 8333, 6667, 0, [11]),  # no town near it
-            (21, "zeppelin", 11, 8000, 4900, 40, [22]),  # same pier, another kind: a dock of its own
-            (22, "zeppelin", 11, 2000, 2000, 33, [21]),  # the capital wins over the nearer town
-            (51, "tram", 11, 4000, 4000, 0, [52]),  # the tram's entrances: area triggers
-            (52, "tram", 12, 8333, 3333, 0, [51]),
+            (11, "boat", 11, 8000, 5000, 40, "", [12]),
+            (12, "boat", 12, 8333, 6667, 0, "", [11]),  # no town near it
+            (21, "zeppelin", 11, 8000, 4900, 40, "", [22]),  # same pier, another kind: a dock of its own
+            (22, "zeppelin", 11, 2000, 2000, 33, "", [21]),  # the capital wins over the nearer town
+            (51, "tram", 11, 4000, 4000, 0, "", [52]),  # the tram's entrances: area triggers
+            (52, "tram", 12, 8333, 3333, 0, "", [51]),
         ])
 
     def test_lines_of_one_pier_share_a_dock(self):
@@ -387,30 +387,49 @@ class TransportTest(unittest.TestCase):
         nodes = self.NODES + [path_node(4, 0, 0, 760, 600, flags=2), path_node(4, 1, 0, 900, 900, flags=2)]
         stops, _ = transport.path_stops(nodes)
         found = transport.docks(MAPS, [line(1, "boat", 1), line(4, "boat", 4)], stops, [], [])
-        self.assertEqual([(d[0], d[6]) for d in found], [(11, [12, 42]), (12, [11]), (42, [11])])
+        self.assertEqual([(d[0], d[7]) for d in found], [(11, [12, 42]), (12, [11]), (42, [11])])
+
+    def test_dock_faction_is_its_lines_faction(self):
+        import transport
+        nodes = self.NODES + [path_node(4, 0, 0, 760, 600, flags=2), path_node(4, 1, 0, 900, 900, flags=2),
+                              path_node(5, 0, 0, 100, 900, flags=2), path_node(5, 1, 0, 900, 100, flags=2)]
+        stops, _ = transport.path_stops(nodes)
+        found = transport.docks(MAPS, [line(1, "boat", 1, faction="Alliance"), line(4, "boat", 4, faction="Horde"),
+                                       line(5, "boat", 5, faction="pending")], stops, [], [])
+        self.assertEqual({d[0]: d[6] for d in found}, {
+            11: "",  # one pier of both factions: anyone
+            12: "Alliance",
+            42: "Horde",
+            51: "", 52: "",  # pending: anyone until checked
+        })
+        self.assertEqual(transport.pending([line(5, "boat", 5, faction="pending"), line(6, "none", 6)]), [5])
 
     def test_lines_file(self):
         import transport
         with tempfile.TemporaryDirectory() as folder:
             path = os.path.join(folder, "transport.csv")
             with open(path, "w", encoding="utf-8") as out:
-                out.write("line,kind,path,triggers,note\n241,boat,241,,x\n369,tram,,2173 2175,y\n")
-            self.assertEqual(transport.lines(path), [line(241, "boat", 241), line(369, "tram", 0, (2173, 2175))])
-            with open(path, "w", encoding="utf-8") as out:
-                out.write("line,kind,path,triggers,note\n1,rocket,1,,x\n")
-            with self.assertRaises(ValueError):
-                transport.lines(path)
+                out.write("line,kind,faction,path,triggers,note\n241,boat,Anyone,241,,x\n"
+                          "369,tram,Alliance,,2173 2175,y\n11391,boat,pending,11391,,z\n436,none,,436,,w\n")
+            self.assertEqual(transport.lines(path), [
+                line(241, "boat", 241), line(369, "tram", 0, (2173, 2175), "Alliance"),
+                line(11391, "boat", 11391, faction="pending"), line(436, "none", 436)])
+            for bad in ("1,rocket,Anyone,1,,x", "1,boat,,1,,x", "1,boat,horde,1,,x"):
+                with open(path, "w", encoding="utf-8") as out:
+                    out.write("line,kind,faction,path,triggers,note\n%s\n" % bad)
+                with self.assertRaises(ValueError):
+                    transport.lines(path)
 
     def test_write(self):
         import transport
         with tempfile.TemporaryDirectory() as folder:
             path = os.path.join(folder, "Transport.lua")
-            transport.write(path, "1.60.1.1", "2026-01-02", [(11, "boat", 11, 8000, 5000, 40, [12])],
+            transport.write(path, "1.60.1.1", "2026-01-02", [(11, "boat", 11, 8000, 5000, 40, "Horde", [12])],
                             {"enUS": {40: "Booty Bay"}})
             with open(path, encoding="utf-8") as source:
                 text = source.read()
         self.assertIn("pack.categories.transport = function()", text)
-        self.assertIn('[11] = { "boat", 11, 8000, 5000, 40, 12 },', text)
+        self.assertIn('[11] = { "boat", 11, 8000, 5000, 40, "Horde", 12 },', text)
         self.assertIn('[40] = "Booty Bay",', text)
 
 

@@ -46,9 +46,12 @@ Tables per output:
 
 `manual/transport.csv` lists the transport lines players ride, one row each:
 its kind (`boat`, `zeppelin`, `skyship`, `tram`, or `none` for a path left out
-on purpose, like Naxxramas'), its `TaxiPath` ID, or for the tram the
-`AreaTrigger` IDs of its entrances. The client knows each route and where it
-stops, but not what runs on it nor whether players ride it. The generator
+on purpose, like Naxxramas'), its faction (`Alliance`, `Horde`, `Anyone`, or
+`pending` while nobody has checked it: shown to anyone until then, and the
+generator lists it; required for every line but `none`), its `TaxiPath` ID, or
+for the tram the `AreaTrigger` IDs of its entrances. The client knows each
+route and where it stops, but not what runs on it, whether players ride it nor
+which faction does. A dock shared by lines of both factions is for anyone. The generator
 reports a path with stops that is not listed (a new build's new line), and a
 kind that does not fit the route's height (zeppelins and skyships fly, boats
 stay at sea level).
@@ -139,7 +142,8 @@ game (`ns.PlaceOnMap`).
 - `Transport.lua`: the docks of boats, zeppelins and skyships (the stops of
   their routes in the client) and the two entrances of the Deeprun Tram, each
   with the docks it goes to, named after the town or capital next to it (none:
-  the addon names it after its map). Stops of one kind at the same pier are one
+  the addon names it after its map), and the faction that rides it (MapScout
+  leaves out the other faction's). Stops of one kind at the same pier are one
   dock with every destination.
 - `Services.lua`: banks, auction houses, inns, mailboxes, stable masters,
   repair vendors, barbers, guild masters and battlemasters, per map, with the

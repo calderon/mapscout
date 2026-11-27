@@ -4,9 +4,12 @@ The client knows the route of each boat and zeppelin: TaxiPath holds one path
 per line and TaxiPathNode its points in the world, in order; the points where
 it waits (Flags bit 2, with a Delay) are its stops, the docks. The client does
 not say which kind of transport runs on a path (that is the server's), nor
-which paths players really ride, so manual/transport.csv lists the lines, one
-row each, with its kind ("none": a path left out on purpose). A path with stops that is not in that file is
-reported, so a new build's new lines are not missed.
+which paths players really ride, nor which faction rides them, so
+manual/transport.csv lists the lines, one row each, with its kind ("none": a
+path left out on purpose) and its faction ("Alliance", "Horde", "Anyone", or
+"pending" while nobody has checked it: shown to anyone until then). A path with
+stops that is not in that file is reported, so a new build's new lines are not
+missed.
 
 The Deeprun Tram is an instance of its own: its two entrances are the area
 triggers that send players into it (AreaTrigger), also listed in that file.
@@ -30,23 +33,36 @@ NEAR_TOWN = 600  # yards: farther, a stop is not named after a town
 TOWN, CAPITAL = 5, 29  # AreaPOI.Flags (see places.py)
 FLYING = ("zeppelin", "skyship")
 HIGH = 40  # yards over the sea: a flying route's middle is higher
+FACTIONS = ("Alliance", "Horde")
+ANYONE, PENDING = "Anyone", "pending"
 
 
 def lines(path):
-    """[{line, kind, path, triggers}] from manual/transport.csv."""
+    """[{line, kind, faction, path, triggers}] from manual/transport.csv;
+    faction "Alliance", "Horde", "" (anyone) or "pending" (not checked yet)."""
     out = []
     with open(path, newline="", encoding="utf-8") as source:
         for row in csv.DictReader(source):
             kind = row["kind"].strip()
             if kind not in KINDS + ("none",):
                 raise ValueError("%s: line %s: unknown kind %r" % (path, row["line"], kind))
+            faction = row["faction"].strip()
+            if kind != "none" and faction not in FACTIONS + (ANYONE, PENDING):
+                raise ValueError("%s: line %s: faction %r is not Alliance, Horde, %s or %s" % (
+                    path, row["line"], faction, ANYONE, PENDING))
             out.append({
                 "line": int(row["line"]),
                 "kind": kind,
+                "faction": "" if faction == ANYONE else faction,
                 "path": int(row["path"] or 0),
                 "triggers": [int(t) for t in row["triggers"].split()],
             })
     return out
+
+
+def pending(listed):
+    """Lines whose faction nobody has checked yet."""
+    return [e["line"] for e in listed if e["kind"] in KINDS and e["faction"] == PENDING]
 
 
 def path_stops(path_nodes):
@@ -108,12 +124,15 @@ def town(pois, continent, x, y):
 
 
 def docks(maps, listed, stops, triggers, pois):
-    """[(dockID, kind, uiMapID, x, y, townPOI, [destination dockIDs])] sorted.
+    """[(dockID, kind, uiMapID, x, y, townPOI, faction, [destination dockIDs])]
+    sorted. A dock's faction is its lines' when they all have the same one,
+    else "" (anyone); a pending line counts as anyone.
 
     A dock's ID is its first line's ID * 10 + the stop's number on it (1, 2...),
     so it stays the same while that line does."""
     trigger_at = {int(r["ID"]): (int(r["ContinentID"]), float(r["Pos_0"]), float(r["Pos_1"])) for r in triggers}
     found = []  # {id, kind, continent, x, y, lines: set}
+    faction_of = {e["line"]: (e["faction"] if e["faction"] in FACTIONS else "") for e in listed}
     for entry in sorted(listed, key=lambda e: e["line"]):
         if entry["kind"] not in KINDS:
             continue
@@ -137,8 +156,10 @@ def docks(maps, listed, stops, triggers, pois):
             raise ValueError("dock %d: no map holds it" % dock["id"])
         to = sorted({d["id"] for d in found if d is not dock and set(d["lines"]) & set(dock["lines"])})
         ui_map, x, y = place
+        sides = {faction_of[line] for line in dock["lines"]}
+        faction = sides.pop() if len(sides) == 1 else ""
         out.append((dock["id"], dock["kind"], ui_map, to_int(x), to_int(y),
-                    town(pois, dock["continent"], dock["x"], dock["y"]), to))
+                    town(pois, dock["continent"], dock["x"], dock["y"]), faction, to))
     out.sort()
     return out
 
@@ -153,19 +174,20 @@ def write(path, version, date, found, names_by_locale):
     lines_out = [lua.header("boats, zeppelins, skyships and trams", version, date, [
         "the client's TaxiPath and TaxiPathNode (the stops of each route), AreaTrigger (the tram's entrances), "
         "AreaPOI (town names), UiMapAssignment and UiMap tables, through wago.tools",
-        "manual/transport.csv (which routes players ride, and their kind)",
+        "manual/transport.csv (which routes players ride, their kind and faction)",
     ])]
     lines_out.append("local _, pack = ...\n")
     lines_out.append("-- Built only when MapScout asks for it (see Pack.lua)")
     lines_out.append("pack.categories.transport = function()")
     lines_out.append("\treturn {")
     lines_out.append("\t\tbuild = %s," % lua.string(version))
-    lines_out.append("\t\t-- [dock] = { kind, uiMapID, x, y, town, destination docks... }: kind \"boat\", \"zeppelin\",")
-    lines_out.append("\t\t-- \"skyship\" or \"tram\"; x, y 0-10000 on the map; town = AreaPOI ID of the town it is named")
-    lines_out.append("\t\t-- after, 0 if none (the game names it after its map)")
+    lines_out.append("\t\t-- [dock] = { kind, uiMapID, x, y, town, faction, destination docks... }: kind \"boat\",")
+    lines_out.append("\t\t-- \"zeppelin\", \"skyship\" or \"tram\"; x, y 0-10000 on the map; town = AreaPOI ID of the")
+    lines_out.append("\t\t-- town it is named after, 0 if none (the game names it after its map); faction \"Alliance\",")
+    lines_out.append("\t\t-- \"Horde\" or \"\" (anyone)")
     lines_out.append("\t\tdocks = {")
-    for dock, kind, ui_map, x, y, town_id, to in found:
-        lines_out.append("\t\t\t[%d] = %s," % (dock, lua.row([kind, ui_map, x, y, town_id] + to)))
+    for dock, kind, ui_map, x, y, town_id, faction, to in found:
+        lines_out.append("\t\t\t[%d] = %s," % (dock, lua.row([kind, ui_map, x, y, town_id, faction] + to)))
     lines_out.append("\t\t},")
     lines_out.append("\t\t-- Town names in MapScout's languages; any other uses enUS")
     lines_out.append("\t\tnames = {")
