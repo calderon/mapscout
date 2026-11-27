@@ -1,9 +1,12 @@
 -- MapScout: city services (built-in provider, through MapScoutAPI): banks,
--- auction houses, inns, mailboxes, stable masters and repair vendors.
--- Each result is named after its service ("Bank", in the player's language),
--- with the place in the subtitle: the name the game gave it ("Las Arcas") when
--- it was harvested in the player's language, else its city.
---   @service (all)  @bank  @auction  @inn  @mailbox  @stable  @repair
+-- auction houses, inns, mailboxes, stable masters, repair vendors, barbers,
+-- guild masters and battlemasters.
+-- Each result is named after its service ("Bank", in the player's language;
+-- a battlemaster after its battleground, "Alterac Valley battlemaster"), with
+-- the place in the subtitle: the name the game gave it ("Las Arcas") when it
+-- was harvested in the player's language, else its city.
+--   @service (all)  @bank  @auction  @inn  @mailbox  @stable  @repair  @barber
+--   @guild  @battlemaster
 -- From the static data pack (Core/Packs.lua, category "services"), harvested in
 -- the game: the client has neither the NPCs nor the mailboxes. Services only
 -- the other faction can use are left out. The pack is only loaded when this
@@ -23,7 +26,13 @@ Services.KINDS = {
 	{ id = "mailbox", words = "MAILBOX", icon = "Interface\\Icons\\INV_Letter_15" },
 	{ id = "stable", words = "STABLE", icon = "Interface\\Icons\\Ability_Hunter_BeastTaming" },
 	{ id = "repair", words = "REPAIR", icon = "Interface\\Icons\\Trade_BlackSmithing" },
+	{ id = "barber", words = "BARBER", icon = "Interface\\Icons\\INV_Misc_Comb_02" },
+	{ id = "guild", words = "GUILD", icon = "Interface\\Icons\\INV_Misc_Note_05" },
+	{ id = "battle", words = "BATTLEMASTER", icon = "Interface\\Icons\\INV_BannerPVP_02" },
 }
+-- The battlegrounds a battlemaster sends to (row[7]): their name and search
+-- words are BATTLE_<id> and BATTLEGROUND_<ID>
+Services.BATTLEGROUNDS = { alterac = true, arathi = true, warsong = true }
 local BY_ID = {}
 for _, kind in ipairs(Services.KINDS) do
 	BY_ID[kind.id] = kind
@@ -49,13 +58,19 @@ function Services.Entries(data)
 			if kind and (side == "" or not faction or side == faction) then
 				local place = row[6] > 0 and sameLanguage(row[5], locale) and names[row[5]] and names[row[5]][row[6]]
 				local keywords = ns.Words(kind.words)
+				local battleground = Services.BATTLEGROUNDS[row[7] or ""] and row[7]
+				if battleground then
+					for _, word in ipairs(ns.Words("BATTLEGROUND_" .. battleground:upper())) do
+						keywords[#keywords + 1] = word
+					end
+				end
 				if place then
 					keywords[#keywords + 1] = place:lower()
 				end
 				local map = ns.MapPlace(mapID)
 				entries[#entries + 1] = {
 					id = ("%s:%d:%d"):format(kind.id, mapID, i),
-					name = L["SERVICE_" .. kind.id],
+					name = battleground and L["BATTLE_" .. battleground] or L["SERVICE_" .. kind.id],
 					subtitle = place or (map and map.name) or nil,
 					category = kind.id,
 					keywords = keywords,

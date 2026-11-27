@@ -8,10 +8,11 @@ local _, pack = ...
 pack.categories.services = function()
 	return {
 		build = "1.60.1.71139",
-		-- [uiMapID] = { { service, x, y, faction, locale, name }, ... }: service "bank", "auction",
-		-- "inn", "mailbox", "stable" or "repair"; x, y 0-10000 on the map; faction "Alliance",
-		-- "Horde" or "" (anyone); name = index in names[locale] of the place's name as the game
-		-- wrote it in that language (0: none)
+		-- [uiMapID] = { { service, x, y, faction, locale, name[, battleground] }, ... }: service
+		-- "bank", "auction", "inn", "mailbox", "stable", "repair", "barber", "guild" or
+		-- "battle"; x, y 0-10000 on the map; faction "Alliance", "Horde" or "" (anyone);
+		-- name = index in names[locale] of the place's name as the game wrote it in that language
+		-- (0: none); battleground (battlemasters only) "alterac", "arathi" or "warsong"
 		maps = {
 			[1455] = {
 				{ "bank", 3515, 6116, "Alliance", "esES", 1 },
@@ -20,6 +21,11 @@ pack.categories.services = function()
 				{ "mailbox", 2112, 5240, "", "esES", 4 },
 				{ "mailbox", 3316, 6521, "", "", 0 },
 				{ "stable", 6937, 8358, "Alliance", "esES", 5 },
+				{ "barber", 2670, 5028, "Alliance", "esES", 6 },
+				{ "guild", 3578, 8564, "Alliance", "esES", 7 },
+				{ "battle", 6959, 9072, "Alliance", "esES", 8, "alterac" },
+				{ "battle", 6992, 8892, "Alliance", "esES", 9, "arathi" },
+				{ "battle", 7099, 8870, "Alliance", "esES", 10, "warsong" },
 			},
 		},
 		names = {
@@ -29,6 +35,11 @@ pack.categories.services = function()
 				"Taberna Roca de Fuego",
 				"Buzón de Forjaz",
 				"Ulbrek Manofuego",
+				"Peluquería de Forjaz",
+				"Centro del Viajero de Forjaz",
+				"Glordrum Barbacerada",
+				"Donal Osbien",
+				"Lylandris",
 			},
 		},
 	}

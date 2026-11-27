@@ -9,12 +9,16 @@ describe("Providers/Services.lua", function()
 				{ "bank", 3515, 6116, "Alliance", "esES", 1 },
 				{ "mailbox", 3316, 6521, "", "", 0 },
 				{ "stable", 6937, 8358, "Alliance", "esES", 2 },
+				{ "barber", 2670, 5028, "Alliance", "esES", 4 },
+				{ "battle", 6959, 9072, "Alliance", "esES", 5, "alterac" },
+				{ "battle", 7099, 8870, "Alliance", "esES", 6, "warsong" },
 			},
 			[1454] = {
 				{ "bank", 4000, 4000, "Horde", "esES", 3 },
 			},
 		},
-		names = { esES = { "Las Arcas", "Ulbrek Manofuego", "Banco de Orgrimmar" } },
+		names = { esES = { "Las Arcas", "Ulbrek Manofuego", "Banco de Orgrimmar", "Peluquería de Forjaz",
+			"Glordrum Barbacerada", "Lylandris" } },
 	}
 
 	before_each(function()
@@ -95,7 +99,7 @@ describe("Providers/Services.lua", function()
 
 	it("leaves out what only the other faction can use, but not mailboxes", function()
 		start()
-		assert.are.equal(3, #entries())
+		assert.are.equal(6, #entries())
 		assert.is_nil(entry("bank:1454:1"))
 	end)
 
@@ -128,10 +132,34 @@ describe("Providers/Services.lua", function()
 		assert.are.equal("mailbox:1455:2", search("buzon")[1].id)
 		assert.are.equal("mailbox:1455:2", search("mailbox")[1].id)
 		local all = search("@servicio")
-		assert.are.equal(3, #all)
+		assert.are.equal(6, #all)
 		local mail = search("@buzon")
 		assert.are.equal(1, #mail)
 		assert.are.equal("mailbox", mail[1].category)
+	end)
+
+	it("names battlemasters after their battleground, and finds them by it", function()
+		start()
+		local alterac = entry("battle:1455:5")
+		assert.are.equal("Maestro de batalla del Valle de Alterac", alterac.name)
+		assert.are.equal("Glordrum Barbacerada", alterac.subtitle)
+		assert.are.equal("battle", alterac.category)
+		assert.are.equal("battle:1455:5", search("alterac")[1].id)
+		assert.are.equal("battle:1455:6", search("garganta grito de guerra")[1].id)
+		assert.are.equal("battle:1455:6", search("wsg")[1].id)
+		assert.are.equal(2, #search("@battlemaster"))
+		assert.are.equal(2, #search("@batalla"))
+	end)
+
+	it("finds barbers", function()
+		start()
+		local barber = entry("barber:1455:4")
+		assert.are.equal("Peluquería", barber.name)
+		assert.are.equal("Peluquería de Forjaz", barber.subtitle)
+		for _, text in ipairs({ "peluqueria", "barber", "barbero", "@peluqueria" }) do
+			local found = search(text)
+			assert.are.equal("barber:1455:4", found[1] and found[1].id, text)
+		end
 	end)
 
 	it("knows which services the pack has on each map", function()
