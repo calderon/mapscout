@@ -174,15 +174,35 @@ def names(rows_by_locale, ids):
     return out
 
 
+def other_names(map_rows_by_locale, area_rows_by_locale, ids):
+    """{locale: {instanceMapID: name}}: the name of the instance's area
+    (Map.AreaTableID -> AreaTable) where it is not the map's name, the one
+    players also call it by ("The Temple of Atal'Hakkar" for "Sunken Temple")."""
+    wanted = set(ids)
+    out = {}
+    for locale, map_rows in map_rows_by_locale.items():
+        areas = {r["ID"]: r["AreaName_lang"] for r in area_rows_by_locale.get(locale, ())}
+        found = {}
+        for row in map_rows:
+            instance = int(row["ID"])
+            other = areas.get(row.get("AreaTableID") or "0", "").strip()
+            if instance in wanted and other and other.lower() != row["MapName_lang"].strip().lower():
+                found[instance] = other
+        if found:
+            out[locale] = found
+    return out
+
+
 def via(found):
     """The VIA rows whose instances are both kept: {instance: (from, part)}."""
     kept = {row[0] for row in found}
     return {k: v for k, v in VIA.items() if k in kept and v[0] in kept}
 
 
-def write(path, version, date, found, names_by_locale, manual_rows=(), doors_by_instance=None, via_by_instance=None):
+def write(path, version, date, found, names_by_locale, manual_rows=(), doors_by_instance=None, via_by_instance=None,
+          other_names_by_locale=None):
     lines = [lua.header("dungeon and raid entrances", version, date, [
-        "the client's Map (Corpse_0/1, CorpseMapID), UiMapAssignment, UiMap, LFGDungeons and ContentTuning tables, through wago.tools",
+        "the client's Map (Corpse_0/1, CorpseMapID), AreaTable, UiMapAssignment, UiMap, LFGDungeons and ContentTuning tables, through wago.tools",
     ] + ["instance %d%s: %s" % (row[0], " (%s)" % row[5] if row[5] else "", row[4]) for row in manual_rows])]
     lines.append("local _, pack = ...\n")
     lines.append("-- Built only when MapScout asks for it (see Pack.lua)")
@@ -217,6 +237,14 @@ def write(path, version, date, found, names_by_locale, manual_rows=(), doors_by_
         lines.append("\t\t\t%s = {" % locale)
         for instance in sorted(names_by_locale[locale]):
             lines.append("\t\t\t\t[%d] = %s," % (instance, lua.string(names_by_locale[locale][instance])))
+        lines.append("\t\t\t},")
+    lines.append("\t\t},")
+    lines.append("\t\t-- Other names players use (the instance's area in the client), found too")
+    lines.append("\t\totherNames = {")
+    for locale in sorted(other_names_by_locale or {}):
+        lines.append("\t\t\t%s = {" % locale)
+        for instance in sorted(other_names_by_locale[locale]):
+            lines.append("\t\t\t\t[%d] = %s," % (instance, lua.string(other_names_by_locale[locale][instance])))
         lines.append("\t\t\t},")
     lines.append("\t\t},")
     lines.append("\t}")

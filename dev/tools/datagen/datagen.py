@@ -83,7 +83,11 @@ def main(argv=None):
         found = dungeons.checked_only(found, instances, level_by_name, checked)
     doors = dungeons.doors(manual, checked if not args.pending else {(row[0], row[5]) for row in manual})
     names = dungeons.names({locale: tables.rows("Map", locale) for locale in LOCALES}, [e[0] for e in found])
-    dungeons.write(os.path.join(OUT, "Dungeons.lua"), args.build, date, found, names, manual, doors, dungeons.via(found))
+    other_names = dungeons.other_names({locale: tables.rows("Map", locale) for locale in LOCALES},
+                                       {locale: tables.rows("AreaTable", locale) for locale in LOCALES},
+                                       [e[0] for e in found])
+    dungeons.write(os.path.join(OUT, "Dungeons.lua"), args.build, date, found, names, manual, doors, dungeons.via(found),
+                   other_names)
     pois = tables.rows("AreaPOI")
     found_places = places.places(maps, pois)
     place_names = places.names({locale: tables.rows("AreaPOI", locale) for locale in LOCALES}, [p[0] for p in found_places])

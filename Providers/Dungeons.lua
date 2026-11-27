@@ -14,6 +14,9 @@
 -- An instance with several doors (the pack's doors: Scarlet Monastery's wings,
 -- Stratholme's gates...) is one result per door, "Name (wing)"; searching the
 -- instance's name finds them all.
+-- Other names players use (the pack's otherNames, in the player's language
+-- and in English: "Sunken Temple" is also "The Temple of Atal'Hakkar") are
+-- search words: either name finds it, the result shows the main one.
 -- A raid with no door outside (the pack's via: Molten Core, Blackwing Lair) is
 -- on the entrance of the dungeon it is entered from, and says so.
 -- A point on a continent map (the pack stores it there when zone maps overlap)
@@ -58,6 +61,9 @@ function Dungeons.Entries(data)
 	end
 	local names, english = data.names[GetLocale()] or data.names.enUS or {}, data.names.enUS or {}
 	local doors, via = data.doors or {}, data.via or {}
+	-- Other names players use ("The Temple of Atal'Hakkar"): found too, the result keeps the main name
+	local others = data.otherNames or {}
+	local otherNames, otherEnglish = others[GetLocale()] or {}, others.enUS or {}
 	local order = {}
 	local function add(instance, kind, uiMap, x, y, level, wing, index, note)
 		local name = names[instance] or english[instance]
@@ -81,6 +87,13 @@ function Dungeons.Entries(data)
 		local keywords = ns.Words(kind == "raid" and "RAID" or "DUNGEON")
 		if english[instance] and english[instance] ~= name then
 			keywords[#keywords + 1] = english[instance]:lower()
+		end
+		local other, otherEN = otherNames[instance], otherEnglish[instance]
+		if other then
+			keywords[#keywords + 1] = other:lower()
+		end
+		if otherEN and otherEN ~= other then
+			keywords[#keywords + 1] = otherEN:lower()
 		end
 		local id = instance
 		if wing then
