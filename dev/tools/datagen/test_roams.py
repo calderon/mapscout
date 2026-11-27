@@ -36,17 +36,21 @@ class RoamsTest(unittest.TestCase):
         self.assertIsNone(self.maps.yards(9999, 0, 0, 1, 1))
 
     def test_far_apart(self):
-        near = [(1455, 0.50, 0.50), (1455, 0.51, 0.51)]  # about 13 yards: talked to from two sides
+        near = [(1455, 0.50, 0.50, "A"), (1455, 0.51, 0.51, "A")]  # about 13 yards: talked to from two sides
         self.assertFalse(roams.far_apart(near, self.maps))
-        self.assertTrue(roams.far_apart(near + [(1455, 0.60, 0.50)], self.maps))  # 100 yards
-        self.assertFalse(roams.far_apart([(1455, 0.5, 0.5), (1453, 0.9, 0.9)], self.maps))  # other map
-        self.assertFalse(roams.far_apart([(9999, 0.1, 0.1), (9999, 0.9, 0.9)], self.maps))  # size unknown
+        self.assertTrue(roams.far_apart(near + [(1455, 0.60, 0.50, "A")], self.maps))  # 100 yards
+        # another NPC with the same ID (every mountaineer is 727), or one not told apart: not compared
+        self.assertFalse(roams.far_apart(near + [(1455, 0.60, 0.50, "B")], self.maps))
+        self.assertFalse(roams.far_apart([(1455, 0.5, 0.5, ""), (1455, 0.9, 0.5, "")], self.maps))
+        self.assertFalse(roams.far_apart([(1455, 0.5, 0.5, "A"), (1453, 0.9, 0.9, "A")], self.maps))  # other map
+        self.assertFalse(roams.far_apart([(9999, 0.1, 0.1, "A"), (9999, 0.9, 0.9, "A")], self.maps))  # size unknown
 
     def test_npcs_from_the_harvest_and_by_hand(self):
         with tempfile.TemporaryDirectory() as folder:
             npcs_csv(folder, [
-                {"npc": "5109", "uiMap": "1455", "x": "0.4", "y": "0.7", "seen": "1455:0.2756:0.7192"},
-                {"npc": "2460", "uiMap": "1455", "x": "0.3452", "y": "0.5893", "seen": "1455:0.345:0.589"},
+                {"npc": "5109", "uiMap": "1455", "x": "0.4", "y": "0.7", "seen": "1455:0.2756:0.7192:A 1455:0.4:0.7:A"},
+                {"npc": "2460", "uiMap": "1455", "x": "0.3452", "y": "0.5893",
+                 "seen": "1455:0.345:0.589:B 1455:0.3452:0.5893:B"},
                 {"npc": "8720", "uiMap": "1455", "x": "0.2444", "y": "0.7443", "seen": ""},
             ])
             path = os.path.join(folder, "roams.csv")

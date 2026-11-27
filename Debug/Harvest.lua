@@ -81,8 +81,8 @@ function Harvest.ParseGUID(guid)
 	if type(guid) ~= "string" then
 		return nil
 	end
-	local kind, _, _, _, _, id = strsplit("-", guid)
-	return kind, tonumber(id)
+	local kind, _, _, _, _, id, spawn = strsplit("-", guid)
+	return kind, tonumber(id), spawn -- spawn: this one NPC (others share its ID)
 end
 
 -- Where the player is: uiMapID, x, y (0..1), or nil
@@ -153,25 +153,28 @@ end
 Harvest.SIGHTINGS = 10 -- most places kept per NPC
 Harvest.SAME_SPOT = 0.002 -- closer places on one map are the same (map units)
 
--- Keeps where an NPC was talked to ({ map, x, y } in record.seen), so the
--- generator can tell one who walks a route (seen far apart) from one who
--- stands still. The same spot again is not added.
-function Harvest.AddSighting(record, mapID, x, y)
+-- Keeps where an NPC was talked to ({ map, x, y, spawn } in record.seen), so
+-- the generator can tell one who walks a route (seen far apart) from one who
+-- stands still. spawn tells apart NPCs that share an ID (every Ironforge
+-- mountaineer is 727): only places of one spawn are compared. The same spot of
+-- the same spawn again is not added.
+function Harvest.AddSighting(record, mapID, x, y, spawn)
 	local seen = record.seen or {}
 	record.seen = seen
 	for _, spot in ipairs(seen) do
-		if spot[1] == mapID and math.abs(spot[2] - x) < Harvest.SAME_SPOT and math.abs(spot[3] - y) < Harvest.SAME_SPOT then
+		if spot[1] == mapID and spot[4] == spawn and math.abs(spot[2] - x) < Harvest.SAME_SPOT
+			and math.abs(spot[3] - y) < Harvest.SAME_SPOT then
 			return
 		end
 	end
 	if #seen < Harvest.SIGHTINGS then
-		seen[#seen + 1] = { mapID, x, y }
+		seen[#seen + 1] = { mapID, x, y, spawn }
 	end
 end
 
 function Harvest.RecordNPC(service, unit)
 	unit = unit or "npc"
-	local kind, id = Harvest.ParseGUID(UnitGUID(unit))
+	local kind, id, spawn = Harvest.ParseGUID(UnitGUID(unit))
 	local mapID, x, y = Harvest.Where()
 	if not mapID then
 		return nil
@@ -192,7 +195,7 @@ function Harvest.RecordNPC(service, unit)
 	record.title = Harvest.UnitTitle(unit) or record.title
 	record.locale = GetLocale()
 	record.map, record.x, record.y, record.at = mapID, round(x), round(y), time()
-	Harvest.AddSighting(record, mapID, record.x, record.y)
+	Harvest.AddSighting(record, mapID, record.x, record.y, spawn)
 	if service == "gossip" then
 		record.gossip = gossipOptions()
 	elseif service == "trainer" then
