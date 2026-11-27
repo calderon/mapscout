@@ -77,20 +77,22 @@ def rows_from_saved(text):
 
 
 def _spot(value):
-    """(uiMap, x, y) of a saved place ({ map, x, y }, read as a list or a dict)."""
+    """(uiMap, x, y, spawn) of a saved place ({ map, x, y, spawn }, read as a
+    list or a dict); spawn tells apart NPCs that share an ID ("" if unknown)."""
     if isinstance(value, dict):
         value = [value[k] for k in sorted(value)]
     if not isinstance(value, (list, tuple)) or len(value) < 3:
         return None
-    return int(value[0]), float(value[1]), float(value[2])
+    spawn = str(value[3]) if len(value) > 3 and value[3] is not None else ""
+    return int(value[0]), float(value[1]), float(value[2]), spawn
 
 
 def spots(text):
-    """[(uiMap, x, y)] of a "seen" cell ("1455:0.2756:0.7192 1455:0.3:0.6")."""
+    """[(uiMap, x, y, spawn)] of a "seen" cell ("1455:0.2756:0.7192:0000A1 ...")."""
     out = []
     for part in (text or "").split():
-        ui_map, x, y = part.split(":")
-        out.append((int(ui_map), float(x), float(y)))
+        fields = part.split(":")
+        out.append((int(fields[0]), float(fields[1]), float(fields[2]), fields[3] if len(fields) > 3 else ""))
     return out
 
 
@@ -100,7 +102,8 @@ def spots_text(found):
     for spot in found:
         if spot not in out:
             out.append(spot)
-    return " ".join("%d:%s:%s" % (m, _num(x), _num(y)) for m, x, y in out)
+    return " ".join("%d:%s:%s" % (m, _num(x), _num(y)) + (":" + spawn if spawn else "")
+                    for m, x, y, spawn in out)
 
 
 def _num(value):
@@ -108,15 +111,12 @@ def _num(value):
 
 
 def _npc_seen(old, row):
-    """Where an NPC was seen, from both imports: the old row's places and
-    position, then the new one's (a position alone counts as a place)."""
+    """Where an NPC was seen, from both imports: the old row's places, then
+    the new one's."""
     found = []
     for r in (old, row):
-        if not r:
-            continue
-        found += spots(r.get("seen"))
-        if r.get("uiMap") not in (None, "") and r.get("x") not in (None, ""):
-            found.append((int(r["uiMap"]), float(r["x"]), float(r["y"])))
+        if r:
+            found += spots(r.get("seen"))
     return spots_text(found)
 
 

@@ -1,8 +1,10 @@
 """NPCs who walk a route (#179).
 
 The harvest keeps every place an NPC was talked to (the "seen" column of
-harvest/npcs.csv, the player's position each time). An NPC seen on one map in
-two places farther apart than FAR_YARDS walks a route: the point we have is only
+harvest/npcs.csv, the player's position each time, with the spawn: NPCs that
+share an ID, like every Ironforge mountaineer, are told apart by it). One NPC
+(same ID and spawn) seen on one map in two places farther apart than FAR_YARDS
+walks a route: the point we have is only
 one spot on it, and MapScout shows it as approximate. Talking to an NPC who
 stands still from either side leaves the places a few yards apart, well under
 FAR_YARDS.
@@ -17,13 +19,14 @@ import os
 
 import harvest
 
-FAR_YARDS = 40
+FAR_YARDS = 25
 
 
 def far_apart(places, maps):
-    """True when two places on one map are farther apart than FAR_YARDS."""
+    """True when two places of one spawn on one map are farther apart than
+    FAR_YARDS (places without a spawn can't be told apart: not compared)."""
     for a, b in itertools.combinations(places, 2):
-        if a[0] != b[0]:
+        if a[0] != b[0] or not a[3] or a[3] != b[3]:
             continue
         yards = maps.yards(a[0], a[1], a[2], b[1], b[2])
         if yards is not None and yards > FAR_YARDS:
@@ -49,9 +52,6 @@ def npcs(folder, maps, manual_path=None):
     """NPC IDs that walk a route: harvested far apart, or flagged by hand."""
     found = set(manual(manual_path)) if manual_path else set()
     for row in harvest.read(folder, "npcs").values():
-        places = harvest.spots(row.get("seen"))
-        if row.get("uiMap") and row.get("x"):
-            places.append((int(row["uiMap"]), float(row["x"]), float(row["y"])))
-        if far_apart(places, maps):
+        if far_apart(harvest.spots(row.get("seen")), maps):
             found.add(int(row["npc"]))
     return found

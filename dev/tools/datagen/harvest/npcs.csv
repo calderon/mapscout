@@ -1,23 +1,25 @@
-npc,locale,name,faction,title,services,skill,uiMap,x,y,gossip,at
-1976,esES,Patrulla urbana de Ventormenta,Alliance,Nivel 55,,,1453,0.5479,0.5673,,1795775059
-2460,esES,Barnum Mantopétreo,Alliance,,bank,,1455,0.3452,0.5893,,1795733173
-2461,esES,Bailey Mantopétreo,Alliance,,bank,,1455,0.3544,0.6076,,1795717432
-2784,esES,Rey Magni Barbabronce,Alliance,,,,1455,0.3941,0.5575,,1795717553
-2879,esES,Karrina Mekenda,Alliance,Instructor de mascotas,,,1453,0.6736,0.3691,,1795774864
-4259,esES,Thurgrum Forjahonda,Alliance,Suministros de herrería,repair vendor,,1455,0.5148,0.4321,,1795774336
-5049,esES,Lyesa Frenteacerada,Alliance,,vendor,,1455,0.3576,0.854,,1795772904
-5099,esES,Soleil Mantopétreo,Alliance,,bank,,1455,0.3619,0.6221,,1795733181
-5109,esES,Myra Tyrngaarde,Alliance,,vendor,,1455,0.2756,0.7192,,1795733143
-5124,esES,Sognar Barbarrisco,Alliance,Vendedor de carne,vendor,,1455,0.6307,0.7159,,1795774215
-5130,esES,Jondor Frenteacerada,Alliance,,,,1455,0.3576,0.854,132055:¿Cómo puedo formar una hermandad? | 132056:Quiero crear el blasón de una hermandad.,1795772884
-5509,esES,Kathrum Manacha,Alliance,Mercader de hachas,repair vendor,,1453,0.5941,0.3395,132060:Quiero ver tus mercancías.,1795774809
-5512,esES,Kaita Forjahonda,Alliance,Suministros de herrería,repair vendor,,1453,0.6326,0.3747,132060:Quiero ver tus mercancías.,1795774837
-5595,esES,Guardia de Forjaz,Alliance,Nivel 55,,,1455,0.5761,0.3523,,1795774478
-6328,esES,Dannie Chispana,Alliance,Instructor de demonios,,,1426,0.4725,0.5375,,1795802545
-6491,esES,Ángel de la Resurrección,Neutral,Nivel 60,,,1426,0.5421,0.3903,132054:Devuélveme a la vida.,1795801082
-8720,esES,Subastador Redmuse,Alliance,,auction,,1455,0.2444,0.7443,,1795719302
-11145,esES,Myolor Furiahendida,Alliance,Nivel 53,,,1455,0.5143,0.4102,,1795774442
-14991,esES,Emisario de la Liga de Arathor,Alliance,Nivel 40,,,1455,0.5826,0.8032,,1795773942
-265813,esES,Eric Martillo Radiante,Alliance,Aventurero,,,1426,0.4667,0.5396,,1795802532
-270581,esES,Fyrenz Vishonar,Alliance,Transfiguradora,transmog,,1453,0.4793,0.8453,4675665:Me gustaría cambiar la apariencia de mi equipamiento. | 4675720:Me gustaría desactivar la transfiguración.,1795775178
-274781,esES,Guardia regio férreo,Alliance,,,,1455,0.4108,0.5064,,1795732758
+npc,locale,name,faction,title,services,skill,uiMap,x,y,gossip,at,seen
+727,esES,Montaraz de Forjaz,Alliance,Nivel 30,,,1426,0.4648,0.5224,,1795811785,1426:0.48:0.5533 1426:0.4641:0.5448 1426:0.4768:0.5609 1426:0.4768:0.5609:0677BDEEAE 1426:0.4641:0.547:3BC3A6A19D 1426:0.4652:0.5291:A80C07CDAE 1426:0.4807:0.5514:0677BDEEAE 1426:0.4643:0.5221:3BC3A6A19D 1426:0.4648:0.5224:F655C9894A
+1976,esES,Patrulla urbana de Ventormenta,Alliance,Nivel 55,,,1453,0.5479,0.5673,,1795775059,
+2460,esES,Barnum Mantopétreo,Alliance,,bank,,1455,0.3452,0.5893,,1795733173,
+2461,esES,Bailey Mantopétreo,Alliance,,bank,,1455,0.3544,0.6076,,1795717432,
+2784,esES,Rey Magni Barbabronce,Alliance,,,,1455,0.3941,0.5575,,1795717553,
+2878,esES,Peria Lamenur,Alliance,Instructor de mascotas,,,1426,0.4661,0.5409,,1795811667,1426:0.4661:0.5409:D5DD2251FC
+2879,esES,Karrina Mekenda,Alliance,Instructor de mascotas,,,1453,0.6736,0.3691,,1795774864,
+4259,esES,Thurgrum Forjahonda,Alliance,Suministros de herrería,repair vendor,,1455,0.5148,0.4321,,1795774336,
+5049,esES,Lyesa Frenteacerada,Alliance,,vendor,,1455,0.3576,0.854,,1795772904,
+5099,esES,Soleil Mantopétreo,Alliance,,bank,,1455,0.3619,0.6221,,1795733181,
+5109,esES,Myra Tyrngaarde,Alliance,,vendor,,1455,0.2756,0.7192,,1795733143,
+5124,esES,Sognar Barbarrisco,Alliance,Vendedor de carne,vendor,,1455,0.6307,0.7159,,1795774215,
+5130,esES,Jondor Frenteacerada,Alliance,,,,1455,0.3576,0.854,132055:¿Cómo puedo formar una hermandad? | 132056:Quiero crear el blasón de una hermandad.,1795772884,
+5509,esES,Kathrum Manacha,Alliance,Mercader de hachas,repair vendor,,1453,0.5941,0.3395,132060:Quiero ver tus mercancías.,1795774809,
+5512,esES,Kaita Forjahonda,Alliance,Suministros de herrería,repair vendor,,1453,0.6326,0.3747,132060:Quiero ver tus mercancías.,1795774837,
+5595,esES,Guardia de Forjaz,Alliance,Nivel 55,,,1455,0.5761,0.3523,,1795774478,
+6328,esES,Dannie Chispana,Alliance,Instructor de demonios,,,1426,0.4725,0.5375,,1795802545,
+6491,esES,Ángel de la Resurrección,Neutral,Nivel 60,,,1426,0.5421,0.3903,132054:Devuélveme a la vida.,1795801082,
+8720,esES,Subastador Redmuse,Alliance,,auction,,1455,0.2444,0.7443,,1795719302,
+11145,esES,Myolor Furiahendida,Alliance,Nivel 53,,,1455,0.5143,0.4102,,1795774442,
+14991,esES,Emisario de la Liga de Arathor,Alliance,Nivel 40,,,1455,0.5826,0.8032,,1795773942,
+265813,esES,Eric Martillo Radiante,Alliance,Aventurero,,,1426,0.4667,0.5396,,1795802532,
+270581,esES,Fyrenz Vishonar,Alliance,Transfiguradora,transmog,,1453,0.4793,0.8453,4675665:Me gustaría cambiar la apariencia de mi equipamiento. | 4675720:Me gustaría desactivar la transfiguración.,1795775178,
+274781,esES,Guardia regio férreo,Alliance,,,,1455,0.4108,0.5064,,1795732758,

@@ -60,8 +60,10 @@ stay at sea level).
 `manual/roams.csv` flags NPCs who walk a route by hand (`npc`, `name`,
 `sources`: who saw it walking and when, or public sources; required). The
 harvest finds them too: it keeps every place an NPC was talked to (`seen` in
-`harvest/npcs.csv`, added up across imports), and an NPC seen on one map in two
-places more than `FAR_YARDS` (40) apart walks a route (`roams.py`). Their
+`harvest/npcs.csv`, added up across imports, each with the NPC's spawn from
+its GUID: NPCs that share an ID, like every Ironforge mountaineer, are told
+apart by it), and one NPC seen on one map in two places more than `FAR_YARDS`
+(25) apart walks a route (`roams.py`). Their
 services and trainers carry `true` at the end of their row, and MapScout shows
 their point as approximate.
 
