@@ -29,7 +29,7 @@ class Maps:
                 continue
             self.assignments.append({
                 "uiMap": ui_map, "continent": int(row["MapID"]), "type": self.types[ui_map],
-                "region": region, "ui": ui, "area": area,
+                "region": region, "ui": ui, "area": area, "areaID": int(row.get("AreaID") or 0),
             })
 
     def _holding(self, continent, world_x, world_y, kind):
@@ -55,6 +55,15 @@ class Maps:
         if continents:
             return self._convert(continents[0], world_x, world_y)
         return None
+
+    def place_in_zone(self, area_id, continent, world_x, world_y):
+        """(uiMapID, x, y) on the zone map of an AreaTable zone (the parent of a
+        subzone) when it holds the point, else as place() does. The point is
+        known to be in that zone: no need for the game to guess at a border."""
+        for a in self._holding(continent, world_x, world_y, ZONE):
+            if a["areaID"] == area_id:
+                return self._convert(a, world_x, world_y)
+        return self.place(continent, world_x, world_y)
 
     @staticmethod
     def _convert(a, world_x, world_y):

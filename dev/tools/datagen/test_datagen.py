@@ -59,6 +59,14 @@ class GeoTest(unittest.TestCase):
     def test_outside_every_zone_uses_the_continent(self):
         self.assertEqual(MAPS.place(0, 400, 200)[0], 10)
 
+    def test_a_subzone_on_its_own_zone_where_rectangles_overlap(self):
+        zone12 = assignment(12, 0, 0, 0, 300, 600)
+        zone12["AreaID"] = "40"
+        maps = Maps([ui_map(10, 2), ui_map(12, 3), ui_map(13, 3)],
+                    [assignment(10, 0, 0, 0, 1000, 1000), zone12, assignment(13, 0, 0, 400, 300, 1000)])
+        self.assertEqual(maps.place_in_zone(40, 0, 100, 500)[0], 12)
+        self.assertEqual(maps.place_in_zone(99, 0, 100, 500)[0], 10)  # another zone: the continent
+
     def test_other_continent_or_outside(self):
         self.assertIsNone(MAPS.place(1, 100, 100))
         self.assertIsNone(MAPS.place(0, 2000, 100))
@@ -223,6 +231,98 @@ class PlacesTest(unittest.TestCase):
         ]
         found = places.places(MAPS, rows)
         self.assertEqual([(p[0], p[1]) for p in found], [(1, "town"), (4, "place")])
+
+
+def area_row(id_, name, parent=40, continent=0):
+    return {"ID": str(id_), "AreaName_lang": name, "ParentAreaID": str(parent), "ContinentID": str(continent)}
+
+
+class TerrainTest(unittest.TestCase):
+    @staticmethod
+    def chunk(tag, data):
+        import struct
+        return tag[::-1].encode() + struct.pack("<I", len(data)) + data
+
+    def test_tile_files_from_the_wdt(self):
+        import struct
+        import terrain
+        maid = bytearray(4096 * 32)
+        struct.pack_into("<8I", maid, 5 * 32, 777, 1, 2, 3, 4, 5, 6, 7)
+        struct.pack_into("<8I", maid, 9 * 32, 555, 0, 0, 0, 0, 0, 0, 0)
+        wdt = self.chunk("MVER", b"\x12\0\0\0") + self.chunk("MAID", bytes(maid))
+        self.assertEqual(terrain.tile_files(wdt), [555, 777])
+
+    def test_tile_areas_from_the_adt(self):
+        import struct
+        import terrain
+        header = bytearray(128 + 16)
+        struct.pack_into("<I", header, terrain.MCNK_AREA, 107)
+        struct.pack_into("<3f", header, terrain.MCNK_POSITION, 1000.0, 2000.0, 5.0)
+        adt = self.chunk("MVER", b"\x12\0\0\0") + self.chunk("MCNK", bytes(header))
+        self.assertEqual(terrain.tile_areas(adt), [[107, round(1000 - terrain.CHUNK / 2, 1),
+                                                     round(2000 - terrain.CHUNK / 2, 1)]])
+
+    def test_middles_deep_inside_the_biggest_piece(self):
+        import terrain
+        c = terrain.CHUNK
+        # chunk centres, as the tiles give them: half a chunk from the grid lines
+        chunks = [[1, (x + 0.5) * c, (y + 0.5) * c] for x in range(5) for y in range(5)]  # a 5 x 5 square
+        chunks += [[1, 40.5 * c, 40.5 * c]]  # a loose chunk far away
+        chunks += [[2, (x + 0.5) * c, 10.5 * c] for x in range(3)]  # a line, not wanted
+        found = terrain.middles(chunks, {1})
+        self.assertEqual(list(found), [1])
+        self.assertAlmostEqual(found[1][0], 2.5 * c)
+        self.assertAlmostEqual(found[1][1], 2.5 * c)
+        self.assertEqual(found[1][2], 25)
+
+    def test_middles_of_a_ring_stay_on_the_ground(self):
+        import terrain
+        c = terrain.CHUNK
+        ring = [[1, (x + 0.5) * c, (y + 0.5) * c] for x in range(5) for y in range(5) if x in (0, 4) or y in (0, 4)]
+        x, y, _ = terrain.middles(ring, {1})[1]
+        self.assertTrue(any(abs(x - cx) < 0.01 and abs(y - cy) < 0.01 for _, cx, cy in ring))
+
+    def test_middles_of_real_chunk_centres_make_one_piece(self):
+        import terrain
+        # centres from tile_areas: corner minus half a chunk, rounded to 0.1
+        corner = 6400.0
+        chunks = [[1, round(corner - i * terrain.CHUNK - terrain.CHUNK / 2, 1), -16.7] for i in range(9)]
+        self.assertEqual(terrain.middles(chunks, {1})[1][2], 9)
+
+
+class SubzonesTest(unittest.TestCase):
+    def test_only_subzones_not_found_yet_on_outdoor_continents(self):
+        import places
+        import terrain
+        c = terrain.CHUNK
+        areas = [
+            area_row(107, "Saldean's Farm"),
+            area_row(87, "Goldshire"),  # already an AreaPOI place
+            area_row(40, "Westfall", parent=0),  # a zone
+            area_row(111, "Jangolode Mine"),  # no ground of its own
+            area_row(900, "Battleground camp", continent=30),
+            area_row(2364, "The Great Sea"),  # the sea next to the coast
+            area_row(2518, "Lariss Pavilion"),  # the place is "Lariss Pavillion", same name in Spanish
+            area_row(200, "Lordamere Lake"), area_row(201, "Lordamere Lake", parent=41),  # split by a border
+        ]
+        chunks = {0: [[107, 600 + c * i, 700] for i in range(3)] + [[87, 650, 650], [40, 900, 900], [2364, 700, 950]]
+                      + [[200, 800, 800]] + [[201, 800 + c * i, 850] for i in range(2)]}
+        chunks[0].append([2518, 610, 610])
+        found = places.subzones(MAPS, areas, chunks, ["goldshire", "Westfall", "Pabellón de Lariss"],
+                                {2518: ["Pabellón de Lariss"]})
+        self.assertEqual([a[0] for a in found], [107, 201])
+        self.assertEqual(found[0][1], 11)
+
+    def test_write_areas_and_their_names(self):
+        import places
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "Places.lua")
+            places.write(path, "1.0", "2026-01-01", [(1, "town", 10, 5, 6)], {"enUS": {1: "Goldshire"}},
+                         [(107, 1436, 4500, 3000)], {"enUS": {107: "Saldean's Farm"}, "esES": {107: "Granja de Saldean"}})
+            with open(path, encoding="utf-8") as source:
+                text = source.read()
+        self.assertIn("[107] = { 1436, 4500, 3000 },", text)
+        self.assertIn('[107] = "Granja de Saldean",', text)
 
 
 def path_node(path, index, continent, x, y, z=0, flags=0):

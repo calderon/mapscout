@@ -21,10 +21,11 @@ import dungeons  # noqa: E402
 import harvest  # noqa: E402
 import places  # noqa: E402
 import services  # noqa: E402
+import terrain  # noqa: E402
 import trainers  # noqa: E402
 import transport  # noqa: E402
 from geo import Maps  # noqa: E402
-from wago import Tables, build_date  # noqa: E402
+from wago import Files, Tables, build_date  # noqa: E402
 
 PRODUCT = "wowf"  # WoW Forever on wago.tools
 BUILD = "1.60.1.71139"  # the build the packs are made from (game version 1.60.1)
@@ -91,9 +92,25 @@ def main(argv=None):
     pois = tables.rows("AreaPOI")
     found_places = places.places(maps, pois)
     place_names = places.names({locale: tables.rows("AreaPOI", locale) for locale in LOCALES}, [p[0] for p in found_places])
-    places.write(os.path.join(OUT, "Places.lua"), args.build, date, found_places, place_names)
-    print("Places.lua: %d towns, %d named places" % (
-        sum(1 for p in found_places if p[1] == "town"), sum(1 for p in found_places if p[1] == "place")))
+    files = Files(args.build)
+    wdt = {int(row["ID"]): int(row["WdtFileDataID"]) for row in instances}
+    chunks = {continent: terrain.continent(files, wdt[continent], os.path.join(
+        CACHE, args.build, "terrain", "%d.json" % continent)) for continent in places.OUTDOOR}
+    # Names already found (places, maps, instances), in every language
+    taken = [name for names_of in place_names.values() for name in names_of.values()]
+    taken += [row["Name_lang"] for row in tables.rows("UiMap")]
+    taken += [row["MapName_lang"] for locale in LOCALES for row in tables.rows("Map", locale)]
+    translated = {}
+    for locale in LOCALES[1:]:
+        for row in tables.rows("AreaTable", locale):
+            translated.setdefault(int(row["ID"]), []).append(row["AreaName_lang"])
+    found_areas = places.subzones(maps, tables.rows("AreaTable"), chunks, taken, translated)
+    area_names = places.area_names({locale: tables.rows("AreaTable", locale) for locale in LOCALES},
+                                   [a[0] for a in found_areas])
+    places.write(os.path.join(OUT, "Places.lua"), args.build, date, found_places, place_names, found_areas, area_names)
+    print("Places.lua: %d towns, %d named places, %d subzones from the terrain" % (
+        sum(1 for p in found_places if p[1] == "town"), sum(1 for p in found_places if p[1] == "place"),
+        len(found_areas)))
 
     listed = transport.lines(os.path.join(MANUAL, "transport.csv"))
     stops, heights = transport.path_stops(tables.rows("TaxiPathNode"))

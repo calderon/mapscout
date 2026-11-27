@@ -29,7 +29,14 @@ Never data from other addons' databases, emulator databases or wiki scraping
 
 Tables per output:
 
-- `Places.lua`: `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`.
+- `Places.lua`: `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`;
+  for subzones without a label, `AreaTable` (enUS, esES, esMX) and the
+  terrain: each continent's WDT (`Map.WdtFileDataID`) and the root ADT file
+  of each of its tiles, loose client files from wago.tools
+  (`/api/casc/<FileDataID>?version=…`), downloaded one by one at least 1.5 s
+  apart (about 45 minutes the first time for both continents). Only the area
+  of each chunk is kept, in `.cache/<build>/terrain/<continent>.json`; a run
+  that stops goes on where it was.
 - `Dungeons.lua`: `Map` and `AreaTable` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`, plus `manual/entrances.csv`.
 - `Services.lua`: the harvest (the client has no service NPCs nor mailboxes),
   plus `manual/services.csv` for services not harvested yet on a map (at least
@@ -106,7 +113,13 @@ game (`ns.PlaceOnMap`).
 
 - `Places.lua`: towns and camps, and named places (the names the world map
   writes, where it writes them; a name is kept once per map). Not every subzone
-  is there: some names are part of the map's art.
+  is there: some names are part of the map's art. Those come from the
+  terrain (`areas`, by AreaTable ID, with their names in `areaNames`): the
+  subzones of both continents whose name is not a place, a map or an
+  instance already, at the chunk of their biggest piece of ground farthest
+  from any other area (inside the subzone, near its middle), stored on
+  their zone's map (the AreaTable parent: no guessing at a border). The open sea
+  next to each coast is a subzone too, and is left out (`SEAS`).
 - `Dungeons.lua`: dungeon and raid entrances (where the corpse of a player who
   dies inside goes), their kind, recommended level and names, and the other
   name players use where the instance's area (AreaTable) has another one
