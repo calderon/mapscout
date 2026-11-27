@@ -10,6 +10,7 @@
 --       categories = { { id = "shops", name = "Shops", filter = "shops" } }, -- sub-toggles, own @ words
 --       defaultEnabled = true,
 --       group = "quests", groupName = "Quests", -- optional: one checkbox for several providers
+--       parent = "services",               -- optional: shown inside that provider, found by its @ word
 --       OnEnable = function() provider:SetEntries(...) end, -- on, at login too
 --       OnDisable = function() end,        -- off: stop events, drop data
 --       Collect = function(ctx, add) end,  -- live results, asked per search
@@ -71,6 +72,7 @@ local function validateSpec(id, spec)
 	optional(id, spec, "icon", "string")
 	optional(id, spec, "group", "string") -- providers of one group share a checkbox in the options
 	optional(id, spec, "groupName", "string")
+	optional(id, spec, "parent", "string") -- shown inside that provider in the options, found by its @ word
 	optional(id, spec, "filter", "string")
 	optional(id, spec, "filterAliases", "table")
 	optional(id, spec, "categories", "table")
@@ -463,8 +465,29 @@ function Registry.ResetChoices()
 	notify("categories")
 end
 
+-- The providers registered inside another one (spec.parent), in registration order
+function Registry.Children(id)
+	local list = {}
+	for _, other in ipairs(order) do
+		local record = providers[other]
+		if record.spec.parent == id and other ~= id then
+			list[#list + 1] = record
+		end
+	end
+	return list
+end
+
+-- A provider's word selects it and the providers inside it (@service: trainers too)
+local function addWhole(found, id)
+	found[#found + 1] = { provider = id }
+	for _, child in ipairs(Registry.Children(id)) do
+		found[#found + 1] = { provider = child.id }
+	end
+end
+
 -- What an @ word selects: a list of { provider = id, category = id or nil }.
--- A provider's word selects the whole provider; a category's word, that category.
+-- A provider's word selects the whole provider (and the ones inside it); a
+-- category's word, that category.
 -- normalized: the word is already normalized (skips doing it again).
 function Registry.FindByFilter(word, normalized)
 	if not normalized then
@@ -477,7 +500,7 @@ function Registry.FindByFilter(word, normalized)
 		for _, filter in ipairs(record.filters) do
 			if filter == word then
 				whole = true
-				found[#found + 1] = { provider = id }
+				addWhole(found, id)
 				break
 			end
 		end
@@ -512,6 +535,9 @@ function Registry.FindByFilterPrefix(start)
 			if filter:sub(1, #start) == start then
 				whole = true
 				add(id)
+				for _, child in ipairs(Registry.Children(id)) do
+					add(child.id)
+				end
 				break
 			end
 		end

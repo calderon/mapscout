@@ -246,6 +246,26 @@ describe("API/Registry.lua", function()
 		assert.matches("filter must be a string", err, 1, true)
 	end)
 
+	it("finds the providers inside another one with its @ word", function()
+		load()
+		login()
+		MapScoutAPI:RegisterProvider("services", { name = "Services", filter = "service",
+			categories = { { id = "bank", name = "Banks", filter = "bank" } } })
+		MapScoutAPI:RegisterProvider("trainers", { name = "Trainers", filter = "trainer", parent = "services" })
+		assert.are.same({ { provider = "services" }, { provider = "trainers" } }, Registry.FindByFilter("service"))
+		assert.are.same({ { provider = "services" }, { provider = "trainers" } }, Registry.FindByFilterPrefix("serv"))
+		assert.are.same({ { provider = "trainers" } }, Registry.FindByFilter("trainer")) -- not the other way
+		assert.are.same({ { provider = "services", category = "bank" } }, Registry.FindByFilter("bank"))
+		assert.are.same({ "trainers" }, (function()
+			local ids = {}
+			for i, record in ipairs(Registry.Children("services")) do ids[i] = record.id end
+			return ids
+		end)())
+		local ok, err = pcall(MapScoutAPI.RegisterProvider, MapScoutAPI, "x", { name = "X", parent = 3 })
+		assert.is_false(ok)
+		assert.matches("parent must be a string", err, 1, true)
+	end)
+
 	it("/ms debug providers lists them", function()
 		load()
 		SlashCmdList.MAPSCOUT("debug providers")

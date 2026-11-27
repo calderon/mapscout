@@ -251,7 +251,7 @@ describe("Adapters/QuestieDBServices.lua", function()
 		assert.are.same({ "Vendedora" }, search("@proveedor"))
 		-- by subname (first; "Herrero" follows as a near match: few results allow typos)
 		assert.are.equal("Bixi", (ns.Engine.Search(ns.Query.Parse("herreria")))[1].item.entry.name)
-		assert.are.equal(5, #search("@servicio")) -- the trainer is in Trainers
+		assert.are.equal(6, #search("@servicio")) -- the trainer too: Trainers is inside Services
 	end)
 
 	it("leaves out what our pack has on that map", function()

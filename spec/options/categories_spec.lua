@@ -141,6 +141,57 @@ describe("Options/Categories.lua", function()
 		assert.are.equal("flights.nil", changed[2]) -- told on reset
 	end)
 
+	describe("a provider inside another one", function()
+		before_each(function()
+			MapScoutAPI:RegisterProvider("trainers", {
+				name = "Instructores", parent = "services", filter = "trainer",
+				categories = { { id = "class", name = "Tu clase", filter = "class" }, { id = "riding", name = "Equitación" } },
+			}):SetEntries({ { id = 1, name = "Instructor de magos", category = "class", mapID = 1455, x = 0.5, y = 0.5 } })
+			ns.OptionsCategories.Refresh()
+		end)
+
+		local function levels()
+			local list = {}
+			for i, line in ipairs(ns.OptionsCategories.Lines()) do
+				list[i] = line.level .. " " .. (line.category and line.category.name or line.record.spec.name)
+			end
+			return list
+		end
+
+		it("comes after that one's categories, with its own under it", function()
+			assert.are.same({ "0 Servicios", "1 Banco", "1 Posada", "1 Instructores", "2 Tu clase", "2 Equitación",
+				"0 Vuelos" }, levels())
+		end)
+
+		it("turns on and off with the outer checkbox, which shows it as partial", function()
+			row("Equitación"):Run("OnClick")
+			assert.is_true(row("Servicios"):GetChecked())
+			assert.is_true(row("Instructores"):GetChecked())
+			row("Servicios"):Run("OnClick") -- on: off, both
+			assert.is_false(ns.Registry.Get("services").enabled)
+			assert.is_false(ns.Registry.Get("trainers").enabled)
+			assert.is_false(row("Servicios"):GetChecked())
+			assert.is_false(row("Instructores"):IsEnabled()) -- greyed: can't be turned on alone
+			assert.is_true(row("Instructores"):GetChecked()) -- but checked: it comes back with Services
+			row("Servicios"):Run("OnClick") -- off: on, both, with all their categories
+			assert.is_true(ns.Registry.Get("services").enabled)
+			assert.is_true(ns.Registry.Get("trainers").enabled)
+			assert.is_true(ns.Registry.IsCategoryEnabled("trainers", "riding"))
+		end)
+
+		it("has a checkbox of its own for all its kinds, and one per kind", function()
+			row("Instructores"):Run("OnClick")
+			assert.is_false(ns.Registry.Get("trainers").enabled)
+			assert.is_true(ns.Registry.Get("services").enabled) -- the outer one stays on
+			assert.is_true(row("Servicios"):GetChecked()) -- partial
+			assert.is_false(row("Tu clase"):IsEnabled()) -- greyed
+			row("Instructores"):Run("OnClick")
+			assert.is_true(ns.Registry.Get("trainers").enabled)
+			row("Tu clase"):Run("OnClick")
+			assert.is_false(ns.Registry.IsCategoryEnabled("trainers", "class"))
+		end)
+	end)
+
 	it("adds providers registered later by themselves", function()
 		MapScoutAPI:RegisterProvider("late", { name = "Llega tarde" })
 		assert.is_table(row("Llega tarde"))
