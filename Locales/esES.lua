@@ -141,7 +141,7 @@ L.QUESTS_NO_PLACE = "El juego no indica en el mapa dónde está esta misión."
 
 -- Misiones disponibles (QuestieDB)
 L.AVAILABLE_NAME = "Disponibles"
-L.AVAILABLE_DESCRIPTION = "Misiones que puedes coger ahora, de QuestieDB"
+L.AVAILABLE_DESCRIPTION = "Misiones que puedes coger ahora"
 L.AVAILABLE_SUBTITLE = "Disponible · Nivel %d · %s"
 L.AVAILABLE_GIVER = "La da: %s"
 L.AVAILABLE_STARTS_AT = "Empieza en: %s"
@@ -184,6 +184,11 @@ L.BATTLE_arathi = "Maestro de batalla de la Cuenca de Arathi"
 L.BATTLE_warsong = "Maestro de batalla de la Garganta Grito de Guerra"
 L.DEBUG_QUESTIE_SERVICES = "servicios de QuestieDB"
 L.DEBUG_QUESTIE_SERVICES_RESULT = "QuestieDB: %d PNJ, %d servicios, creado en %.0f ms"
+L.SPIRIT_HEALER = "Ángel de la resurrección"
+L.SPIRIT_HEALERS_NAME = "Ángeles de la resurrección"
+L.SPIRIT_HEALERS_DESCRIPTION = "Los ángeles de los cementerios, para volver a la vida tras morir"
+L.DEBUG_SPIRIT_HEALERS = "ángeles de la resurrección de QuestieDB"
+L.DEBUG_SPIRIT_HEALERS_RESULT = "QuestieDB: %d PNJ, %d ángeles, creado en %.0f ms"
 L.TRAINERS_NAME = "Instructores"
 L.TRAINERS_DESCRIPTION = "Instructores de clase, de profesiones, de equitación y de armas en las ciudades"
 L.TRAINERS_class = "Tu clase"
@@ -328,3 +333,5 @@ ns.W.FORGE = { "forja", "forjas" }
 ns.W.BARBER = { "peluqueria", "peluquero", "barbero", "barberia", "peluquerias" }
 ns.W.GUILD = { "hermandad", "tabardo", "maestro de la hermandad" }
 ns.W.VENDOR = { "vendedor", "proveedor", "tienda", "mercader", "vendedores", "proveedores" }
+ns.W.SPIRIT_HEALERS = { "angel", "cementerio", "angeles", "cementerios" }
+ns.W.SPIRIT_HEALER = { "angel de la resurreccion", "cementerio", "angel", "resucitar" }

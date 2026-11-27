@@ -34,6 +34,7 @@ Providers/Trainers.lua
 Providers/Quests.lua
 Adapters/QuestieDB.lua
 Adapters/QuestieDBServices.lua
+Adapters/QuestieDBSpiritHealers.lua
 UI/Map.lua
 UI/SearchBar.lua
 UI/Preview.lua
