@@ -4,7 +4,8 @@
 -- language), with the place in the subtitle: the name the game gave it ("Sala
 -- de los Misterios") when it was harvested in the player's language, else its
 -- city. The player's own class comes first; other classes' trainers have their
--- own toggle.
+-- own toggle. Trainers are shown inside Services in the options (spec.parent),
+-- and @service finds them too.
 --   @trainer (all)  @class  @otherclass  @profession  @riding  @weapon
 -- From the static data pack (Core/Packs.lua, category "trainers"), harvested
 -- in the game, like the city services (Providers/Services.lua). Trainers only
@@ -168,6 +169,7 @@ provider = MapScoutAPI:RegisterProvider("trainers", {
 	name = L.TRAINERS_NAME,
 	description = L.TRAINERS_DESCRIPTION,
 	icon = Trainers.ICONS.class,
+	parent = "services", -- trainers are one more kind of service: inside it in the options, found by @service
 	filter = table.remove(aliases, 1),
 	filterAliases = aliases,
 	categories = categories,

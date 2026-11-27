@@ -1,7 +1,9 @@
 -- MapScout options: what to search. A checkbox per provider (Places, Flight
 -- masters...), with its categories under it (Bank, Inn...). Providers of one
 -- group (spec.group: "Quests" = in your log + available) hang from one more
--- checkbox that turns them all on or off.
+-- checkbox that turns them all on or off. A provider inside another one
+-- (spec.parent: Trainers in Services) comes after that one's categories, and
+-- the outer checkbox turns both on or off, as a group's does.
 --   * A provider turned off is really off: not loaded, indexed nor listening
 --     to events (the registry drops it). Its categories show greyed.
 --   * A category turned off is left out of the results.
@@ -75,22 +77,49 @@ local function groupState(records)
 	return anyOn, anyOn and not allFull
 end
 
+-- The state of a provider's checkbox with the providers inside it: as a group's
+local function outerState(line)
+	if line.records then
+		return groupState(line.records)
+	end
+	return providerState(line.record)
+end
+
 -- What the list shows, in order:
--- { kind = "group"|"provider"|"category"|"setting", level = 0..2, record, category, setting, records }
-local function addProvider(into, record, level)
-	into[#into + 1] = { kind = "provider", record = record, level = level }
+-- { kind = "group"|"provider"|"category"|"setting", level = 0..3, record, category, setting, records }
+-- A provider with others inside it has records = { itself, those inside }.
+local function addProvider(into, record, level, outer)
+	local line = { kind = "provider", record = record, level = level, outer = outer }
+	into[#into + 1] = line
 	for _, category in ipairs(record.spec.categories or {}) do
 		into[#into + 1] = { kind = "category", record = record, category = category, level = level + 1 }
 	end
 	for _, setting in ipairs(ns.Registry.Settings(record.id)) do
 		into[#into + 1] = { kind = "setting", record = record, setting = setting, level = level + 1 }
 	end
+	local children = ns.Registry.Children(record.id)
+	if #children > 0 then
+		line.records = { record }
+		for _, child in ipairs(children) do
+			table.insert(line.records, child)
+			addProvider(into, child, level + 1, record)
+		end
+	end
+end
+
+-- Whether a provider is drawn inside another one (only if that one is registered)
+local function isInside(record)
+	local parent = record.spec.parent
+	return parent ~= nil and parent ~= record.id and ns.Registry.Get(parent) ~= nil
 end
 
 function Categories.Lines()
 	local lines, groups = {}, {}
 	for _, record in ipairs(ns.Registry.List()) do
 		local group = record.spec.group
+		if isInside(record) then -- drawn with the provider it is in
+			group = false
+		end
 		if group then
 			if not groups[group] then
 				groups[group] = { kind = "group", group = group, name = record.spec.groupName or group, level = 0, records = {} }
@@ -98,7 +127,7 @@ function Categories.Lines()
 				lines[#lines + 1] = { kind = "groupEnd", group = group } -- where its providers go
 			end
 			table.insert(groups[group].records, record)
-		else
+		elseif group == nil then
 			addProvider(lines, record, 0)
 		end
 	end
@@ -132,6 +161,15 @@ function Categories.Toggle(line)
 				ns.Registry.SetEnabled(member.id, false)
 			else
 				turnOn(member) -- with all its categories
+			end
+		end
+	elseif line.kind == "provider" and line.records then -- with the providers inside it
+		local anyOn = groupState(line.records)
+		for _, member in ipairs(line.records) do
+			if anyOn then
+				ns.Registry.SetEnabled(member.id, false)
+			else
+				turnOn(member)
 			end
 		end
 	elseif line.kind == "provider" then
@@ -169,12 +207,16 @@ function Categories.Refresh()
 			checked, partial = groupState(line.records)
 			label, font = line.name, "GameFontNormal"
 		elseif line.kind == "provider" then
-			checked, partial = providerState(record)
+			checked, partial = outerState(line)
 			label, tooltip = record.spec.name, record.spec.description
 			font = (line.level or 0) == 0 and "GameFontNormal" or "GameFontHighlight"
 			if record.failed then
 				label = label .. " (" .. L.PROVIDER_STATE_FAILED .. ")"
 				enabled = false
+			elseif line.outer and not line.outer.enabled then
+				-- greyed while the provider it is in is off, checked as its
+				-- categories are: turning that one on turns this one on too
+				checked, partial, enabled = true, false, false
 			end
 		elseif line.kind == "setting" then
 			checked = ns.Registry.GetSetting(record.id, line.setting.id)
@@ -191,7 +233,7 @@ function Categories.Refresh()
 			texture:SetDesaturated(partial)
 			texture:SetAlpha(partial and 0.5 or 1)
 		end
-		row.Label:SetFontObject(font)
+		row.Label:SetFontObject(enabled and font or "GameFontDisable") -- greyed text too: the check alone barely shows it
 		row.Label:SetText(label)
 		row.tooltip = tooltip
 		if enabled then
