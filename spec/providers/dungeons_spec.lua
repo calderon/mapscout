@@ -92,13 +92,17 @@ describe("Providers/Dungeons.lua", function()
 	end)
 
 	it("finds an unconfirmed entrance by name, with no place and saying so", function()
-		local deadmines = entry(36)
-		assert.are.equal("Minas de la Muerte", deadmines.name)
-		assert.are.equal("Mazmorra · nivel 16 · entrada por confirmar", deadmines.subtitle)
-		assert.is_nil(deadmines.mapID)
-		assert.are.same({ ns.L.DUNGEONS_NO_ENTRANCE }, deadmines.details)
-		local alcaz = entry(2994) -- one of Forever's new dungeons
-		assert.are.equal("Mazmorra · nivel 48 · entrada por confirmar", alcaz.subtitle)
+		local core = entry(409)
+		assert.are.equal("Núcleo de Magma", core.name)
+		assert.are.equal("Banda · nivel 60 · entrada por confirmar", core.subtitle)
+		assert.is_nil(core.mapID)
+		assert.are.same({ ns.L.DUNGEONS_NO_ENTRANCE }, core.details)
+	end)
+
+	it("places Forever's new dungeons", function()
+		local alcaz = entry(2994) -- from DungeonJournal, with its author's permission
+		assert.are.equal("Mazmorra · nivel 48", alcaz.subtitle)
+		assert.are.equal(1445, alcaz.mapID)
 	end)
 
 	it("never leaves an entrance on the map of a building or an instance", function()
@@ -112,6 +116,19 @@ describe("Providers/Dungeons.lua", function()
 		assert.are.equal(1436, mapID) -- its zone, not Blackrock Mountain
 		assert.are.equal(0.2, x)
 		assert.are.equal(0.3, y)
+	end)
+
+	it("keeps a zone point on its zone, even where the game sees the zone next to it", function()
+		local badlands = { mapID = 1418, name = "Tierras Inhóspitas", mapType = 3, parentMapID = 1415 }
+		local getInfo = C_Map.GetMapInfo
+		StubGlobals({ C_Map = setmetatable({
+			GetMapInfo = function(id) return id == 1418 and badlands or getInfo(id) end,
+			GetMapInfoAtPosition = function() return WESTFALL end,
+		}, { __index = C_Map }) })
+		local mapID, x, y = ns.Dungeons.Place(1418, 0.443, 0.12) -- Uldaman, at the north edge
+		assert.are.equal(1418, mapID)
+		assert.are.equal(0.443, x)
+		assert.are.equal(0.12, y)
 	end)
 
 	it("finds them by name in both languages and by @ words", function()

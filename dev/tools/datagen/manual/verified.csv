@@ -2,7 +2,8 @@
 # Only checked entrances get a place on the map; every other dungeon or raid is
 # still searchable, with no place, as "entrance to be confirmed".
 #   instance: the instance's map ID (client Map table)
-#   checked: who checked it and when
+#   checked: who checked it and when (Exehn: DungeonJournal data, used with the
+#            author's permission, see entrances.csv)
 instance,name,checked
 33,Shadowfang Keep,Daniel 2026-11-26
 43,Wailing Caverns,Daniel 2026-11-26
@@ -17,3 +18,19 @@ instance,name,checked
 509,Ruins of Ahn'Qiraj,Daniel 2026-11-26
 531,Ahn'Qiraj Temple,Daniel 2026-11-26
 2970,The Drowned City,Daniel 2026-11-26
+2999,Ruins of Lordaeron,Exehn (DungeonJournal) 2026-11-27
+2998,Excavation Site: Wetlands,Exehn (DungeonJournal) 2026-11-27
+2959,City of Dalaran,Exehn (DungeonJournal) 2026-11-27
+3039,Krol'dok Stronghold,Exehn (DungeonJournal) 2026-11-27
+2994,Alcaz Prison,Exehn (DungeonJournal) 2026-11-27
+2974,Blackmaw Hold,Exehn (DungeonJournal) 2026-11-27
+3001,The Shaper's Terrace,Exehn (DungeonJournal) 2026-11-27
+34,The Stockade,Exehn (DungeonJournal) 2026-11-27
+36,Deadmines,Exehn (DungeonJournal) 2026-11-27
+48,Blackfathom Deeps,Exehn (DungeonJournal) 2026-11-27
+70,Uldaman,Exehn (DungeonJournal) 2026-11-27
+90,Gnomeregan,Exehn (DungeonJournal) 2026-11-27
+109,Sunken Temple,Exehn (DungeonJournal) 2026-11-27
+229,Blackrock Spire,Exehn (DungeonJournal) 2026-11-27
+230,Blackrock Depths,Exehn (DungeonJournal) 2026-11-27
+429,Dire Maul,Exehn (DungeonJournal) 2026-11-27

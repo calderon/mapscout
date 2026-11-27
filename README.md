@@ -14,6 +14,10 @@ Any other addon can add its own results and actions to the search through the pu
 
 Any addon can add its own results and actions to MapScout through `MapScoutAPI`. How MapScout is built: [ARCHITECTURE.md](ARCHITECTURE.md).
 
+### Credits
+
+- Dungeon entrances: [DungeonJournal](https://www.curseforge.com/wow/addons/dungeonjournal) by **Exehn**, used with permission. Thank you!
+
 ---
 
 <a name="espanol"></a>
@@ -29,3 +33,7 @@ Cualquier otro addon puede añadir sus propios resultados y acciones al buscador
 ### Para desarrolladores
 
 Cualquier addon puede añadir sus propios resultados y acciones a MapScout con `MapScoutAPI`. Cómo está hecho MapScout: [ARCHITECTURE.md](ARCHITECTURE.md) (en inglés).
+
+### Créditos
+
+- Entradas de las mazmorras: [DungeonJournal](https://www.curseforge.com/wow/addons/dungeonjournal), de **Exehn**, con su permiso. ¡Gracias!

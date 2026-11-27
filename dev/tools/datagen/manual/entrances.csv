@@ -2,8 +2,27 @@
 # One row per instance: where a player goes in, on the zone map they see it.
 #   instance: the instance's map ID (client Map table)
 #   uiMap, x, y: the zone map and the position on it, 0-100 as the game shows it
-#   sources: where the point comes from; at least two public sources that agree,
-#            separated by " ; ". Single facts only: never another addon's list.
+#   sources: where the point comes from, separated by " ; ". Either at least two
+#            public sources that agree (single facts only), or an addon whose
+#            author gave written permission to use its data, credited by name:
+#            never another addon's list without that permission.
 # A row here wins over the client data for the same instance.
 instance,uiMap,x,y,sources
 2970,1434,21.4,27.9,https://wow.gg/guides/the-drowned-city ; https://conquestcapped.com/guides/wow-forever/wow-forever-the-drowned-city-guide/
+3065,1455,43.5,52.0,DungeonJournal by Exehn (with permission)
+2999,1420,63.4,67.4,DungeonJournal by Exehn (with permission)
+2998,1437,47.7,56.2,DungeonJournal by Exehn (with permission)
+2959,1416,8.5,59.3,DungeonJournal by Exehn (with permission)
+3039,2548,37.5,37.3,DungeonJournal by Exehn (with permission)
+2994,1445,75.3,14.1,DungeonJournal by Exehn (with permission)
+2974,1447,38.6,33.2,DungeonJournal by Exehn (with permission)
+3001,1449,48.1,6.1,DungeonJournal by Exehn (with permission)
+34,1453,52.4,70.0,DungeonJournal by Exehn (with permission)
+36,1436,42.5,71.7,DungeonJournal by Exehn (with permission)
+48,1440,14.5,14.2,DungeonJournal by Exehn (with permission)
+70,1418,44.3,12.0,DungeonJournal by Exehn (with permission)
+90,1426,24.3,39.8,DungeonJournal by Exehn (with permission)
+109,1435,69.5,53.5,DungeonJournal by Exehn (with permission)
+229,1427,34.8,84.0,DungeonJournal by Exehn (with permission)
+230,1427,34.8,84.0,DungeonJournal by Exehn (with permission)
+429,1444,59.0,45.0,DungeonJournal by Exehn (with permission)
