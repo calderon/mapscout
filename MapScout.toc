@@ -31,6 +31,7 @@ Providers/Dungeons.lua
 Providers/Transport.lua
 Providers/Services.lua
 Providers/Trainers.lua
+Providers/SpiritHealers.lua
 Providers/Quests.lua
 Adapters/QuestieDB.lua
 Adapters/QuestieDBServices.lua

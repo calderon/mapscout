@@ -45,6 +45,7 @@ pack.categories.services = function()
 				{ "battle", 6992, 8892, "Alliance", "esES", 13, "arathi" },
 				{ "battle", 7099, 8870, "Alliance", "esES", 14, "warsong" },
 				{ "anvil", 5126, 4236, "", "", 0 },
+				{ "anvil", 5233, 4155, "", "", 0 },
 			},
 		},
 		names = {

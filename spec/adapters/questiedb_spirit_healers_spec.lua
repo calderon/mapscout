@@ -14,8 +14,12 @@ describe("Adapters/QuestieDBSpiritHealers.lua", function()
 		[5] = { name = "Nowhere", flags = 32, friendly = "AH" },
 	}
 
-	local function load(withDB)
+	-- our pack: the graveyard outside Ironforge (QuestieDB's 46, 52 is the same one), and one QuestieDB lacks
+	local OWN = { maps = { [1426] = { { 4650, 5230 }, { 8000, 8000 } } } }
+
+	local function load(withDB, withOwn)
 		ResetWoW()
+		rawset(_G, "MapScoutDataForever", nil)
 		local db = withDB and {
 			RequireContract = function(n) return n == 4 end,
 			contractVersion = 4,
@@ -55,6 +59,16 @@ describe("Adapters/QuestieDBSpiritHealers.lua", function()
 			LibQuestieDB = db,
 			WOW_PROJECT_ID = 18,
 			C_XMLUtil = { GetTemplateInfo = function() return {} end },
+			C_AddOns = {
+				LoadAddOn = function()
+					rawset(_G, "MapScoutDataForever", { categories = {
+						spirithealers = function() return withOwn and OWN or { maps = {} } end,
+					} })
+					return true
+				end,
+				IsAddOnLoadOnDemand = function() return true end,
+				GetAddOnMetadata = function() end,
+			},
 		})
 		local map = CreateFrame("Frame", "WorldMapFrame")
 		map.ScrollContainer = CreateFrame("Frame", nil, map)
@@ -65,7 +79,8 @@ describe("Adapters/QuestieDBSpiritHealers.lua", function()
 		local frame = FakeFrames[before + 1]
 		for _, file in ipairs({ "Core/Caps.lua", "Core/Util.lua", "Core/DB.lua", "Core/Packs.lua", "API/MapScoutAPI.lua",
 			"API/Registry.lua", "Search/Query.lua", "Search/Index.lua", "Search/Engine.lua",
-			"Adapters/QuestieDB.lua", "Adapters/QuestieDBSpiritHealers.lua", "UI/Map.lua" }) do
+			"Providers/SpiritHealers.lua", "Adapters/QuestieDB.lua", "Adapters/QuestieDBSpiritHealers.lua",
+			"UI/Map.lua" }) do
 			LoadAddonFile(file, ns)
 		end
 		frame:Fire("ADDON_LOADED", "MapScout")
@@ -102,18 +117,24 @@ describe("Adapters/QuestieDBSpiritHealers.lua", function()
 		"Dun Morogh 1426 0.10 0.20", "Dun Morogh 1426 0.30 0.70", "Dun Morogh 1426 0.46 0.52", "Forjaz 1455 0.60 0.40",
 	}
 
-	it("does nothing without QuestieDB: no toggle either", function()
-		load(false)
+	it("does nothing without QuestieDB: the option is ours, with our data only", function()
+		load(false, true)
 		assert.is_nil(ns.QuestieSpiritHealers)
-		assert.is_nil(ns.Registry.Get("spirithealers"))
+		assert.are.same({ "Dun Morogh 1426 0.47 0.52", "Dun Morogh 1426 0.80 0.80" }, search("cementerio"))
 	end)
 
-	it("is a provider of its own, not a service", function()
+	it("has no option of its own: its spirit healers are in Spirit healers", function()
 		load(true)
 		local record = ns.Registry.Get("spirithealers")
 		assert.is_truthy(record)
 		assert.is_nil(record.spec.parent)
 		assert.is_nil(ns.Registry.Get("services"))
+	end)
+
+	it("leaves out a spirit healer where our pack has that graveyard, and adds the others", function()
+		load(true, true)
+		assert.are.same({ "Dun Morogh 1426 0.10 0.20", "Dun Morogh 1426 0.30 0.70", "Dun Morogh 1426 0.47 0.52",
+			"Dun Morogh 1426 0.80 0.80", "Forjaz 1455 0.60 0.40" }, search("cementerio"))
 	end)
 
 	it("gives one result per spawn of each spirit healer the player can use", function()
@@ -133,11 +154,12 @@ describe("Adapters/QuestieDBSpiritHealers.lua", function()
 		assert.are.same({ "Forjaz 1455 0.60 0.40" }, search("@angel forjaz"))
 	end)
 
-	it("follows its toggle", function()
+	it("follows the Spirit healers toggle", function()
 		load(true)
 		ns.Registry.SetEnabled("spirithealers", false)
 		settle()
 		assert.are.same({}, search("cementerio"))
+		assert.are.same({}, ns.Registry.Get("spirithealers").entries or {})
 		ns.Registry.SetEnabled("spirithealers", true)
 		settle()
 		assert.are.same(ALL, search("cementerio"))

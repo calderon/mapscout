@@ -17,3 +17,4 @@ Places.lua
 Transport.lua
 Services.lua
 Trainers.lua
+SpiritHealers.lua

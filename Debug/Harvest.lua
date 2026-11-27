@@ -21,6 +21,9 @@
 --   * objects: opening a mailbox or a guild bank, and what "here" notes
 --   * directions: the place a city guard marks on the map when asked for a
 --     service (the guard's own answer, with the choices that led to it)
+--   * graveyards: on dying, the graveyard the ghost will appear at (the game
+--     says so at once, no need to release the spirit); and, as a ghost,
+--     talking to a spirit healer, where it stands
 -- Positions are the player's, on the most precise map (an NPC is within a few
 -- steps of whoever talks to it).
 
@@ -69,6 +72,7 @@ local function store()
 	data.entrances = data.entrances or {}
 	data.npcs = data.npcs or {}
 	data.objects = data.objects or {}
+	data.graveyards = data.graveyards or {}
 	return data
 end
 
@@ -205,6 +209,70 @@ function Harvest.NoteHere(what)
 	data.objects[key] = { service = what, map = mapID, x = round(x), y = round(y), at = time() }
 	ns.Print(("harvest: %s guardado aquí (%d, %.1f, %.1f)"):format(what, mapID, x * 100, y * 100))
 	return data.objects[key]
+end
+
+-- Graveyards. On dying, the game says where the ghost will appear
+-- (C_DeathInfo.GetDeathReleasePosition), but only on the continent's map: on a
+-- city's map the graveyard outside it is off the map. The point is then placed
+-- on its outdoor zone. It answers nothing while alive. As a ghost, the only NPC
+-- one can talk to is a spirit healer: its gossip window notes where it stands.
+-- Every record is kept ("death:time", "healer:time"); the generator joins
+-- those of the same graveyard.
+
+-- The continent a map is in, or nil (an instance has none)
+function Harvest.ContinentOf(mapID)
+	local id, seen = mapID, 0
+	while id and id ~= 0 and seen < 10 do
+		local info = C_Map.GetMapInfo(id)
+		if not info then
+			return nil
+		end
+		if info.mapType == 2 then
+			return id
+		end
+		id, seen = info.parentMapID, seen + 1
+	end
+	return nil
+end
+
+local function onMap(x, y)
+	return x and y and x >= 0 and x <= 1 and y >= 0 and y <= 1 and not (x == 0 and y == 0)
+end
+
+function Harvest.RecordDeath()
+	local death = C_DeathInfo
+	local mapID = C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+	local continent = mapID and Harvest.ContinentOf(mapID)
+	local at = continent and death and death.GetDeathReleasePosition and death.GetDeathReleasePosition(continent)
+	local cx, cy
+	if at then
+		cx, cy = at:GetXY()
+	end
+	if not onMap(cx, cy) then
+		ns.Print(("harvest: cementerio NO guardado (mapa %s, continente %s, el juego no da el punto)"):format(
+			tostring(mapID), tostring(continent)))
+		return nil
+	end
+	local zone, x, y = ns.PlaceOutdoors(continent, cx, cy)
+	local record = {
+		how = "death", map = zone, x = round(x), y = round(y), continent = continent, cx = round(cx), cy = round(cy),
+		died = mapID, at = time(),
+	}
+	store().graveyards["death:" .. record.at] = record
+	ns.Print(("harvest: cementerio guardado (%d, %.1f, %.1f)"):format(zone, x * 100, y * 100))
+	return record
+end
+
+function Harvest.RecordHealer()
+	local mapID, x, y = Harvest.Where()
+	if not mapID then
+		return nil
+	end
+	local _, npcID = Harvest.ParseGUID(UnitGUID("npc"))
+	local record = { how = "healer", npc = npcID, map = mapID, x = round(x), y = round(y), at = time() }
+	store().graveyards["healer:" .. record.at] = record
+	ns.Print(("harvest: ángel guardado (%d, %.1f, %.1f)"):format(mapID, x * 100, y * 100))
+	return record
 end
 
 -- Entrances: the last place outside, paired with the instance entered next.
@@ -395,6 +463,10 @@ local function onService(event)
 	if event == "GOSSIP_SHOW" and hooked then
 		noteOptions()
 	end
+	if event == "GOSSIP_SHOW" and UnitIsGhost("player") then
+		Harvest.RecordHealer() -- a ghost only talks to spirit healers: not a service
+		return
+	end
 	local service = Harvest.SERVICES[event]
 	if service then
 		Harvest.RecordNPC(service)
@@ -420,6 +492,7 @@ function Harvest.SetOn(on)
 		PLAYER_LEAVING_WORLD = Harvest.LeavingWorld,
 		PLAYER_ENTERING_WORLD = Harvest.EnteringWorld,
 		ZONE_CHANGED_NEW_AREA = Harvest.EnteringWorld,
+		PLAYER_DEAD = Harvest.RecordDeath,
 	}
 	for event, fn in pairs(others) do
 		if on and Harvest.HasEvent(event) then
@@ -469,9 +542,9 @@ ns.RegisterCommand("harvest", function(args)
 		store().on = on
 	end
 	local data = store()
-	ns.Print(("harvest %s: %d entradas, %d PNJ, %d objetos, %d direcciones"):format(
+	ns.Print(("harvest %s: %d entradas, %d PNJ, %d objetos, %d direcciones, %d cementerios"):format(
 		data.on and "|cff00ff00ON|r" or "OFF", count(data.entrances), count(data.npcs), count(data.objects),
-		count(data.directions or {})))
+		count(data.directions or {}), count(data.graveyards)))
 end)
 
 ns.RegisterEvent("PLAYER_LOGIN", "Harvest", function()
@@ -479,3 +552,4 @@ ns.RegisterEvent("PLAYER_LOGIN", "Harvest", function()
 		Harvest.SetOn(true)
 	end
 end)
+

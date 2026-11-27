@@ -26,7 +26,7 @@
 -- Source: instance 2999: DungeonJournal by Exehn (with permission)
 -- Source: instance 3001: DungeonJournal by Exehn (with permission)
 -- Source: instance 3039: DungeonJournal by Exehn (with permission)
--- Source: instance 3065: harvest (in game)
+-- Source: instance 3065: harvest (in game, average of 2 entries)
 
 local _, pack = ...
 
@@ -70,7 +70,7 @@ pack.categories.dungeons = function()
 			[2999] = { "dungeon", 1420, 6340, 6740, 15 },
 			[3001] = { "dungeon", 1449, 4810, 610, 60 },
 			[3039] = { "dungeon", 2548, 3750, 3730, 40 },
-			[3065] = { "dungeon", 1455, 2756, 4805, 13 },
+			[3065] = { "dungeon", 1455, 2752, 4799, 13 },
 		},
 		-- Instances with several doors: [instance mapID] = { { wing, uiMapID, x, y }, ... },
 		-- one result each (they replace the entrance above)

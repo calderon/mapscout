@@ -29,6 +29,7 @@ FILES = {
     "npcs": ["npc", "locale", "name", "faction", "title", "services", "skill", "uiMap", "x", "y", "gossip", "at"],
     "objects": ["key", "service", "object", "uiMap", "x", "y", "at"],
     "directions": ["key", "locale", "asked", "name", "poi", "texture", "guard", "uiMap", "x", "y", "at"],
+    "graveyards": ["key", "how", "npc", "uiMap", "x", "y", "continent", "cx", "cy", "died", "at"],
 }
 
 
@@ -62,6 +63,11 @@ def rows_from_saved(text):
         out["directions"][key] = {
             "key": key, "locale": d.get("locale") or "esES", "asked": d.get("asked", ""), "name": d.get("name", ""), "poi": d.get("poi") or "", "texture": d.get("texture", ""),
             "guard": d.get("guard") or "", "uiMap": d["map"], "x": d["x"], "y": d["y"], "at": d.get("at", 0)}
+    for key, g in (data.get("graveyards") or {}).items():  # "death:time" or "healer:time"
+        out["graveyards"][key] = {
+            "key": key, "how": g.get("how", ""), "npc": g.get("npc") or "", "uiMap": g["map"], "x": g["x"], "y": g["y"],
+            "continent": g.get("continent") or "", "cx": g.get("cx", ""), "cy": g.get("cy", ""),
+            "died": g.get("died") or "", "at": g.get("at", 0)}
     return out
 
 

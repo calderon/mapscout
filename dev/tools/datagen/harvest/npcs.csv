@@ -13,9 +13,11 @@ npc,locale,name,faction,title,services,skill,uiMap,x,y,gossip,at
 5509,esES,Kathrum Manacha,Alliance,Mercader de hachas,repair vendor,,1453,0.5941,0.3395,132060:Quiero ver tus mercancías.,1795774809
 5512,esES,Kaita Forjahonda,Alliance,Suministros de herrería,repair vendor,,1453,0.6326,0.3747,132060:Quiero ver tus mercancías.,1795774837
 5595,esES,Guardia de Forjaz,Alliance,Nivel 55,,,1455,0.5761,0.3523,,1795774478
-6491,esES,Ángel de la Resurrección,Neutral,,,,1426,0.5409,0.3882,132054:Devuélveme a la vida.,1795723980
+6328,esES,Dannie Chispana,Alliance,Instructor de demonios,,,1426,0.4725,0.5375,,1795802545
+6491,esES,Ángel de la Resurrección,Neutral,Nivel 60,,,1426,0.5421,0.3903,132054:Devuélveme a la vida.,1795801082
 8720,esES,Subastador Redmuse,Alliance,,auction,,1455,0.2444,0.7443,,1795719302
 11145,esES,Myolor Furiahendida,Alliance,Nivel 53,,,1455,0.5143,0.4102,,1795774442
 14991,esES,Emisario de la Liga de Arathor,Alliance,Nivel 40,,,1455,0.5826,0.8032,,1795773942
+265813,esES,Eric Martillo Radiante,Alliance,Aventurero,,,1426,0.4667,0.5396,,1795802532
 270581,esES,Fyrenz Vishonar,Alliance,Transfiguradora,transmog,,1453,0.4793,0.8453,4675665:Me gustaría cambiar la apariencia de mi equipamiento. | 4675720:Me gustaría desactivar la transfiguración.,1795775178
 274781,esES,Guardia regio férreo,Alliance,,,,1455,0.4108,0.5064,,1795732758
