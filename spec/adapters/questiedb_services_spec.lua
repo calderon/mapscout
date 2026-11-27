@@ -157,6 +157,8 @@ describe("Adapters/QuestieDBServices.lua", function()
 		assert.are.same({ "Tabernero Brebefuego" }, search("@posada"))
 		assert.are.same({ "Vendedora" }, search("@vendedor")) -- category: the vendor-only NPC
 		assert.are.same({ "Herrero Rudo", "Tabernero Brebefuego", "Vendedora" }, search("vendedor")) -- typed: all that sell
+		assert.are.same(search("vendedor"), search("proveedor")) -- the game's titles use both words
+		assert.are.same({ "Vendedora" }, search("@proveedor"))
 		-- by subname (first; "Herrero" follows as a near match: few results allow typos)
 		assert.are.equal("Bixi", (ns.Engine.Search(ns.Query.Parse("herreria")))[1].item.entry.name)
 		assert.are.equal(5, #search("@servicio"))
