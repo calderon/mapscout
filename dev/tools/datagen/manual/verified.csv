@@ -4,7 +4,8 @@
 #   instance: the instance's map ID (client Map table)
 #   checked: who checked it and when (Exehn: DungeonJournal data, used with the
 #            author's permission, see entrances.csv)
-instance,name,checked
+#   wing: which door, for an instance with several (see entrances.csv)
+instance,name,checked,wing
 33,Shadowfang Keep,Daniel 2026-11-26
 43,Wailing Caverns,Daniel 2026-11-26
 47,Razorfen Kraul,Daniel 2026-11-26
@@ -33,4 +34,12 @@ instance,name,checked
 109,Sunken Temple,Exehn (DungeonJournal) 2026-11-27
 229,Blackrock Spire,Exehn (DungeonJournal) 2026-11-27
 230,Blackrock Depths,Exehn (DungeonJournal) 2026-11-27
-429,Dire Maul,Exehn (DungeonJournal) 2026-11-27
+189,Scarlet Monastery,Exehn (DungeonJournal) 2026-11-27,library
+189,Scarlet Monastery,Exehn (DungeonJournal) 2026-11-27,armory
+189,Scarlet Monastery,Exehn (DungeonJournal) 2026-11-27,cathedral
+189,Scarlet Monastery,Exehn (DungeonJournal) 2026-11-27,graveyard
+329,Stratholme,Exehn (DungeonJournal) 2026-11-27,main
+329,Stratholme,Exehn (DungeonJournal) 2026-11-27,service
+429,Dire Maul,Exehn (DungeonJournal) 2026-11-27,east
+429,Dire Maul,Exehn (DungeonJournal) 2026-11-27,west
+429,Dire Maul,Exehn (DungeonJournal) 2026-11-27,north

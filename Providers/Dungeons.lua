@@ -11,6 +11,9 @@
 -- Only entrances checked in the game have a place (the pack says uiMapID 0
 -- for the rest): those are still found by name, "entrance to be confirmed",
 -- and lead nowhere, so MapScout never shows a wrong point.
+-- An instance with several doors (the pack's doors: Scarlet Monastery's wings,
+-- Stratholme's gates...) is one result per door, "Name (wing)"; searching the
+-- instance's name finds them all.
 -- A point on a continent map (the pack stores it there when zone maps overlap)
 -- is placed in its zone by the game, always on the outdoor zone or city
 -- (ns.PlaceOutdoors).
@@ -40,49 +43,78 @@ function Dungeons.Place(mapID, x, y)
 	return mapID, x, y
 end
 
+-- Each wing's name is the text DUNGEONS_WING_<WING>; the English one is a search word too
+local function wingNames(wing)
+	local key = "DUNGEONS_WING_" .. wing:upper()
+	return L[key], ns.L_EN[key]
+end
+
 function Dungeons.Entries(data)
 	local entries = {}
 	if not (data and data.entrances and data.names) then
 		return entries
 	end
 	local names, english = data.names[GetLocale()] or data.names.enUS or {}, data.names.enUS or {}
-	for instance, row in pairs(data.entrances) do
-		local kind, uiMap, x, y, level = row[1], row[2], row[3] / 10000, row[4] / 10000, row[5]
+	local doors = data.doors or {}
+	local order = {}
+	local function add(instance, kind, uiMap, x, y, level, wing, index)
 		local name = names[instance] or english[instance]
-		if name and CATEGORY[kind] then
-			local mapID, px, py, details
-			if uiMap and uiMap > 0 then
-				mapID, px, py = Dungeons.Place(uiMap, x, y)
-			else
-				details = { L.DUNGEONS_NO_ENTRANCE }
+		if not (name and CATEGORY[kind]) then
+			return
+		end
+		local mapID, px, py, details
+		if uiMap and uiMap > 0 then
+			mapID, px, py = Dungeons.Place(uiMap, x, y)
+		else
+			details = { L.DUNGEONS_NO_ENTRANCE }
+		end
+		local what = kind == "raid" and L.DUNGEONS_RAID or L.DUNGEONS_DUNGEON
+		if level and level > 0 then
+			what = L.DUNGEONS_SUBTITLE:format(what, level)
+		end
+		if not mapID then
+			what = L.DUNGEONS_PENDING:format(what)
+		end
+		local keywords = ns.Words(kind == "raid" and "RAID" or "DUNGEON")
+		if english[instance] and english[instance] ~= name then
+			keywords[#keywords + 1] = english[instance]:lower()
+		end
+		local id = instance
+		if wing then
+			local wingName, wingEnglish = wingNames(wing)
+			name = L.DUNGEONS_WITH_WING:format(name, wingName)
+			if wingEnglish and wingEnglish ~= wingName then
+				keywords[#keywords + 1] = wingEnglish:lower()
 			end
-			local what = kind == "raid" and L.DUNGEONS_RAID or L.DUNGEONS_DUNGEON
-			if level and level > 0 then
-				what = L.DUNGEONS_SUBTITLE:format(what, level)
+			id = instance .. ":" .. wing
+		end
+		local entry = {
+			id = id,
+			name = name,
+			subtitle = what,
+			details = details,
+			category = CATEGORY[kind],
+			keywords = keywords,
+			mapID = mapID,
+			x = px,
+			y = py,
+			icon = Dungeons.ICONS[kind],
+			weight = mapID and 0.6 or 0.5,
+		}
+		order[entry] = instance + (index or 0) / 100
+		entries[#entries + 1] = entry
+	end
+	for instance, row in pairs(data.entrances) do
+		local kind, level = row[1], row[5]
+		if doors[instance] and #doors[instance] > 0 then
+			for index, door in ipairs(doors[instance]) do
+				add(instance, kind, door[2], door[3] / 10000, door[4] / 10000, level, door[1], index)
 			end
-			if not mapID then
-				what = L.DUNGEONS_PENDING:format(what)
-			end
-			local keywords = ns.Words(kind == "raid" and "RAID" or "DUNGEON")
-			if english[instance] and english[instance] ~= name then
-				keywords[#keywords + 1] = english[instance]:lower()
-			end
-			entries[#entries + 1] = {
-				id = instance,
-				name = name,
-				subtitle = what,
-				details = details,
-				category = CATEGORY[kind],
-				keywords = keywords,
-				mapID = mapID,
-				x = px,
-				y = py,
-				icon = Dungeons.ICONS[kind],
-				weight = mapID and 0.6 or 0.5,
-			}
+		else
+			add(instance, kind, row[2], row[3] / 10000, row[4] / 10000, level)
 		end
 	end
-	table.sort(entries, function(a, b) return a.id < b.id end)
+	table.sort(entries, function(a, b) return order[a] < order[b] end)
 	return entries
 end
 

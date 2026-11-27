@@ -125,7 +125,7 @@ class ManualTest(unittest.TestCase):
             a = self.manual_file(folder, "a.csv", "2970,1434,21.4,27.9,guide one ; guide two\n")
             b = self.manual_file(folder, "b.csv", "2970,1434,22,28,other\n")
             (row,) = dungeons.manual([a])
-            self.assertEqual((row[0], row[1], row[4]), (2970, 1434, "guide one ; guide two"))
+            self.assertEqual((row[0], row[1], row[4], row[5]), (2970, 1434, "guide one ; guide two", ""))
             self.assertAlmostEqual(row[2], 0.214)
             self.assertAlmostEqual(row[3], 0.279)
             (row,) = dungeons.manual([a, b])
@@ -139,14 +139,46 @@ class ManualTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 dungeons.manual([self.manual_file(folder, "b.csv", "1,1434,121,27,x\n")])
 
+    def test_manual_doors_need_a_known_wing(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "a.csv")
+            with open(path, "w", encoding="utf-8") as out:
+                out.write("instance,uiMap,x,y,sources,wing\n189,1420,85.35,32.39,s,library\n189,1420,84.8,30.37,s,graveyard\n")
+            rows = dungeons.manual([path])
+            self.assertEqual([(r[0], r[5]) for r in rows], [(189, "graveyard"), (189, "library")])
+            with open(path, "a", encoding="utf-8") as out:
+                out.write("189,1420,1,1,s,kitchen\n")
+            with self.assertRaises(ValueError):
+                dungeons.manual([path])
+
     def test_merge_adds_and_overrides(self):
         rows = [instance(36, "Deadmines", 1, 0, 750, 600), instance(2970, "The Drowned City", 1, -1, 0, 0)]
         found = dungeons.entrances(MAPS, rows, {})
         merged = dungeons.merge(found, rows, {"The Drowned City": 35},
-                                [(2970, 1434, 0.214, 0.279, "s"), (36, 11, 0.5, 0.5, "s")])
+                                [(2970, 1434, 0.214, 0.279, "s", ""), (36, 11, 0.5, 0.5, "s", "")])
         self.assertEqual(merged, [(36, "dungeon", 11, 5000, 5000, 0), (2970, "dungeon", 1434, 2140, 2790, 35)])
         with self.assertRaises(ValueError):
-            dungeons.merge(found, rows, {}, [(30, 1, 0.5, 0.5, "s")])  # not an instance
+            dungeons.merge(found, rows, {}, [(30, 1, 0.5, 0.5, "s", "")])  # not an instance
+
+    def test_doors_replace_the_single_entrance(self):
+        rows = [instance(189, "Scarlet Monastery", 1, 0, 750, 600)]
+        found = dungeons.entrances(MAPS, rows, {})
+        doors = [(189, 1420, 0.8535, 0.3239, "s", "library"), (189, 1420, 0.848, 0.3037, "s", "graveyard"),
+                 (189, 1420, 0.826, 0.338, "s", "armory")]
+        self.assertEqual(dungeons.merge(found, rows, {}, doors), [(189, "dungeon", 0, 0, 0, 0)])
+        checked = {(189, "library"), (189, "graveyard")}  # the armory is not checked: no door
+        self.assertEqual(dungeons.doors(doors, checked),
+                         {189: [("library", 1420, 8535, 3239), ("graveyard", 1420, 8480, 3037)]})
+
+    def test_write_doors(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "Dungeons.lua")
+            dungeons.write(path, "1.60.1.1", "2026-01-02", [(329, "dungeon", 0, 0, 0, 55)], {"enUS": {329: "Stratholme"}},
+                           [(329, 1423, 0.3, 0.15, "s", "main")], {329: [("main", 1423, 3000, 1500)]})
+            with open(path, encoding="utf-8") as source:
+                text = source.read()
+        self.assertIn("-- Source: instance 329 (main): s", text)
+        self.assertIn('\t\t\t[329] = {\n\t\t\t\t{ "main", 1423, 3000, 1500 },\n\t\t\t},', text)
 
 
 def poi(id_, name, flags, continent=0, x=750, y=600, condition=0):
