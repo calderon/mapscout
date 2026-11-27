@@ -31,7 +31,9 @@ Tables per output:
 
 - `Places.lua`: `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`.
 - `Dungeons.lua`: `Map` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`, plus `manual/entrances.csv`.
-- `Services.lua`: only the harvest (the client has no service NPCs nor mailboxes).
+- `Services.lua`: the harvest (the client has no service NPCs nor mailboxes),
+  plus `manual/services.csv` for services not harvested yet on a map (at least
+  two public sources that agree, cited in each row).
 - `Trainers.lua`: only the harvest, like `Services.lua`.
 - `Transport.lua`: `TaxiPathNode`, `AreaTrigger`, `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, plus `manual/transport.csv`.
 
@@ -71,6 +73,13 @@ trainers are not among a guard's options: talking to one records the skill its
 window teaches ("Equitación"), which tells riding and profession trainers
 apart (a class trainer's window teaches its schools, not its class, so those
 come only from guards).
+
+Guards do not know the other services either, so the harvest records them as
+they are used: transmogrifiers and guild banks when their window opens (their
+event, or the interaction manager's), quartermasters as vendors with the line
+under their name (`title` in `npcs.csv`). Anvils and forges have no window:
+stand next to one and type `/ms harvest here anvil` (or `forge`), which notes it in
+`objects.csv` where the player stands.
 
 ## Outputs
 

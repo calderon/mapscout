@@ -76,6 +76,8 @@ def guard_trainer(asked):
         return ("weapon", "")
     if first in GUARD_RIDING:
         return ("riding", "")
+    if (first in GUARD_CLASS or first in GUARD_PROFESSION) and not rest:
+        return None  # the menu itself, not an answer (its POI is still the last one's)
     if first in GUARD_CLASS:
         token = _find(CLASSES, rest)
         return ("class", token) if token else False

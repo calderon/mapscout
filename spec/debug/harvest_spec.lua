@@ -173,4 +173,47 @@ describe("Debug/Harvest.lua", function()
 		assert.is_true(ns.db.harvest.on)
 		assert.is_nil(next(ns.db.harvest.npcs))
 	end)
+	it("records the line under an NPC's name, to tell quartermasters apart", function()
+		StubGlobals({
+			C_TooltipInfo = {
+				GetUnit = function() return { lines = { { leftText = "Tilda" }, { leftText = "Intendente" } } } end,
+			},
+		})
+		SlashCmdList.MAPSCOUT("harvest on")
+		frame:Fire("MERCHANT_SHOW")
+		assert.are.equal("Intendente", ns.db.harvest.npcs[4092].title)
+	end)
+
+	it("records transmogrifiers and guild banks opened through the interaction manager", function()
+		StubGlobals({ Enum = { PlayerInteractionType = { Merchant = 5, Transmogrifier = 3, GuildBanker = 10 } } })
+		SlashCmdList.MAPSCOUT("harvest on")
+		frame:Fire("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 3)
+		assert.are.same({ transmog = true }, ns.db.harvest.npcs[4092].services)
+		npc.guid = "GameObject-0-1-2-3-187299-000"
+		frame:Fire("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 10)
+		local _, object = next(ns.db.harvest.objects)
+		assert.are.equal("guildbank", object.service)
+		assert.are.equal(187299, object.objectID)
+		frame:Fire("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", 5) -- has its own event: not twice
+		assert.are.same({ transmog = true }, ns.db.harvest.npcs[4092].services)
+	end)
+
+	it("does not register events the client does not have", function()
+		StubGlobals({ C_EventUtils = { IsEventValid = function(event) return event ~= "TRANSMOGRIFY_OPEN" end } })
+		assert.is_false(ns.Harvest.HasEvent("TRANSMOGRIFY_OPEN"))
+		assert.is_true(ns.Harvest.HasEvent("BANKFRAME_OPENED"))
+		SlashCmdList.MAPSCOUT("harvest on")
+		frame:Fire("TRANSMOGRIFY_OPEN")
+		assert.is_nil(next(ns.db.harvest.npcs))
+	end)
+
+	it("notes anvils and forges where the player stands", function()
+		SlashCmdList.MAPSCOUT("harvest here anvil")
+		local key, object = next(ns.db.harvest.objects)
+		assert.are.equal("anvil:1455:356:604", key)
+		assert.are.same({ "anvil", 1455, 0.3561, 0.6043 }, { object.service, object.map, object.x, object.y })
+		SlashCmdList.MAPSCOUT("harvest here chair")
+		assert.matches("anvil|forge", ChatLog[#ChatLog], 1, true)
+		assert.are.equal(1, #(function() local t = {} for k in pairs(ns.db.harvest.objects) do t[#t + 1] = k end return t end)())
+	end)
 end)

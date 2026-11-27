@@ -1,0 +1,9 @@
+# City services the harvest has not recorded yet, written by hand.
+#   service: as in services.py KINDS ("transmog"...)
+#   uiMap, x, y: the city map and the position on it, 0-100 as the game shows it
+#   faction: "Alliance", "Horde" or empty (anyone)
+#   sources: where the point comes from; at least two public sources that agree,
+#            separated by " ; ". Single facts only: never another addon's list.
+# A service harvested on the same map wins over these rows (they are then left out).
+service,uiMap,x,y,faction,sources
+transmog,1454,46.2,53.4,Horde,https://urgametips.com/wow-forever/transmog/ ; https://playfulls.com/guides/transmog

@@ -1,5 +1,6 @@
 """City services: banks, auction houses, inns, mailboxes, stable masters,
-repair vendors, barbers, guild masters and battlemasters.
+repair vendors, barbers, transmogrifiers, guild masters, battlemasters, anvils
+and forges.
 
 The client data has none of them (the NPCs and mailboxes are the server's), so
 they come from our harvest mode (Debug/Harvest.lua), measured in the game:
@@ -9,7 +10,11 @@ they come from our harvest mode (Debug/Harvest.lua), measured in the game:
   building), named as the game names it, in the language of the client that
   asked.
 - npcs.csv: the NPCs a player talked to, with the services they offered.
-- objects.csv: the mailboxes a player opened.
+- objects.csv: the mailboxes a player opened, and the anvils and forges noted
+  with /ms harvest here.
+
+Services not harvested yet on a map may come from manual/services.csv: single
+facts from public sources, at least two that agree.
 
 For one service on one map, the guard's places win: when a guard gave them,
 the NPCs of that service on that map are left out (the bankers stand in the
@@ -29,7 +34,8 @@ import unicodedata
 import lua
 from geo import to_int
 
-KINDS = ("bank", "auction", "inn", "mailbox", "stable", "repair", "barber", "guild", "battle")
+KINDS = ("bank", "auction", "inn", "mailbox", "stable", "repair", "barber", "transmog", "guild", "battle", "anvil",
+         "forge")
 
 # The guard's words for each service (the start of the option, lowercase,
 # without accents), per language. Options for later categories are known and
@@ -41,6 +47,8 @@ GUARD_WORDS = {
     "mailbox": ("buzon", "mailbox", "the mailbox"),
     "stable": ("maestro de establos", "stable master", "the stable master"),
     "barber": ("peluqueria", "barberia", "barber", "the barber", "barbershop", "barber shop"),
+    "transmog": ("transfigurador", "transfiguradora", "transfiguracion", "transmogrifier", "the transmogrifier",
+                 "transmogrification"),
     "guild": ("maestro de la hermandad", "guild master", "the guild master"),
     "battle": ("maestro de batalla", "maestros de batalla", "battlemaster", "battlemasters", "battle master"),
 }
@@ -55,9 +63,10 @@ GUARD_LATER = (
     "flight master", "deeprun tram", "zeppelin master", "bat handler", "hippogryph master",
 )
 NPC_SERVICES = {"bank": "bank", "auction": "auction", "innkeeper": "inn", "stable": "stable", "repair": "repair",
-                "guild": "guild", "battlemaster": "battle"}
+                "guild": "guild", "battlemaster": "battle", "transmog": "transmog"}
+OBJECTS = ("mailbox", "anvil", "forge")
 FACTIONS = ("Alliance", "Horde")
-ANYONE = ("mailbox",)  # any player can use them, whatever the guard's faction
+ANYONE = ("mailbox", "anvil", "forge")  # any player can use them, whatever the guard's faction
 SAME_PLACE = 0.003  # map units (0-1): closer points of one service are the same place
 DEFAULT_LOCALE = "esES"  # the language of what was harvested before records said it
 
@@ -141,9 +150,36 @@ def points(folder):
                 found.append((ui_map, kind, float(row["x"]), float(row["y"]), _faction(row["faction"]),
                               row.get("locale") or DEFAULT_LOCALE, row["name"], ""))
     for row in _read(folder, "objects"):
-        if row["service"] == "mailbox":
-            found.append((int(row["uiMap"]), "mailbox", float(row["x"]), float(row["y"]), "", "", "", ""))
+        if row["service"] in OBJECTS:
+            found.append((int(row["uiMap"]), row["service"], float(row["x"]), float(row["y"]), "", "", "", ""))
     return found, sorted(set(unknown))
+
+
+def manual(path):
+    """Points of the hand-written file, as points() gives them (no name)."""
+    if not os.path.exists(path):
+        return []
+    with open(path, newline="", encoding="utf-8") as source:
+        lines = [line for line in source if line.strip() and not line.lstrip().startswith("#")]
+    out = []
+    for row in csv.DictReader(lines):
+        kind, ui_map = row["service"], int(row["uiMap"])
+        x, y = float(row["x"]), float(row["y"])
+        if kind not in KINDS:
+            raise ValueError("%s: unknown service %r" % (path, kind))
+        if not (0 <= x <= 100 and 0 <= y <= 100):
+            raise ValueError("%s: %s on %d is off the map (%s, %s)" % (path, kind, ui_map, x, y))
+        if len([s for s in row["sources"].split(";") if s.strip()]) < 2:
+            raise ValueError("%s: %s on %d needs two sources" % (path, kind, ui_map))
+        out.append((ui_map, kind, x / 100, y / 100, _faction(row["faction"]), "", "", ""))
+    return out
+
+
+def with_manual(found, hand):
+    """The harvested points plus the hand-written ones of services not
+    harvested on their map."""
+    harvested = {(p[0], p[1]) for p in found}
+    return found + [p for p in hand if (p[0], p[1]) not in harvested]
 
 
 def merge(found):
@@ -177,7 +213,9 @@ def write(path, version, date, found):
         rows.setdefault(ui_map, []).append(row)
     lines_out = [lua.header("city services", version, date, [
         "harvest/directions.csv (the places city guards mark on the map), harvest/npcs.csv (service NPCs talked "
-        "to) and harvest/objects.csv (mailboxes opened): recorded in the game with the harvest mode",
+        "to) and harvest/objects.csv (mailboxes opened, anvils and forges noted): recorded in the game with the "
+        "harvest mode",
+        "manual/services.csv: services not harvested yet, from at least two public sources that agree (cited there)",
     ])]
     lines_out.append("local _, pack = ...\n")
     lines_out.append("-- Built only when MapScout asks for it (see Pack.lua)")
@@ -185,10 +223,11 @@ def write(path, version, date, found):
     lines_out.append("\treturn {")
     lines_out.append("\t\tbuild = %s," % lua.string(version))
     lines_out.append("\t\t-- [uiMapID] = { { service, x, y, faction, locale, name[, battleground] }, ... }: service")
-    lines_out.append("\t\t-- \"bank\", \"auction\", \"inn\", \"mailbox\", \"stable\", \"repair\", \"barber\", \"guild\" or")
-    lines_out.append("\t\t-- \"battle\"; x, y 0-10000 on the map; faction \"Alliance\", \"Horde\" or \"\" (anyone);")
-    lines_out.append("\t\t-- name = index in names[locale] of the place's name as the game wrote it in that language")
-    lines_out.append("\t\t-- (0: none); battleground (battlemasters only) \"alterac\", \"arathi\" or \"warsong\"")
+    lines_out.append("\t\t-- \"bank\", \"auction\", \"inn\", \"mailbox\", \"stable\", \"repair\", \"barber\", \"transmog\",")
+    lines_out.append("\t\t-- \"guild\", \"battle\", \"anvil\" or \"forge\"; x, y 0-10000 on the map; faction")
+    lines_out.append("\t\t-- \"Alliance\", \"Horde\" or \"\" (anyone); name = index in names[locale] of the place's")
+    lines_out.append("\t\t-- name as the game wrote it in that language (0: none); battleground (battlemasters only)")
+    lines_out.append("\t\t-- \"alterac\", \"arathi\" or \"warsong\"")
     lines_out.append("\t\tmaps = {")
     for ui_map in sorted(rows):
         lines_out.append("\t\t\t[%d] = {" % ui_map)

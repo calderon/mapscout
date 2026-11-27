@@ -41,6 +41,7 @@ DIRECTIONS = [
 OBJECTS = [
     {"key": "m1", "service": "mailbox", "uiMap": "1455", "x": "0.3316", "y": "0.6521"},
     {"key": "m2", "service": "mailbox", "uiMap": "1455", "x": "0.2012", "y": "0.5332"},  # the guard's one
+    {"key": "a1", "service": "anvil", "uiMap": "1455", "x": "0.5126", "y": "0.4236"},
 ]
 
 
@@ -64,6 +65,7 @@ class ServicesTest(unittest.TestCase):
         self.assertEqual(services.guard_service("Maestro de la hermandad"), "guild")
         self.assertEqual(services.guard_service("Maestro de batalla > Valle de Alterac"), "battle")
         self.assertEqual(services.guard_service("Maestro de grifos"), "")
+        self.assertEqual(services.guard_service("Transfigurador"), "transmog")
 
     def test_battlegrounds(self):
         self.assertEqual(services.battleground("Maestro de batalla > Garganta Grito de Guerra"), "warsong")
@@ -89,11 +91,29 @@ class ServicesTest(unittest.TestCase):
             (1455, "barber", "Peluquería de Forjaz", ""),
             (1455, "battle", "Glordrum", "alterac"),  # one point per battleground
             (1455, "battle", "Donal", "arathi"),
+            (1455, "anvil", "", ""),
         ])
         self.assertEqual(merged[0][4], "Horde")
         self.assertEqual(merged[1][4:6], ("Alliance", "esES"))
         self.assertEqual(merged[2][4:6], ("", "esES"))  # a mailbox is for anyone; harvested before records said their language
         self.assertEqual(merged[3][4:6], ("", ""))
+
+    def test_manual_only_where_not_harvested(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "services.csv")
+            with open(path, "w", encoding="utf-8") as out:
+                out.write("# a comment\nservice,uiMap,x,y,faction,sources\n"
+                          "transmog,1454,46.2,53.4,Horde,https://a ; https://b\n"
+                          "transmog,1453,48,84.5,Alliance,https://a ; https://b\n")
+            hand = services.manual(path)
+            self.assertEqual(hand[0], (1454, "transmog", 0.462, 0.534, "Horde", "", "", ""))
+            harvested = [(1453, "transmog", 0.4821, 0.8471, "Alliance", "esES", "Transfigurador", "")]
+            found = services.with_manual(harvested, hand)
+            self.assertEqual([(p[0], p[6]) for p in found], [(1453, "Transfigurador"), (1454, "")])
+            with open(path, "w", encoding="utf-8") as out:
+                out.write("service,uiMap,x,y,faction,sources\ntransmog,1454,46.2,53.4,Horde,https://a\n")
+            with self.assertRaises(ValueError):
+                services.manual(path)  # one source is not enough
 
     def test_write(self):
         found = [(1455, "bank", 0.3515, 0.6116, "Alliance", "esES", "Las Arcas", ""),
