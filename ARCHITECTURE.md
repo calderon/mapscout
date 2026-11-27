@@ -40,7 +40,7 @@ MapScout/
     Discovery.lua              # providers declared in other addons' .toc (## X-MapScout-Provider)
   Providers/                   # built-in providers, registered through MapScoutAPI only
     Coordinates.lua            # query handler: "45.2, 67.8", "45 67", "Elwynn 42 65"
-    Geography.lua Instances.lua Taxi.lua Transport.lua Services.lua Quests.lua
+    Geography.lua Instances.lua Taxi.lua Transport.lua Services.lua Trainers.lua Quests.lua
     AreaPOI.lua Vignettes.lua Portals.lua
   UI/
     Map.lua                    # MapScout's layer over the map area, map hooks, open/close/change events
@@ -136,6 +136,8 @@ What the client cannot tell us at runtime (NPC services, mailboxes and other obj
 - Files start with a "Generated, do not edit" header with the source build.
 
 **City services** (`Services.lua`) come only from our harvest mode: the client has neither the service NPCs nor the mailboxes. The quickest source is a city guard: asked for a service, it marks the place on the map (a gossip POI), and the harvest keeps it with the guard's words and the client's language. Repair vendors and mailboxes are recorded by opening them. Place names are shown only to players of the language they were harvested in; everyone else sees the service and its city. Until our data covers the world, the QuestieDB services adapter fills the gaps: it leaves out a service on a map where our pack has that service (while our provider is on), so each city harvested moves to our data by itself, and the adapter can be removed once it adds nothing.
+
+**Trainers** (`Trainers.lua`) come the same way: guards mark class, profession and weapon trainers (the building, not the NPC); riding trainers are recorded by talking to them, with the skill their window teaches. Each result is named after what it teaches ("Mage trainer"), found by trainer, class and profession words in English and the player's language. The player's own class has its toggle and comes first (higher weight); other classes have a toggle of their own. Where our pack has any trainer on a map, the QuestieDB adapter leaves its trainers out there.
 
 ## Persistence
 

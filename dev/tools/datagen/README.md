@@ -21,7 +21,7 @@ generator changes, and commit what changed.
 |---|---|---|
 | The Forever client's DB2 tables of one exact build (`BUILD`, now 1.60.1.71139) | CSV exports of [wago.tools](https://wago.tools) (`/db2/{table}/csv?version=…`), the build's own client data. Its `robots.txt` and `/llms.txt` allow these downloads. Kept in `.cache/<build>/` (not committed) | Instance entrances, map positions, names, levels |
 | Hand-written entrances (`manual/entrances.csv`) | Single facts from public sources, at least two that agree, cited per row. Never another addon's list | Entrances the client data does not have |
-| Harvest data (`harvest/*.csv`) | Recorded in the game with `/ms harvest on` (Debug/Harvest.lua, development only), brought in with `datagen.py harvest` | Dungeon entrances (they count as checked); city services: the places city guards mark when asked for them (`directions.csv`), service NPCs talked to (`npcs.csv`) and mailboxes opened (`objects.csv`) |
+| Harvest data (`harvest/*.csv`) | Recorded in the game with `/ms harvest on` (Debug/Harvest.lua, development only), brought in with `datagen.py harvest` | Dungeon entrances (they count as checked); city services: the places city guards mark when asked for them (`directions.csv`), service NPCs talked to (`npcs.csv`, trainers with the skill they teach) and mailboxes opened (`objects.csv`) |
 | wow-completionist-data (CC BY-SA 4.0) | Quest and NPC seed (#104) | Not yet |
 
 Never data from other addons' databases, emulator databases or wiki scraping
@@ -32,6 +32,7 @@ Tables per output:
 - `Places.lua`: `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`.
 - `Dungeons.lua`: `Map` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`, plus `manual/entrances.csv`.
 - `Services.lua`: only the harvest (the client has no service NPCs nor mailboxes).
+- `Trainers.lua`: only the harvest, like `Services.lua`.
 - `Transport.lua`: `TaxiPathNode`, `AreaTrigger`, `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, plus `manual/transport.csv`.
 
 `manual/transport.csv` lists the transport lines players ride, one row each:
@@ -63,6 +64,14 @@ recorded by opening their window. `services.py` knows the guards' words in
 English and Spanish (`GUARD_WORDS`); the generator reports an answer it does
 not know, so a new city or language is not missed.
 
+Trainers come from the same guards ("Instructor de clases > Mago",
+"Instructor de profesiones > Alquimia", "Instructor de armas"): `trainers.py`
+knows those words and the names of the classes and professions. Riding
+trainers are not among a guard's options: talking to one records the skill its
+window teaches ("Equitación"), which tells riding and profession trainers
+apart (a class trainer's window teaches its schools, not its class, so those
+come only from guards).
+
 ## Outputs
 
 Each file starts with "Generated … Do not edit", the build and its date, and
@@ -93,3 +102,6 @@ game (`ns.PlaceOnMap`).
   it was harvested in. For one service on one map, the places a guard gave
   win over the NPCs talked to (they stand inside); every mailbox opened adds
   up.
+- `Trainers.lua`: class, profession, riding and weapon trainers, per map, with
+  what they teach (class token or profession), the faction and the place's
+  name, as in `Services.lua`. The guard's place wins over the NPC talked to.

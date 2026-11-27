@@ -16,3 +16,4 @@ Dungeons.lua
 Places.lua
 Transport.lua
 Services.lua
+Trainers.lua

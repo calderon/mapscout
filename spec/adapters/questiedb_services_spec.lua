@@ -18,6 +18,7 @@ describe("Adapters/QuestieDBServices.lua", function()
 	}
 
 	local OWN = { maps = { [1455] = { { "bank", 3515, 6116, "Alliance", "esES", 1 } } }, names = { esES = { "Las Arcas" } } }
+	local OWN_TRAINERS = { maps = { [1455] = { { "profession", "blacksmithing", 5016, 4316, "Alliance", "", 0 } } } }
 
 	local function load(withDB, withOwn)
 		ResetWoW()
@@ -63,7 +64,10 @@ describe("Adapters/QuestieDBServices.lua", function()
 			C_XMLUtil = { GetTemplateInfo = function() return {} end },
 			C_AddOns = {
 				LoadAddOn = function()
-					rawset(_G, "MapScoutDataForever", { categories = { services = function() return OWN end } })
+					rawset(_G, "MapScoutDataForever", { categories = {
+						services = function() return OWN end,
+						trainers = function() return OWN_TRAINERS end,
+					} })
 					return true
 				end,
 				IsAddOnLoadOnDemand = function() return true end,
@@ -81,6 +85,7 @@ describe("Adapters/QuestieDBServices.lua", function()
 			"API/Registry.lua", "Search/Query.lua", "Search/Index.lua", "Search/Engine.lua" }
 		if withOwn then
 			files[#files + 1] = "Providers/Services.lua"
+			files[#files + 1] = "Providers/Trainers.lua"
 		end
 		for _, file in ipairs({ "Adapters/QuestieDB.lua", "Adapters/QuestieDBServices.lua", "UI/Map.lua" }) do
 			files[#files + 1] = file
@@ -168,5 +173,15 @@ describe("Adapters/QuestieDBServices.lua", function()
 		ns.Registry.SetEnabled("services", true)
 		settle()
 		assert.is_nil(byName().Olthran)
+	end)
+
+	it("leaves out trainers on maps where MapScout's own trainers have any, while they are on", function()
+		load(true, true)
+		assert.is_nil(byName().Bixi) -- our pack has trainers in Ironforge
+		assert.is_truthy(byName()["Herrero Rudo"]) -- repairs are not trainers
+		ns.Registry.SetEnabled("trainers", false)
+		settle()
+		assert.is_truthy(byName().Bixi)
+		assert.is_nil(byName().Olthran) -- our services still on
 	end)
 end)

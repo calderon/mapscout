@@ -10,7 +10,8 @@
 --     before the loading screen (the instance's map ID from GetInstanceInfo)
 --   * npcs: talking to a service NPC (bank, auction, vendor and repair,
 --     trainer, stable, flight master, guild, battlemaster, innkeeper), with
---     the options of its gossip window, to tell its services apart later
+--     the options of its gossip window, to tell its services apart later, and
+--     for a trainer the skill it teaches
 --   * objects: opening a mailbox
 --   * directions: the place a city guard marks on the map when asked for a
 --     service (the guard's own answer, with the choices that led to it)
@@ -85,6 +86,21 @@ local function gossipOptions()
 	return list
 end
 
+-- The skill a trainer's window teaches ("Riding", "Mining"), or nil: tells
+-- riding and profession trainers apart (a class trainer teaches its schools)
+function Harvest.TrainerSkill()
+	if not (GetNumTrainerServices and GetTrainerServiceSkillLine) then
+		return nil
+	end
+	for i = 1, GetNumTrainerServices() or 0 do
+		local skill = GetTrainerServiceSkillLine(i)
+		if skill and skill ~= "" then
+			return skill
+		end
+	end
+	return nil
+end
+
 function Harvest.RecordNPC(service)
 	local kind, id = Harvest.ParseGUID(UnitGUID("npc"))
 	local mapID, x, y = Harvest.Where()
@@ -108,6 +124,9 @@ function Harvest.RecordNPC(service)
 	record.map, record.x, record.y, record.at = mapID, round(x), round(y), time()
 	if service == "gossip" then
 		record.gossip = gossipOptions()
+	elseif service == "trainer" then
+		record.services.trainer = true
+		record.skill = Harvest.TrainerSkill() or record.skill
 	else
 		record.services[service] = true
 		if service == "vendor" and CanMerchantRepair and CanMerchantRepair() then
