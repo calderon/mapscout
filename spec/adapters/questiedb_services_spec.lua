@@ -15,6 +15,7 @@ describe("Adapters/QuestieDBServices.lua", function()
 		[7] = { name = "Bixi", flags = 16, friendly = "AH", spawns = HERE, sub = "Instructora de herrería" },
 		[8] = { name = "Vendedora", flags = 4, friendly = "AH", spawns = HERE },
 		[9] = { name = "Nadie", flags = 0, friendly = "AH", spawns = HERE },
+		[10] = { name = "Hulfdan", flags = 4, friendly = "AH", spawns = HERE, sub = "Intendente de la Hermandad" },
 	}
 
 	local OWN = { maps = { [1455] = { { "bank", 3515, 6116, "Alliance", "esES", 1 } } }, names = { esES = { "Las Arcas" } } }
@@ -133,10 +134,10 @@ describe("Adapters/QuestieDBServices.lua", function()
 	it("lists friendly NPCs with a service, placed where they stand", function()
 		load(true)
 		local list = byName()
-		assert.are.same({ "Bixi", "Herrero Rudo", "Olthran", "Tabernero Brebefuego", "Vendedora" },
+		assert.are.same({ "Bixi", "Herrero Rudo", "Hulfdan", "Olthran", "Tabernero Brebefuego", "Vendedora" },
 			(function() local n = {} for k in pairs(list) do n[#n + 1] = k end table.sort(n) return n end)())
 		assert.are.same({ 1455, 0.3, 0.6 }, { list.Olthran.mapID, list.Olthran.x, list.Olthran.y })
-		assert.are.equal(5, ns.QuestieServices.stats.services)
+		assert.are.equal(6, ns.QuestieServices.stats.services)
 	end)
 
 	it("puts each NPC in its first service, named by its subname or the service", function()
@@ -150,18 +151,30 @@ describe("Adapters/QuestieDBServices.lua", function()
 		assert.are.equal("Instructora de herrería", list.Bixi.subtitle)
 	end)
 
+	it("puts quartermasters in their own category, by their title", function()
+		load(true)
+		local list = byName()
+		assert.are.equal("quartermaster", list.Hulfdan.category)
+		assert.are.equal("Intendente de la Hermandad", list.Hulfdan.subtitle)
+		assert.are.same({ "Hulfdan" }, search("@intendente"))
+		assert.are.same({ "Hulfdan" }, search("@quartermaster"))
+		assert.are.equal("vendor", list.Vendedora.category)
+		assert.is_true(ns.QuestieServices.IsQuartermaster("Quartermaster of the Argent Dawn"))
+		assert.is_false(ns.QuestieServices.IsQuartermaster("Banquero"))
+	end)
+
 	it("is found with the service @ words, and by typing any of its services", function()
 		load(true)
 		assert.are.same({ "Olthran" }, search("@banco"))
 		assert.are.same({ "Olthran" }, search("@bank"))
 		assert.are.same({ "Tabernero Brebefuego" }, search("@posada"))
 		assert.are.same({ "Vendedora" }, search("@vendedor")) -- category: the vendor-only NPC
-		assert.are.same({ "Herrero Rudo", "Tabernero Brebefuego", "Vendedora" }, search("vendedor")) -- typed: all that sell
+		assert.are.same({ "Herrero Rudo", "Hulfdan", "Tabernero Brebefuego", "Vendedora" }, search("vendedor")) -- typed: all that sell
 		assert.are.same(search("vendedor"), search("proveedor")) -- the game's titles use both words
 		assert.are.same({ "Vendedora" }, search("@proveedor"))
 		-- by subname (first; "Herrero" follows as a near match: few results allow typos)
 		assert.are.equal("Bixi", (ns.Engine.Search(ns.Query.Parse("herreria")))[1].item.entry.name)
-		assert.are.equal(5, #search("@servicio"))
+		assert.are.equal(6, #search("@servicio"))
 	end)
 
 	it("leaves out what MapScout's own services have on that map, while they are on", function()

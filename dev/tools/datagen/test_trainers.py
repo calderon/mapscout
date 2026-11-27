@@ -50,6 +50,7 @@ class TrainersTest(unittest.TestCase):
         self.assertEqual(trainers.guard_trainer("Profession Trainer > Herbalism"), ("profession", "herbalism"))
         self.assertEqual(trainers.guard_trainer("Instructor de profesiones > Equitación"), ("riding", ""))
         self.assertEqual(trainers.guard_trainer("Instructor de armas"), ("weapon", ""))
+        self.assertIsNone(trainers.guard_trainer("Instructor de clases"))  # the menu, not an answer
         self.assertEqual(trainers.guard_trainer("Weapon Master"), ("weapon", ""))
         self.assertIsNone(trainers.guard_trainer("Banco de Forjaz"))
         self.assertIs(trainers.guard_trainer("Instructor de clases > Monje"), False)

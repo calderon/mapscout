@@ -4,6 +4,8 @@
 -- packs, which stay needed for players without QuestieDB.
 -- Needs Adapters/QuestieDB.lua (loaded first): without QuestieDB it does nothing.
 --
+-- A quartermaster (its title, "Quartermaster" or "Intendente", says so: no flag
+-- does) goes in that category instead.
 -- Each NPC goes in one category, the first of SERVICES it has (an innkeeper
 -- also sells: it is an inn); its keywords name all its services, so typing
 -- finds it under any of them. Flight masters have their own provider.
@@ -42,6 +44,7 @@ Services.SERVICES = {
 	{ id = "repair", flags = { "REPAIR" }, words = "REPAIR", icon = "Interface\\Icons\\Trade_BlackSmithing" },
 	{ id = "battle", flags = { "BATTLEMASTER" }, words = "BATTLEMASTER", icon = "Interface\\Icons\\INV_BannerPVP_02" },
 	{ id = "guild", flags = { "PETITIONER", "TABARD_DESIGNER" }, words = "GUILD", icon = "Interface\\Icons\\INV_Misc_Note_05" },
+	{ id = "quartermaster", flags = {}, words = "QUARTERMASTER", icon = "Interface\\Icons\\INV_Shirt_GuildTabard_01" },
 	{ id = "vendor", flags = { "VENDOR" }, words = "VENDOR", icon = "Interface\\Icons\\INV_Misc_Bag_08" },
 }
 
@@ -51,6 +54,23 @@ for _, service in ipairs(Services.SERVICES) do
 	for _, name in ipairs(service.flags) do
 		service.mask = service.mask + (FLAGS[name] or 0)
 	end
+end
+
+for _, service in ipairs(Services.SERVICES) do
+	if service.id == "quartermaster" then
+		Services.QUARTERMASTER = service
+	end
+end
+
+-- Whether an NPC's title names a quartermaster
+function Services.IsQuartermaster(title)
+	title = (title or ""):lower()
+	for _, word in ipairs(ns.Words("QUARTERMASTER")) do
+		if title:find(word, 1, true) then
+			return true
+		end
+	end
+	return false
 end
 
 local function has(flags, mask)
@@ -90,6 +110,12 @@ function Services.EntryFor(npcID, who)
 	local subName = DB.Npc.subName(npcID)
 	if subName and subName ~= "" then
 		keywords[#keywords + 1] = subName
+		if Services.IsQuartermaster(subName) then
+			main = Services.QUARTERMASTER
+			for _, word in ipairs(ns.Words(main.words)) do
+				keywords[#keywords + 1] = word
+			end
+		end
 	end
 	return {
 		id = npcID,

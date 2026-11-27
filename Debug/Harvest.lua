@@ -5,14 +5,17 @@
 --   /ms harvest          what has been recorded
 --   /ms harvest on|off   start or stop recording (it remembers it)
 --   /ms harvest clear    forget everything recorded
+--   /ms harvest here anvil|forge   note one where the player stands
+--                        (anvils and forges have no window to notice them by)
 -- What it records, in MapScoutDB.harvest (account SavedVariables):
 --   * entrances: entering a dungeon or raid, where the player stood just
 --     before the loading screen (the instance's map ID from GetInstanceInfo)
 --   * npcs: talking to a service NPC (bank, auction, vendor and repair,
 --     trainer, stable, flight master, guild, battlemaster, innkeeper), with
---     the options of its gossip window, to tell its services apart later, and
---     for a trainer the skill it teaches
---   * objects: opening a mailbox
+--     the options of its gossip window, to tell its services apart later, the
+--     line under its name ("Quartermaster"), and for a trainer the skill it
+--     teaches; also transmogrifiers
+--   * objects: opening a mailbox or a guild bank, and what "here" notes
 --   * directions: the place a city guard marks on the map when asked for a
 --     service (the guard's own answer, with the choices that led to it)
 -- Positions are the player's, on the most precise map (an NPC is within a few
@@ -36,7 +39,25 @@ Harvest.SERVICES = {
 	BATTLEFIELDS_SHOW = "battlemaster",
 	CONFIRM_BINDER = "innkeeper",
 	GOSSIP_SHOW = "gossip",
+	-- older events, only where the client still has them
+	TRANSMOGRIFY_OPEN = "transmog",
+	GUILDBANKFRAME_OPENED = "guildbank",
 }
+
+-- Windows opened through the interaction manager (Enum.PlayerInteractionType
+-- name -> service), for services without an event of their own
+Harvest.INTERACTIONS = { Transmogrifier = "transmog", GuildBanker = "guildbank", Barber = "barber" }
+
+-- What "/ms harvest here" can note
+Harvest.HERE = { anvil = true, forge = true }
+
+-- Whether this client has an event (registering an unknown one is an error)
+function Harvest.HasEvent(event)
+	if C_EventUtils and C_EventUtils.IsEventValid then
+		return C_EventUtils.IsEventValid(event) and true or false
+	end
+	return true
+end
 
 local function store()
 	local db = ns.db
@@ -86,6 +107,27 @@ local function gossipOptions()
 	return list
 end
 
+-- The line under a unit's name in its tooltip ("Intendente de Forjaz",
+-- or its level when it has no title), or nil
+local scanner
+function Harvest.UnitTitle(unit)
+	if C_TooltipInfo and C_TooltipInfo.GetUnit then
+		local info = C_TooltipInfo.GetUnit(unit)
+		local line = info and info.lines and info.lines[2]
+		return line and line.leftText or nil
+	end
+	if not CreateFrame then
+		return nil
+	end
+	scanner = scanner or CreateFrame("GameTooltip", "MapScoutHarvestTooltip", nil, "GameTooltipTemplate")
+	scanner:SetOwner(WorldFrame, "ANCHOR_NONE")
+	scanner:SetUnit(unit)
+	local line = _G.MapScoutHarvestTooltipTextLeft2
+	local text = line and line:GetText()
+	scanner:Hide()
+	return text
+end
+
 -- The skill a trainer's window teaches ("Riding", "Mining"), or nil: tells
 -- riding and profession trainers apart (a class trainer teaches its schools)
 function Harvest.TrainerSkill()
@@ -101,14 +143,15 @@ function Harvest.TrainerSkill()
 	return nil
 end
 
-function Harvest.RecordNPC(service)
-	local kind, id = Harvest.ParseGUID(UnitGUID("npc"))
+function Harvest.RecordNPC(service, unit)
+	unit = unit or "npc"
+	local kind, id = Harvest.ParseGUID(UnitGUID(unit))
 	local mapID, x, y = Harvest.Where()
 	if not mapID then
 		return nil
 	end
 	local data = store()
-	if kind == "GameObject" or (not kind and service == "mailbox") then
+	if kind == "GameObject" or (not kind and (service == "mailbox" or service == "guildbank")) then
 		local key = ("%s:%d:%d:%d"):format(service, mapID, math.floor(x * 1000), math.floor(y * 1000))
 		data.objects[key] = { service = service, objectID = id, map = mapID, x = round(x), y = round(y), at = time() }
 		return data.objects[key]
@@ -118,8 +161,9 @@ function Harvest.RecordNPC(service)
 	end
 	local record = data.npcs[id] or { id = id, services = {} }
 	data.npcs[id] = record
-	record.name = UnitName("npc")
-	record.faction = UnitFactionGroup("npc") or "Neutral"
+	record.name = UnitName(unit)
+	record.faction = UnitFactionGroup(unit) or "Neutral"
+	record.title = Harvest.UnitTitle(unit) or record.title
 	record.locale = GetLocale()
 	record.map, record.x, record.y, record.at = mapID, round(x), round(y), time()
 	if service == "gossip" then
@@ -134,6 +178,30 @@ function Harvest.RecordNPC(service)
 		end
 	end
 	return record
+end
+
+-- A window opened through the interaction manager
+function Harvest.OnInteraction(interaction)
+	local names = Enum and Enum.PlayerInteractionType
+	for name, value in pairs(names or {}) do
+		if value == interaction and Harvest.INTERACTIONS[name] then
+			return Harvest.RecordNPC(Harvest.INTERACTIONS[name])
+		end
+	end
+	return nil
+end
+
+-- "/ms harvest here anvil": an object noted where the player stands
+function Harvest.NoteHere(what)
+	local mapID, x, y = Harvest.Where()
+	if not (Harvest.HERE[what] and mapID) then
+		return nil
+	end
+	local data = store()
+	local key = ("%s:%d:%d:%d"):format(what, mapID, math.floor(x * 1000), math.floor(y * 1000))
+	data.objects[key] = { service = what, map = mapID, x = round(x), y = round(y), at = time() }
+	ns.Print(("harvest: %s guardado aquí (%d, %.1f, %.1f)"):format(what, mapID, x * 100, y * 100))
+	return data.objects[key]
 end
 
 -- Entrances: the last place outside, paired with the instance entered next.
@@ -337,7 +405,7 @@ function Harvest.SetOn(on)
 	end
 	listening = on
 	for event in pairs(Harvest.SERVICES) do
-		if on then
+		if on and Harvest.HasEvent(event) then
 			ns.RegisterEvent(event, "Harvest", onService)
 		else
 			ns.UnregisterEvent(event, "Harvest")
@@ -345,12 +413,13 @@ function Harvest.SetOn(on)
 	end
 	local others = {
 		MAIL_SHOW = function() Harvest.RecordNPC("mailbox") end,
+		PLAYER_INTERACTION_MANAGER_FRAME_SHOW = function(_, interaction) Harvest.OnInteraction(interaction) end,
 		PLAYER_LEAVING_WORLD = Harvest.LeavingWorld,
 		PLAYER_ENTERING_WORLD = Harvest.EnteringWorld,
 		ZONE_CHANGED_NEW_AREA = Harvest.EnteringWorld,
 	}
 	for event, fn in pairs(others) do
-		if on then
+		if on and Harvest.HasEvent(event) then
 			ns.RegisterEvent(event, "Harvest", fn)
 		else
 			ns.UnregisterEvent(event, "Harvest")
@@ -382,6 +451,13 @@ end
 
 ns.RegisterCommand("harvest", function(args)
 	args = (args or ""):lower()
+	local here = args:match("^here%s*(%a*)$")
+	if here then
+		if not Harvest.NoteHere(here) then
+			ns.Print("harvest: usa /ms harvest here anvil|forge (y que el juego dé tu posición)")
+		end
+		return
+	end
 	if args == "on" or args == "off" then
 		Harvest.SetOn(args == "on")
 	elseif args == "clear" then

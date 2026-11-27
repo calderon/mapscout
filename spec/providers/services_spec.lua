@@ -162,6 +162,22 @@ describe("Providers/Services.lua", function()
 		end
 	end)
 
+	it("finds transmogrifiers, anvils and forges", function()
+		PACK.maps[1453] = {
+			{ "transmog", 4821, 8471, "Alliance", "esES", 4 },
+			{ "anvil", 6385, 3723, "", "", 0 },
+			{ "forge", 6294, 3710, "", "", 0 },
+		}
+		start()
+		PACK.maps[1453] = nil
+		assert.are.equal("Transfigurador", entry("transmog:1453:1").name)
+		assert.are.equal("transmog:1453:1", search("transfiguracion")[1].id)
+		assert.are.equal("transmog:1453:1", search("transmog")[1].id)
+		assert.are.equal("Yunque", entry("anvil:1453:2").name)
+		assert.are.equal("anvil:1453:2", search("@yunque")[1].id)
+		assert.are.equal("forge:1453:3", search("forja")[1].id)
+	end)
+
 	it("knows which services the pack has on each map", function()
 		start()
 		local Services = ns.Services

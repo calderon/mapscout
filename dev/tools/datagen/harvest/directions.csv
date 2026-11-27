@@ -1,10 +1,11 @@
 key,locale,asked,name,poi,texture,guard,uiMap,x,y,at
 1455:478:54,esES,Instructor de profesiones > Pesca,El Pescador Nómada,,7,5595,1455,0.4785,0.0543,1795733986
 1455:501:67,esES,Instructor de clases > Brujo,Instructor de brujos de Forjaz,,7,5595,1455,0.502,0.0678,1795733906
+1453:482:847,esES,Transfigurador,Transfigurador de Ventormenta,,7,1976,1453,0.4821,0.8471,1795775058
 1455:201:533,esES,La posada,Taberna Roca de Fuego,,7,5595,1455,0.2011,0.5331,1795733854
 1455:211:523,esES,Buzón,Buzón de Forjaz,,7,5595,1455,0.2112,0.524,1795733857
 1455:250:735,esES,Casa de subastas,Casa de subastas de Forjaz,,7,5595,1455,0.2505,0.7357,1795733840
-1455:267:502,esES,Peluquería,Peluquería de Forjaz,,7,5595,1455,0.267,0.5028,1795734130
+1455:267:502,esES,Instructor de clases | Peluquería,Peluquería de Forjaz,,7,5595,1455,0.267,0.5028,1795734130
 1455:269:109,esES,Instructor de clases > Mago | Instructor de clases > Paladín | Instructor de clases > Sacerdote,Sala de los Misterios,,7,5595,1455,0.2692,0.1095,1795734331
 1455:351:611,esES,Banco de Forjaz,Las Arcas,,7,5595,1455,0.3515,0.6116,1795733836
 1455:357:856,esES,Maestro de la hermandad,Centro del Viajero de Forjaz,,7,5595,1455,0.3578,0.8564,1795733851

@@ -1,12 +1,12 @@
 -- MapScout: city services (built-in provider, through MapScoutAPI): banks,
 -- auction houses, inns, mailboxes, stable masters, repair vendors, barbers,
--- guild masters and battlemasters.
+-- transmogrifiers, guild masters, battlemasters, anvils and forges.
 -- Each result is named after its service ("Bank", in the player's language;
 -- a battlemaster after its battleground, "Alterac Valley battlemaster"), with
 -- the place in the subtitle: the name the game gave it ("Las Arcas") when it
 -- was harvested in the player's language, else its city.
 --   @service (all)  @bank  @auction  @inn  @mailbox  @stable  @repair  @barber
---   @guild  @battlemaster
+--   @transmog  @guild  @battlemaster  @anvil  @forge
 -- From the static data pack (Core/Packs.lua, category "services"), harvested in
 -- the game: the client has neither the NPCs nor the mailboxes. Services only
 -- the other faction can use are left out. The pack is only loaded when this
@@ -27,8 +27,11 @@ Services.KINDS = {
 	{ id = "stable", words = "STABLE", icon = "Interface\\Icons\\Ability_Hunter_BeastTaming" },
 	{ id = "repair", words = "REPAIR", icon = "Interface\\Icons\\Trade_BlackSmithing" },
 	{ id = "barber", words = "BARBER", icon = "Interface\\Icons\\INV_Misc_Comb_02" },
+	{ id = "transmog", words = "TRANSMOG", icon = "Interface\\Icons\\INV_Chest_Cloth_17" },
 	{ id = "guild", words = "GUILD", icon = "Interface\\Icons\\INV_Misc_Note_05" },
 	{ id = "battle", words = "BATTLEMASTER", icon = "Interface\\Icons\\INV_BannerPVP_02" },
+	{ id = "anvil", words = "ANVIL", icon = "Interface\\Icons\\INV_Hammer_01" },
+	{ id = "forge", words = "FORGE", icon = "Interface\\Icons\\Spell_Fire_Fire" },
 }
 -- The battlegrounds a battlemaster sends to (row[7]): their name and search
 -- words are BATTLE_<id> and BATTLEGROUND_<ID>
