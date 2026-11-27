@@ -268,27 +268,62 @@ function QuestieAdapter.IsAvailable(questID, who, inLog)
 	return true
 end
 
--- Where the quest is taken: the first giver NPC friendly to the player, or an object
+-- True when the NPC also finishes the quest
+local function finishes(questID, npcID)
+	local finishers = DB.Quest.finishedBy and DB.Quest.finishedBy(questID)
+	for _, id in ipairs(finishers and finishers[1] or {}) do
+		if id == npcID then
+			return true
+		end
+	end
+	return false
+end
+
+local function friendlyNpc(npcID, who)
+	local friendly = DB.Npc.friendlyToFaction(npcID)
+	return not friendly or not who.faction or friendly:find(who.faction, 1, true)
+end
+
+local function objectAt(objectIDs)
+	if not DB.Object then
+		return nil
+	end
+	for _, objectID in ipairs(objectIDs) do
+		local mapID, x, y = QuestieAdapter.FirstSpawn(DB.Object.spawns(objectID))
+		if mapID then
+			return DB.Object.name(objectID), mapID, x, y
+		end
+	end
+	return nil
+end
+
+-- Where the quest is taken: the first giver NPC friendly to the player, or an
+-- object. A quest that starts at an object and at an NPC who also finishes it
+-- (a book to bring to someone) is placed at the object: the NPC is where it is
+-- handed in, and is returned as the fifth value.
 function QuestieAdapter.Giver(questID, who)
 	local starters = DB.Quest.startedBy(questID) or {}
-	for _, npcID in ipairs(starters[1] or {}) do
-		local friendly = DB.Npc.friendlyToFaction(npcID)
-		if not friendly or not who.faction or friendly:find(who.faction, 1, true) then
+	local npcs, objects = starters[1] or {}, starters[2] or {}
+	if #objects > 0 then
+		for _, npcID in ipairs(npcs) do
+			if friendlyNpc(npcID, who) and finishes(questID, npcID) then
+				local name, mapID, x, y = objectAt(objects)
+				if mapID then
+					return name, mapID, x, y, DB.Npc.name(npcID)
+				end
+				break
+			end
+		end
+	end
+	for _, npcID in ipairs(npcs) do
+		if friendlyNpc(npcID, who) then
 			local mapID, x, y = QuestieAdapter.FirstSpawn(DB.Npc.spawns(npcID))
 			if mapID then
 				return DB.Npc.name(npcID), mapID, x, y
 			end
 		end
 	end
-	for _, objectID in ipairs(starters[2] or {}) do
-		if DB.Object then
-			local mapID, x, y = QuestieAdapter.FirstSpawn(DB.Object.spawns(objectID))
-			if mapID then
-				return DB.Object.name(objectID), mapID, x, y
-			end
-		end
-	end
-	return nil
+	return objectAt(objects)
 end
 
 local function questsInLog()
@@ -316,7 +351,7 @@ end
 
 local function entryFor(questID, who)
 	local Q = DB.Quest
-	local giver, mapID, x, y = QuestieAdapter.Giver(questID, who)
+	local giver, mapID, x, y, handIn = QuestieAdapter.Giver(questID, who)
 	if not mapID then
 		return nil
 	end
@@ -325,13 +360,19 @@ local function entryFor(questID, who)
 	for _, line in ipairs(Q.objectivesText(questID) or {}) do
 		details[#details + 1] = line
 	end
-	details[#details + 1] = L.AVAILABLE_GIVER:format(giver or "?")
+	if handIn then
+		details[#details + 1] = L.AVAILABLE_STARTS_AT:format(giver or "?")
+		details[#details + 1] = L.AVAILABLE_HAND_IN:format(handIn)
+	else
+		details[#details + 1] = L.AVAILABLE_GIVER:format(giver or "?")
+	end
 	local required = Q.requiredLevel(questID) or 0
 	if required > who.level then
 		details[#details + 1] = L.AVAILABLE_REQUIRES:format(required)
 	end
 	local keywords = ns.Words("AVAILABLE")
 	keywords[#keywords + 1] = giver
+	keywords[#keywords + 1] = handIn
 	return {
 		id = questID,
 		name = QuestieAdapter.Title(questID),
