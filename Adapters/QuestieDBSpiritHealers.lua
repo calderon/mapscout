@@ -1,20 +1,20 @@
 -- MapScout adapter: spirit healers (the angel at a graveyard) from QuestieDB.
--- Forever's client data has no graveyard table, and the game's graveyard API
--- returns none, so QuestieDB's NPCs (read at runtime, nothing copied) are the
--- only source for now: the NPCs with the SPIRIT_HEALER flag.
--- A provider of its own, not a service: a player who just died looks for the
--- nearest graveyard, and @service shouldn't list them. Registered only with
--- QuestieDB (without it there would be nothing to show, so no toggle either).
--- One NPC can stand at many graveyards: one result per spawn, named "Spirit
--- Healer" in the player's language, with the zone as subtitle (and as a search
--- word: "graveyard ironforge").
--- Needs Adapters/QuestieDB.lua (loaded first). Built in small steps while on.
+-- A stopgap until our own data (harvested in the game) covers the world:
+-- QuestieDB's NPCs with the SPIRIT_HEALER flag, read at runtime (nothing
+-- copied), handed to MapScout's Spirit healers (Providers/SpiritHealers.lua,
+-- SpiritHealers.SetExtra), so one option turns both sources on and off.
+-- Where our pack has a graveyard, QuestieDB's spirit healer there is left out:
+-- each graveyard harvested moves to our data by itself.
+-- One NPC can stand at many graveyards: one result per spawn.
+-- Needs Adapters/QuestieDB.lua (loaded first): without QuestieDB it does
+-- nothing. Built in small steps while Spirit healers is on.
 
 local _, ns = ...
 local L = ns.L
 
 local Adapter = ns.QuestieAdapter
-if not (Adapter and Adapter.db and Adapter.db.Npc and Adapter.db.Npc.GetAllIds) then
+local Own = ns.SpiritHealers
+if not (Own and Adapter and Adapter.db and Adapter.db.Npc and Adapter.db.Npc.GetAllIds) then
 	return -- no QuestieDB, or one we can't read
 end
 local DB = Adapter.db
@@ -26,9 +26,8 @@ ns.QuestieSpiritHealers = Healers
 
 Healers.STEP = 400 -- most NPCs checked per frame
 Healers.BUDGET_MS = 8 -- and at most this long per frame
-Healers.ICON = "Interface\\Icons\\Spell_Holy_Resurrection"
 
--- The entries of one NPC (one per spawn on a known map), or none
+-- The entries of one NPC (one per spawn on a known map) added to into
 function Healers.EntriesFor(npcID, who, into)
 	into = into or {}
 	local flags = DB.Npc.npcFlags(npcID)
@@ -51,35 +50,27 @@ function Healers.EntriesFor(npcID, who, into)
 	for _, areaID in ipairs(areas) do
 		local mapID = Adapter.MapOfArea(areaID)
 		for i, point in ipairs(mapID and spawns[areaID] or {}) do
-			if point[1] and point[2] and point[1] >= 0 and point[2] >= 0 then
-				local map = ns.MapPlace(mapID)
-				local keywords = {}
-				for _, word in ipairs(who.keywords or ns.Words("SPIRIT_HEALER")) do
-					keywords[#keywords + 1] = word
+			local x, y = point[1], point[2]
+			if x and y and x >= 0 and y >= 0 then
+				x, y = x / 100, y / 100
+				if not (who.covered and who.covered(mapID, x, y)) then
+					local entry = Own.Entry(("q:%d:%d:%d"):format(npcID, areaID, i), mapID, x, y, who.keywords)
+					entry.npcID = npcID
+					into[#into + 1] = entry
 				end
-				if map and map.name then
-					keywords[#keywords + 1] = map.name:lower() -- "cementerio forjaz"
-				end
-				into[#into + 1] = {
-					id = ("%d:%d:%d"):format(npcID, areaID, i),
-					name = L.SPIRIT_HEALER,
-					subtitle = map and map.name or nil,
-					keywords = keywords,
-					icon = Healers.ICON,
-					mapID = mapID,
-					x = point[1] / 100,
-					y = point[2] / 100,
-					npcID = npcID,
-				}
 			end
 		end
 	end
 	return into
 end
 
-local provider
 local building
 Healers.stats = {}
+
+local function isOn()
+	local record = ns.Registry.Get("spirithealers")
+	return record ~= nil and record.enabled == true
+end
 
 local step
 step = function(build)
@@ -105,14 +96,20 @@ step = function(build)
 	end
 	building = nil
 	Healers.stats = { npcs = #build.ids, healers = #build.entries, ms = debugprofilestop() - build.start }
-	if provider and provider:IsEnabled() then
-		provider:SetEntries(build.entries)
+	if isOn() then
+		Own.SetExtra("questiedb", build.entries)
 	end
 end
 
 function Healers.Build()
 	local who = Adapter.Player()
 	who.keywords = ns.Words("SPIRIT_HEALER") -- read once, not per spawn
+	local data = ns.Packs.Get("spirithealers")
+	if data then
+		who.covered = function(mapID, x, y)
+			return Own.Covers(data, mapID, x, y)
+		end
+	end
 	local build = { ids = DB.Npc.GetAllIds() or {}, index = 1, entries = {}, who = who, start = debugprofilestop() }
 	building = build
 	C_Timer.After(0, function()
@@ -120,22 +117,24 @@ function Healers.Build()
 	end)
 end
 
-local aliases = ns.Words("SPIRIT_HEALERS")
-provider = MapScoutAPI:RegisterProvider("spirithealers", {
-	name = L.SPIRIT_HEALERS_NAME,
-	description = L.SPIRIT_HEALERS_DESCRIPTION,
-	icon = Healers.ICON,
-	filter = table.remove(aliases, 1), -- the main @ word (English, singular)
-	filterAliases = aliases,
-	OnEnable = function()
-		Healers.Build()
-	end,
-	OnDisable = function()
-		building = nil
-	end,
-})
+-- Spirit healers turned on or off: build, or let go of what was built
+local pending = false
+ns.Registry.Listen(function(what, id)
+	if what == "toggled" and id == "spirithealers" and not pending then
+		pending = true
+		C_Timer.After(0, function()
+			pending = false
+			if isOn() then
+				Healers.Build()
+			else
+				building = nil
+				Own.SetExtra("questiedb", nil)
+			end
+		end)
+	end
+end)
 
-ns.RegisterDebug("spirithealers", function()
+ns.RegisterDebug("questiehealers", function()
 	local s = Healers.stats
-	ns.Print(L.DEBUG_SPIRIT_HEALERS_RESULT:format(s.npcs or 0, s.healers or 0, s.ms or 0))
-end, L.DEBUG_SPIRIT_HEALERS)
+	ns.Print(L.DEBUG_QUESTIE_HEALERS_RESULT:format(s.npcs or 0, s.healers or 0, s.ms or 0))
+end, L.DEBUG_QUESTIE_HEALERS)

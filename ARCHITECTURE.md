@@ -40,7 +40,7 @@ MapScout/
     Discovery.lua              # providers declared in other addons' .toc (## X-MapScout-Provider)
   Providers/                   # built-in providers, registered through MapScoutAPI only
     Coordinates.lua            # query handler: "45.2, 67.8", "45 67", "Elwynn 42 65"
-    Geography.lua Instances.lua Taxi.lua Transport.lua Services.lua Trainers.lua Quests.lua
+    Geography.lua Instances.lua Taxi.lua Transport.lua Services.lua Trainers.lua SpiritHealers.lua Quests.lua
     AreaPOI.lua Vignettes.lua Portals.lua
   UI/
     Map.lua                    # MapScout's layer over the map area, map hooks, open/close/change events
@@ -52,7 +52,7 @@ MapScout/
   Adapters/                    # other addons read at runtime (QuestieDB...), inert when absent
     QuestieDB.lua              # available quests
     QuestieDBServices.lua      # services and trainers, handed to Services and Trainers (stopgap)
-    QuestieDBSpiritHealers.lua # spirit healers: a provider of its own, only with QuestieDB
+    QuestieDBSpiritHealers.lua # spirit healers, handed to SpiritHealers (stopgap)
   Options/
     Panel.lua                  # Settings canvas category (fallback if missing)
 MapScout_Data_Forever/         # LoadOnDemand static data packs (data-only providers), one file per category
@@ -145,7 +145,7 @@ What the client cannot tell us at runtime (NPC services, mailboxes and other obj
 
 **Trainers** (`Trainers.lua`) come the same way, and are shown inside Services in the options (`parent`); `@service` finds them too: guards mark class, profession and weapon trainers (the building, not the NPC); riding trainers are recorded by talking to them, with the skill their window teaches. Each result is named after what it teaches ("Mage trainer"), found by trainer, class and profession words in English and the player's language. The player's own class has its toggle and comes first (higher weight); other classes have a toggle of their own. Where our pack has any trainer on a map, the QuestieDB adapter leaves its trainers out there; elsewhere its trainers are in Trainers, in the category their title names ("Mage Trainer", "Instructora de herrería": class, other class, profession, riding, weapon), or in none when it doesn't say.
 
-**Spirit healers** (`Adapters/QuestieDBSpiritHealers.lua`, #208) are a provider of their own, not a kind of service: a player who just died looks for the nearest graveyard, and `@service` should not list them all. Forever's client data has no graveyard table and `C_DeathInfo.GetGraveyardsForMap` returns none, even next to one, so for now they come only from QuestieDB's NPCs with the `SPIRIT_HEALER` flag, read at runtime. The provider is registered only when QuestieDB is there (without it there is nothing to show, so no toggle either). One NPC can stand at many graveyards: one result per spawn, named "Spirit Healer" in the player's language, with its zone as subtitle and search word. Found with `@spirithealer`/`@graveyard` (`@angel`/`@cementerio`).
+**Spirit healers** (`SpiritHealers.lua`, #208, #209) are a provider of their own, not a kind of service: a player who just died looks for the nearest graveyard, and `@service` should not list them all. Forever's client has no graveyard table (`WorldSafeLocs` is not in its DB2) and `C_DeathInfo.GetGraveyardsForMap` returns none, so they come from our harvest mode: on dying, `C_DeathInfo.GetDeathReleasePosition` names the graveyard the ghost will appear at (exactly; only while dead, and only asked on the continent's map, since a city's map leaves the graveyard outside it), and a spirit healer talked to as a ghost is noted where it stands. The generator joins the records of one graveyard into the `spirithealers` pack category. Until our data covers the world, the QuestieDB adapter (`Adapters/QuestieDBSpiritHealers.lua`) fills the gaps through `SpiritHealers.SetExtra`, as with services: its spirit healers (NPCs with the `SPIRIT_HEALER` flag, one result per spawn) are left out where our pack has a graveyard within `NEAR` on the same map, so each graveyard harvested moves to our data by itself. One result per graveyard, named "Spirit Healer" in the player's language, with its zone as subtitle and search word. Found with `@spirithealer`/`@graveyard` (`@angel`/`@cementerio`).
 
 ## Persistence
 

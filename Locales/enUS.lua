@@ -185,8 +185,10 @@ local EN = {
 	SPIRIT_HEALER = "Spirit Healer",
 	SPIRIT_HEALERS_NAME = "Spirit healers",
 	SPIRIT_HEALERS_DESCRIPTION = "The spirit healers at the graveyards, to come back to life after dying",
-	DEBUG_SPIRIT_HEALERS = "spirit healers from QuestieDB",
-	DEBUG_SPIRIT_HEALERS_RESULT = "QuestieDB: %d NPCs, %d spirit healers, built in %.0f ms",
+	DEBUG_SPIRIT_HEALERS = "spirit healers",
+	DEBUG_SPIRIT_HEALERS_RESULT = "%d spirit healers from our data, %d from other sources (data pack: %s)",
+	DEBUG_QUESTIE_HEALERS = "spirit healers from QuestieDB",
+	DEBUG_QUESTIE_HEALERS_RESULT = "QuestieDB: %d NPCs, %d spirit healers, built in %.0f ms",
 
 	-- Trainers (our data pack)
 	TRAINERS_NAME = "Trainers",

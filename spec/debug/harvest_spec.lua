@@ -1,6 +1,6 @@
 -- Debug/Harvest.lua: the development-only harvest mode
 describe("Debug/Harvest.lua", function()
-	local ns, frame, npc, position, instance, now
+	local ns, frame, npc, position, instance, now, death
 
 	local function strsplitStub(sep, text)
 		local parts = {}
@@ -16,7 +16,15 @@ describe("Debug/Harvest.lua", function()
 		position = { map = 1455, x = 0.35612, y = 0.60433 }
 		instance = { inside = false }
 		now = 100
+		death = { ghost = false } -- release: where the game says the ghost will appear, on the continent
 		StubGlobals({
+			UnitIsGhost = function() return death.ghost end,
+			C_DeathInfo = {
+				GetDeathReleasePosition = function(mapID)
+					local at = death.release
+					return at and mapID == 1415 and { GetXY = function() return at.x, at.y end } or nil
+				end,
+			},
 			GetTime = function() return now end,
 			strsplit = strsplitStub,
 			UnitGUID = function() return npc.guid end,
@@ -25,6 +33,11 @@ describe("Debug/Harvest.lua", function()
 			CanMerchantRepair = function() return npc.repair end,
 			C_Map = {
 				GetBestMapForUnit = function() return position.map end,
+				GetMapInfo = function(id)
+					return ({ [1415] = { mapID = 1415, mapType = 2, parentMapID = 947 },
+						[1455] = { mapID = 1455, mapType = 3, parentMapID = 1415 },
+						[947] = { mapID = 947, mapType = 1, parentMapID = 0 } })[id]
+				end,
 				GetPlayerMapPosition = function()
 					return { GetXY = function() return position.x, position.y end }
 				end,
@@ -245,5 +258,69 @@ describe("Debug/Harvest.lua", function()
 		SlashCmdList.MAPSCOUT("harvest here chair")
 		assert.matches("anvil|forge", ChatLog[#ChatLog], 1, true)
 		assert.are.equal(1, #(function() local t = {} for k in pairs(ns.db.harvest.objects) do t[#t + 1] = k end return t end)())
+	end)
+
+	describe("graveyards", function()
+		before_each(function()
+			SlashCmdList.MAPSCOUT("harvest on")
+			-- the continent's point, placed on its outdoor zone (Core/Util.lua does it in the game)
+			ns.PlaceOutdoors = function(mapID, x, y)
+				assert.are.equal(1415, mapID)
+				return 1426, x + 0.06, y - 0.14
+			end
+		end)
+
+		local function graveyards()
+			local list = {}
+			for key, record in pairs(ns.db.harvest.graveyards) do
+				list[#list + 1] = { key = key, record = record }
+			end
+			return list
+		end
+
+		it("records on dying the graveyard the game names, asked on the continent", function()
+			death.release = { x = 0.47939, y = 0.53830 }
+			frame:Fire("PLAYER_DEAD")
+			local list = graveyards()
+			assert.are.equal(1, #list)
+			assert.are.equal("death:" .. list[1].record.at, list[1].key)
+			local r = list[1].record
+			assert.are.same({ "death", 1426, 0.5394, 0.3983, 1415, 0.4794, 0.5383, 1455 },
+				{ r.how, r.map, r.x, r.y, r.continent, r.cx, r.cy, r.died })
+			assert.matches("cementerio guardado", ChatLog[#ChatLog], 1, true)
+		end)
+
+		it("says so when the game gives no point (inside an instance, or no answer)", function()
+			death.release = nil
+			frame:Fire("PLAYER_DEAD")
+			assert.are.same({}, graveyards())
+			assert.matches("NO guardado", ChatLog[#ChatLog], 1, true)
+			death.release = { x = 0, y = 0 }
+			frame:Fire("PLAYER_DEAD")
+			assert.are.same({}, graveyards())
+		end)
+
+		it("records a spirit healer talked to as a ghost, not as a service NPC", function()
+			death.ghost = true
+			npc = { guid = "Creature-0-1-2-3-6491-000", name = "Ángel de la Resurrección" }
+			position = { map = 1426, x = 0.5421, y = 0.3903 }
+			frame:Fire("GOSSIP_SHOW")
+			local list = graveyards()
+			assert.are.equal(1, #list)
+			local r = list[1].record
+			assert.are.same({ "healer", 6491, 1426, 0.5421, 0.3903 }, { r.how, r.npc, r.map, r.x, r.y })
+			assert.is_nil(next(ns.db.harvest.npcs))
+			SlashCmdList.MAPSCOUT("harvest")
+			assert.matches("1 cementerios", ChatLog[#ChatLog], 1, true)
+		end)
+
+		it("records nothing while off", function()
+			SlashCmdList.MAPSCOUT("harvest off")
+			death.release = { x = 0.47939, y = 0.53830 }
+			frame:Fire("PLAYER_DEAD")
+			death.ghost = true
+			frame:Fire("GOSSIP_SHOW")
+			assert.are.same({}, graveyards())
+		end)
 	end)
 end)

@@ -18,6 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import dungeons  # noqa: E402
+import graveyards  # noqa: E402
 import harvest  # noqa: E402
 import places  # noqa: E402
 import services  # noqa: E402
@@ -137,6 +138,9 @@ def main(argv=None):
         print("trainers: unknown guard answer %r (add its words to trainers.py)" % asked)
     count = trainers.write(os.path.join(OUT, "Trainers.lua"), args.build, date, trainers.merge(found_trainers))
     print("Trainers.lua: %d trainers" % count)
+
+    count = graveyards.write(os.path.join(OUT, "SpiritHealers.lua"), args.build, date, graveyards.points(HARVEST))
+    print("SpiritHealers.lua: %d graveyards" % count)
 
     placed = sum(1 for e in found if e[2])
     print("Dungeons.lua: %d instances, %d with a checked entrance, %d by hand (build %s, %s)%s" % (

@@ -21,7 +21,7 @@ generator changes, and commit what changed.
 |---|---|---|
 | The Forever client's DB2 tables of one exact build (`BUILD`, now 1.60.1.71139) | CSV exports of [wago.tools](https://wago.tools) (`/db2/{table}/csv?version=…`), the build's own client data. Its `robots.txt` and `/llms.txt` allow these downloads. Kept in `.cache/<build>/` (not committed) | Instance entrances, map positions, names, levels |
 | Hand-written entrances (`manual/entrances.csv`) | Single facts from public sources, at least two that agree, cited per row. Never another addon's list | Entrances the client data does not have |
-| Harvest data (`harvest/*.csv`) | Recorded in the game with `/ms harvest on` (Debug/Harvest.lua, development only), brought in with `datagen.py harvest` | Dungeon entrances (they count as checked); city services: the places city guards mark when asked for them (`directions.csv`), service NPCs talked to (`npcs.csv`, trainers with the skill they teach) and mailboxes opened (`objects.csv`) |
+| Harvest data (`harvest/*.csv`) | Recorded in the game with `/ms harvest on` (Debug/Harvest.lua, development only), brought in with `datagen.py harvest` | Dungeon entrances (they count as checked); city services: the places city guards mark when asked for them (`directions.csv`), service NPCs talked to (`npcs.csv`, trainers with the skill they teach) and mailboxes opened (`objects.csv`); graveyards: where the game sends the ghost on dying, and spirit healers talked to as a ghost (`graveyards.csv`) |
 | wow-completionist-data (CC BY-SA 4.0) | Quest and NPC seed (#104) | Not yet |
 
 Never data from other addons' databases, emulator databases or wiki scraping
@@ -42,6 +42,7 @@ Tables per output:
   plus `manual/services.csv` for services not harvested yet on a map (at least
   two public sources that agree, cited in each row).
 - `Trainers.lua`: only the harvest, like `Services.lua`.
+- `SpiritHealers.lua`: only the harvest (the client has no graveyard table).
 - `Transport.lua`: `TaxiPathNode`, `AreaTrigger`, `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, plus `manual/transport.csv`.
 
 `manual/transport.csv` lists the transport lines players ride, one row each:
@@ -156,3 +157,7 @@ game (`ns.PlaceOnMap`).
 - `Trainers.lua`: class, profession, riding and weapon trainers, per map, with
   what they teach (class token or profession), the faction and the place's
   name, as in `Services.lua`. The guard's place wins over the NPC talked to.
+- `SpiritHealers.lua`: one spirit healer per graveyard, per map (`graveyards.py`).
+  Records on the same map within 0.02 of each other are one graveyard; its
+  point is the average of its deaths (`GetDeathReleasePosition`, exact), or of
+  the spirit healers talked to when it has none.
