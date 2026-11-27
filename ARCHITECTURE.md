@@ -27,6 +27,8 @@ MapScout/
     Caps.lua                   # which C_* APIs and features exist in this client
     DB.lua                     # SavedVariables, defaults, schema version + migrations
     Util.lua                   # text normalization, coordinates, map helpers
+    Recorder.lua               # the moments the game tells where something is (talking to a service NPC,
+                               # a mailbox, entering a dungeon, dying, a guard's directions); stores nothing
   Search/
     Query.lua                  # splits the text into @filters, handler matches and free text
     Index.lua                  # static entries, normalized once, per-provider buckets
@@ -119,6 +121,8 @@ In this order of preference (research and links: #104):
 2. **The Forever client's own data files** — DB2 tables of one exact Forever build, downloaded as **wago.tools' CSV exports** (`/db2/{table}/csv?version=…`; its `robots.txt` and `/llms.txt` allow them, not the browsing pages) by the generator in `dev/tools/datagen` (#38). Maps, areas, flight nodes, instances. `QuestV2` only has quest IDs, no titles.
 3. **Open data under CC BY-SA 4.0: [wow-completionist-data](https://github.com/danielalanbates/wow-completionist-data)** — quests (givers, enders, objectives, prerequisites) and NPC/object positions for Forever, built from Warcraft Wiki and client data, with no emulator nor addon databases. Seed for quests and NPCs (#38). Forever coverage when checked: 3,483 quests, start located 48 %, start and end 40 %, NPCs located 47 %, few high-confidence points (many come from Retail-era wiki pages). No services (vendors, trainers, innkeepers, bankers).
 4. **Our in-game harvest mode** — NPCs and objects recorded when interacting with them (#40): services, Forever-only content, and corrections to the seed.
+
+   The moments are noticed by `Core/Recorder.lua`, shared by the development harvest mode (`Debug/Harvest.lua`, not in the released zip), the released contribution mode (#172) and learning places while playing (#212). It stores nothing and listens to no event until one of them starts it (`Recorder.Start(owner, fn)`, `fn(kind, record, why)`); each keeps what it gets in its own way, with the shared helpers to join NPCs (`AddNPC`, `AddSighting`) and guards' directions (`AddDirection`).
 5. **Single facts from public sources, by hand** — a point the client lacks (e.g. the entrance of a Forever dungeon) written in `dev/tools/datagen/manual/`, only when at least two public sources agree, each row citing them. Never another addon's list: data from an addon needs its author's written permission, and is credited.
 6. **Other addons, only read at runtime** — never copied. **QuestieDB** (by the Questie team, GPLv3, a separate addon, supports Forever) for available quests (#83); its NPCs' waypoints are the route of a quest giver or service NPC who walks one (#179).
 

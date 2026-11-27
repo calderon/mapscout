@@ -19,6 +19,7 @@ Core/Caps.lua
 Core/Util.lua
 Core/DB.lua
 Core/Packs.lua
+Core/Recorder.lua
 API/MapScoutAPI.lua
 API/Registry.lua
 Search/Query.lua
