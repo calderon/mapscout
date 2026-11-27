@@ -100,13 +100,28 @@ class DungeonsTest(unittest.TestCase):
                                          {"ID": "30", "MapName_lang": "Valle de Alterac"}]}, [36])
         self.assertEqual(names, {"esES": {36: "Minas de la Muerte"}})
 
+    def test_other_names_from_the_area_when_they_differ(self):
+        maps = {"enUS": [{"ID": "109", "MapName_lang": "Sunken Temple", "AreaTableID": "1477"},
+                         {"ID": "70", "MapName_lang": "Uldaman", "AreaTableID": "1337"},
+                         {"ID": "36", "MapName_lang": "Deadmines", "AreaTableID": "0"},
+                         {"ID": "34", "MapName_lang": "Stormwind Stockade", "AreaTableID": "717"}],
+                "esES": [{"ID": "109", "MapName_lang": "Templo Sumergido", "AreaTableID": "1477"}]}
+        areas = {"enUS": [{"ID": "1477", "AreaName_lang": "The Temple of Atal'Hakkar"},
+                          {"ID": "1337", "AreaName_lang": "uldaman"},
+                          {"ID": "717", "AreaName_lang": "The Stockade"}],
+                 "esES": [{"ID": "1477", "AreaName_lang": "El Templo de Atal'Hakkar"}]}
+        found = dungeons.other_names(maps, areas, [109, 70, 36])
+        self.assertEqual(found, {"enUS": {109: "The Temple of Atal'Hakkar"},
+                                 "esES": {109: "El Templo de Atal'Hakkar"}})
+
     def test_write_is_stable_lua(self):
         with tempfile.TemporaryDirectory() as folder:
             path = os.path.join(folder, "Dungeons.lua")
             dungeons.write(path, "1.60.1.1", "2026-01-02", [(36, "dungeon", 11, 8000, 5000, 16)],
-                           {"enUS": {36: 'Dead "mines"'}})
+                           {"enUS": {36: 'Dead "mines"'}}, other_names_by_locale={"enUS": {36: "The Mines"}})
             with open(path, encoding="utf-8") as source:
                 text = source.read()
+        self.assertIn('otherNames = {\n\t\t\tenUS = {\n\t\t\t\t[36] = "The Mines",', text)
         self.assertIn("build 1.60.1.1 (2026-01-02). Do not edit.", text)
         self.assertIn("pack.categories.dungeons = function()", text)
         self.assertIn('[36] = { "dungeon", 11, 8000, 5000, 16 },', text)

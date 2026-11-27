@@ -30,7 +30,7 @@ Never data from other addons' databases, emulator databases or wiki scraping
 Tables per output:
 
 - `Places.lua`: `AreaPOI` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`.
-- `Dungeons.lua`: `Map` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`, plus `manual/entrances.csv`.
+- `Dungeons.lua`: `Map` and `AreaTable` (enUS, esES, esMX), `UiMap`, `UiMapAssignment`, `LFGDungeons`, `ContentTuning`, plus `manual/entrances.csv`.
 - `Services.lua`: the harvest (the client has no service NPCs nor mailboxes),
   plus `manual/services.csv` for services not harvested yet on a map (at least
   two public sources that agree, cited in each row).
@@ -108,7 +108,9 @@ game (`ns.PlaceOnMap`).
   writes, where it writes them; a name is kept once per map). Not every subzone
   is there: some names are part of the map's art.
 - `Dungeons.lua`: dungeon and raid entrances (where the corpse of a player who
-  dies inside goes), their kind, recommended level and names. Instances without
+  dies inside goes), their kind, recommended level and names, and the other
+  name players use where the instance's area (AreaTable) has another one
+  ("The Temple of Atal'Hakkar" for "Sunken Temple"). Instances without
   that point (Forever's new ones, Naxxramas, Caverns of Time) come from
   `manual/entrances.csv` when there are public sources for them, and later from
   the harvest mode (#40).

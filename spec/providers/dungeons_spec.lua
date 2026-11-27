@@ -180,6 +180,21 @@ describe("Providers/Dungeons.lua", function()
 		assert.is_true(#search("@mazmorra") > #raids)
 	end)
 
+	it("finds them by their other names too, in both languages, showing the main name", function()
+		assert.are.equal("Templo Sumergido", search("templo de atal'hakkar")[1])
+		assert.are.equal("Templo Sumergido", search("temple of atal'hakkar")[1])
+		assert.are.equal("Templo Sumergido", search("sunken temple")[1])
+		assert.are.equal("Mazmorras de Ventormenta", search("las mazmorras")[1])
+		assert.are.equal("Mazmorras de Ventormenta", search("the stockade")[1])
+		local entries = ns.Dungeons.Entries({
+			entrances = { [109] = { "dungeon", 1435, 6950, 5350, 45 } },
+			names = { enUS = { [109] = "Sunken Temple" } },
+			otherNames = { enUS = { [109] = "The Temple of Atal'Hakkar" } },
+		})
+		assert.are.equal("Sunken Temple", entries[1].name)
+		assert.is_true(#entries[1].keywords > 0)
+	end)
+
 	it("lets the data go when turned off, and loads it again when turned on", function()
 		assert.are.same({ "dungeons" }, ns.Packs.Built())
 		ns.Registry.SetEnabled("dungeons", false)
