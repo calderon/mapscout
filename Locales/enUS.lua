@@ -236,13 +236,13 @@ local EN = {
 
 	-- Contributing (/ms contribute)
 	HELP_CONTRIBUTE = "help improve MapScout's data: on, off, status or clear",
-	CONTRIBUTE_TURNED_ON = "thank you! From now on we save the places you find on this computer, every time you play. To stop: /ms contribute off.",
+	CONTRIBUTE_TURNED_ON = "thank you! From now on we save the locations you find on this computer, every time you play. To stop: /ms contribute off.",
 	CONTRIBUTE_TURNED_OFF = "we have stopped saving information. What was saved is kept; if you want to delete it, use /ms contribute clear.",
 	CONTRIBUTE_STATUS_ON = "thank you for helping improve MapScout. Right now %s.",
 	CONTRIBUTE_STATUS_OFF = "you are not contributing (to start: /ms contribute on). Right now %s.",
-	CONTRIBUTE_PLACES_NONE = "no place is saved yet",
-	CONTRIBUTE_PLACES_ONE = "one place is saved",
-	CONTRIBUTE_PLACES = "%d places are saved",
+	CONTRIBUTE_PLACES_NONE = "no location is saved yet",
+	CONTRIBUTE_PLACES_ONE = "one location is saved",
+	CONTRIBUTE_PLACES = "%d locations are saved",
 	CONTRIBUTE_CLEARED_ON = "everything saved has been forgotten. We keep saving what you find; to stop, use /ms contribute off.",
 	CONTRIBUTE_CLEARED_OFF = "everything saved has been forgotten. To contribute again, use /ms contribute on.",
 	CONTRIBUTE_USAGE = "use /ms contribute on, off, status or clear.",

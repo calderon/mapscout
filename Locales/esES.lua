@@ -236,13 +236,13 @@ L.OPTIONS_CONTRIBUTE_HELP = "Guarda en tu ordenador la ubicación de PNJ de serv
 
 -- Contribuir (/ms contribute)
 L.HELP_CONTRIBUTE = "ayuda a mejorar los datos de MapScout: on, off, status o clear"
-L.CONTRIBUTE_TURNED_ON = "¡gracias! A partir de ahora guardamos en este ordenador los sitios que encuentres, cada vez que juegues. Para parar: /ms contribute off."
+L.CONTRIBUTE_TURNED_ON = "¡gracias! A partir de ahora guardamos en este ordenador las ubicaciones que encuentres, cada vez que juegues. Para parar: /ms contribute off."
 L.CONTRIBUTE_TURNED_OFF = "hemos dejado de guardar información. Lo guardado se conserva; si quieres borrarlo, usa /ms contribute clear."
 L.CONTRIBUTE_STATUS_ON = "gracias por contribuir a mejorar MapScout. Ahora mismo %s."
 L.CONTRIBUTE_STATUS_OFF = "no estás contribuyendo (para empezar: /ms contribute on). Ahora mismo %s."
-L.CONTRIBUTE_PLACES_NONE = "no hay ningún sitio guardado"
-L.CONTRIBUTE_PLACES_ONE = "hay un sitio guardado"
-L.CONTRIBUTE_PLACES = "hay %d sitios guardados"
+L.CONTRIBUTE_PLACES_NONE = "no hay ninguna ubicación guardada"
+L.CONTRIBUTE_PLACES_ONE = "hay una ubicación guardada"
+L.CONTRIBUTE_PLACES = "hay %d ubicaciones guardadas"
 L.CONTRIBUTE_CLEARED_ON = "se ha olvidado todo lo guardado. Seguimos guardando lo que encuentres; para parar, usa /ms contribute off."
 L.CONTRIBUTE_CLEARED_OFF = "se ha olvidado todo lo guardado. Para volver a contribuir, usa /ms contribute on."
 L.CONTRIBUTE_USAGE = "usa /ms contribute on, off, status o clear."
