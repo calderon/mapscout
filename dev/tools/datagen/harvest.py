@@ -18,7 +18,7 @@ FOREVER_SAVED = "/Applications/World of Warcraft/_forever_/WTF/Account/*/SavedVa
 
 FILES = {
     "entrances": ["instance", "name", "kind", "uiMap", "x", "y", "at"],
-    "npcs": ["npc", "locale", "name", "faction", "services", "uiMap", "x", "y", "gossip", "at"],
+    "npcs": ["npc", "locale", "name", "faction", "services", "skill", "uiMap", "x", "y", "gossip", "at"],
     "objects": ["key", "service", "object", "uiMap", "x", "y", "at"],
     "directions": ["key", "locale", "asked", "name", "poi", "texture", "guard", "uiMap", "x", "y", "at"],
 }
@@ -44,7 +44,7 @@ def rows_from_saved(text):
             gossip = [gossip[k] for k in sorted(gossip)]
         out["npcs"][str(npc)] = {
             "npc": npc, "locale": n.get("locale") or "esES", "name": n.get("name", ""), "faction": n.get("faction", ""),
-            "services": " ".join(services), "uiMap": n["map"], "x": n["x"], "y": n["y"],
+            "services": " ".join(services), "skill": n.get("skill", ""), "uiMap": n["map"], "x": n["x"], "y": n["y"],
             "gossip": " | ".join(gossip), "at": n.get("at", 0)}
     for key, o in (data.get("objects") or {}).items():
         out["objects"][key] = {

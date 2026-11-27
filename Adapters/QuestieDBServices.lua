@@ -11,8 +11,9 @@
 -- session, in small steps.
 -- A stopgap until MapScout's own data covers the world: where MapScout's
 -- services (Providers/Services.lua, on) have a service on a map, this adapter
--- leaves that service out on that map. Each city harvested moves to our data
--- by itself; turning our services on or off builds this list again.
+-- leaves that service out on that map; trainers likewise where MapScout's
+-- trainers (Providers/Trainers.lua, on) have any on that map. Each city harvested moves to our data
+-- by itself; turning our services or trainers on or off builds this list again.
 
 local _, ns = ...
 local L = ns.L
@@ -140,19 +141,28 @@ step = function(build)
 	end
 end
 
--- What MapScout's own services cover: fn(mapID, service), or nil when they
--- are off (or have no data)
-local function ownCoverage()
-	local own = ns.Registry.Get("services")
-	if not (own and own.enabled and ns.Services) then
+-- The pack data of one of MapScout's own providers, or nil when it is off
+-- (or has no data)
+local function ownData(id, module)
+	local own = ns.Registry.Get(id)
+	if not (own and own.enabled and module) then
 		return nil
 	end
-	local data = ns.Packs.Get("services")
-	if not data then
+	return ns.Packs.Get(id)
+end
+
+-- What MapScout's own services and trainers cover: fn(mapID, service), or nil
+-- when both are off (or have no data)
+local function ownCoverage()
+	local services, trainers = ownData("services", ns.Services), ownData("trainers", ns.Trainers)
+	if not (services or trainers) then
 		return nil
 	end
 	return function(mapID, kind)
-		return ns.Services.Covers(data, mapID, kind)
+		if kind == "trainer" then
+			return trainers ~= nil and ns.Trainers.Covers(trainers, mapID)
+		end
+		return services ~= nil and ns.Services.Covers(services, mapID, kind)
 	end
 end
 
@@ -194,7 +204,7 @@ provider = MapScoutAPI:RegisterProvider("questiedb-services", {
 
 -- Our services turned on or off: what they cover changed
 ns.Registry.Listen(function(what, id)
-	if what == "toggled" and id == "services" and provider and provider:IsEnabled() then
+	if what == "toggled" and (id == "services" or id == "trainers") and provider and provider:IsEnabled() then
 		Services.Build()
 	end
 end)

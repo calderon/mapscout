@@ -72,6 +72,22 @@ describe("Debug/Harvest.lua", function()
 		assert.are.same({ "132052:Hazme tu hogar" }, record.gossip)
 	end)
 
+	it("records the skill a trainer teaches, from the first service that has one", function()
+		SlashCmdList.MAPSCOUT("harvest on")
+		local skills = { "", "Equitación", "Equitación" }
+		StubGlobals({
+			GetNumTrainerServices = function() return #skills end,
+			GetTrainerServiceSkillLine = function(i) return skills[i] end,
+		})
+		frame:Fire("TRAINER_SHOW")
+		local record = ns.db.harvest.npcs[4092]
+		assert.are.same({ trainer = true }, record.services)
+		assert.are.equal("Equitación", record.skill)
+		skills = {} -- a window without services keeps what was learnt before
+		frame:Fire("TRAINER_SHOW")
+		assert.are.equal("Equitación", record.skill)
+	end)
+
 	it("records mailboxes as objects", function()
 		SlashCmdList.MAPSCOUT("harvest on")
 		npc.guid = nil

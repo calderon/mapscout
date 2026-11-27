@@ -21,6 +21,7 @@ import dungeons  # noqa: E402
 import harvest  # noqa: E402
 import places  # noqa: E402
 import services  # noqa: E402
+import trainers  # noqa: E402
 import transport  # noqa: E402
 from geo import Maps  # noqa: E402
 from wago import Tables, build_date  # noqa: E402
@@ -101,6 +102,12 @@ def main(argv=None):
         print("services: unknown guard answer %r (add its words to services.py)" % asked)
     count = services.write(os.path.join(OUT, "Services.lua"), args.build, date, services.merge(found_services))
     print("Services.lua: %d places" % count)
+
+    found_trainers, unknown = trainers.points(HARVEST)
+    for asked in unknown:
+        print("trainers: unknown guard answer %r (add its words to trainers.py)" % asked)
+    count = trainers.write(os.path.join(OUT, "Trainers.lua"), args.build, date, trainers.merge(found_trainers))
+    print("Trainers.lua: %d trainers" % count)
 
     placed = sum(1 for e in found if e[2])
     print("Dungeons.lua: %d instances, %d with a checked entrance, %d by hand (build %s, %s)%s" % (

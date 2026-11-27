@@ -153,6 +153,40 @@ local EN = {
 	DEBUG_QUESTIE_SERVICES = "services from QuestieDB",
 	DEBUG_QUESTIE_SERVICES_RESULT = "QuestieDB: %d NPCs, %d services, built in %.0f ms",
 
+	-- Trainers (our data pack)
+	TRAINERS_NAME = "Trainers",
+	TRAINERS_DESCRIPTION = "Class, profession, riding and weapon trainers in cities",
+	TRAINERS_class = "Your class",
+	TRAINERS_otherclass = "Other classes",
+	TRAINERS_profession = "Professions",
+	TRAINERS_riding = "Riding",
+	TRAINERS_weapon = "Weapons",
+	DEBUG_TRAINERS = "trainers",
+	DEBUG_TRAINERS_RESULT = "%d trainers (data pack: %s)",
+	TRAINER_WARRIOR = "Warrior trainer",
+	TRAINER_PALADIN = "Paladin trainer",
+	TRAINER_HUNTER = "Hunter trainer",
+	TRAINER_ROGUE = "Rogue trainer",
+	TRAINER_PRIEST = "Priest trainer",
+	TRAINER_SHAMAN = "Shaman trainer",
+	TRAINER_MAGE = "Mage trainer",
+	TRAINER_WARLOCK = "Warlock trainer",
+	TRAINER_DRUID = "Druid trainer",
+	TRAINER_alchemy = "Alchemy trainer",
+	TRAINER_blacksmithing = "Blacksmithing trainer",
+	TRAINER_cooking = "Cooking trainer",
+	TRAINER_enchanting = "Enchanting trainer",
+	TRAINER_engineering = "Engineering trainer",
+	TRAINER_fishing = "Fishing trainer",
+	TRAINER_herbalism = "Herbalism trainer",
+	TRAINER_firstaid = "First Aid trainer",
+	TRAINER_skinning = "Skinning trainer",
+	TRAINER_leatherworking = "Leatherworking trainer",
+	TRAINER_tailoring = "Tailoring trainer",
+	TRAINER_mining = "Mining trainer",
+	TRAINER_riding = "Riding trainer",
+	TRAINER_weapon = "Weapon master",
+
 	-- Options page
 	OPTIONS_ABOUT = "A search bar in the world map. Type a place, a service, a quest or coordinates; @ chooses what to search (@zona, @banco, @mision...).",
 	OPTIONS_AFTER_COMBAT = "the options will open when combat ends.",
@@ -230,6 +264,32 @@ local WORDS = {
 	INN = { "inn", "innkeeper", "inns", "tavern" },
 	STABLE = { "stable", "stablemaster", "stables" },
 	TRAINER = { "trainer", "trainers" },
+	TRAINER_CLASS = { "class", "classes" },
+	TRAINER_OTHERCLASS = { "otherclass", "otherclasses" },
+	TRAINER_PROFESSION = { "profession", "professions" },
+	TRAINER_RIDING = { "riding", "mount" },
+	TRAINER_WEAPON = { "weapon", "weapons", "weapon master" },
+	TRAINER_WARRIOR = { "warrior", "warriors" },
+	TRAINER_PALADIN = { "paladin", "paladins" },
+	TRAINER_HUNTER = { "hunter", "hunters" },
+	TRAINER_ROGUE = { "rogue", "rogues" },
+	TRAINER_PRIEST = { "priest", "priests" },
+	TRAINER_SHAMAN = { "shaman", "shamans" },
+	TRAINER_MAGE = { "mage", "mages" },
+	TRAINER_WARLOCK = { "warlock", "warlocks" },
+	TRAINER_DRUID = { "druid", "druids" },
+	TRAINER_ALCHEMY = { "alchemy" },
+	TRAINER_BLACKSMITHING = { "blacksmithing", "blacksmith" },
+	TRAINER_COOKING = { "cooking" },
+	TRAINER_ENCHANTING = { "enchanting" },
+	TRAINER_ENGINEERING = { "engineering" },
+	TRAINER_FISHING = { "fishing" },
+	TRAINER_HERBALISM = { "herbalism", "herb", "herbs" },
+	TRAINER_FIRSTAID = { "first aid" },
+	TRAINER_SKINNING = { "skinning" },
+	TRAINER_LEATHERWORKING = { "leatherworking" },
+	TRAINER_TAILORING = { "tailoring" },
+	TRAINER_MINING = { "mining" },
 	REPAIR = { "repair", "repairs" },
 	MAILBOX = { "mailbox", "mail", "mailboxes" },
 	BATTLEMASTER = { "battlemaster", "battle" },
@@ -257,10 +317,10 @@ function ns.KeyName(key)
 end
 
 -- Search words for a key: the English ones plus the player's language,
--- lowercase and without repeats.
+-- lowercase and without repeats (a key may have words in only one of them).
 function ns.Words(key)
 	local result, seen = {}, {}
-	for _, list in ipairs({ WORDS[key], ns.W[key] }) do
+	for _, list in ipairs({ WORDS[key] or {}, ns.W[key] or {} }) do
 		for _, word in ipairs(list) do
 			word = word:lower()
 			if not seen[word] then
