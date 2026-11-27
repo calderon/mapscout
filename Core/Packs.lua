@@ -97,6 +97,21 @@ function Packs.Built()
 	return list
 end
 
+function Packs.IsBuilt(name)
+	return built[name] ~= nil
+end
+
+-- The pack's version (its .toc), read without loading it, or nil
+function Packs.Version()
+	local info = Packs.Info()
+	local get = info and C_AddOns and C_AddOns.GetAddOnMetadata
+	if not get then
+		return nil
+	end
+	local ok, version = pcall(get, info.addon, "Version")
+	return ok and type(version) == "string" and version ~= "" and version or nil
+end
+
 -- For the tests: back to "nothing loaded"
 function Packs.Reset()
 	built, order, failure = {}, {}, nil

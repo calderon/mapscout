@@ -293,6 +293,46 @@ function ns.DistanceToPlayer(mapID, x, y)
 	return math.sqrt(dx * dx + dy * dy)
 end
 
+-- Where a map lies in the world: its continent and the world position of its
+-- corner and of one map unit along x and y (a map is a flat rectangle of the
+-- world, so any point of it is these three added up). Asked once per map.
+local worldOf = {}
+local function mapInWorld(mapID)
+	local known = worldOf[mapID]
+	if known ~= nil then
+		return known or nil
+	end
+	local get = C_Map.GetWorldPosFromMapPos
+	local continent, corner = get(mapID, CreateVector2D(0, 0))
+	local _, alongX = get(mapID, CreateVector2D(1, 0))
+	local _, alongY = get(mapID, CreateVector2D(0, 1))
+	if not (corner and alongX and alongY) then
+		worldOf[mapID] = false
+		return nil
+	end
+	local cx, cy = corner:GetXY()
+	local xx, xy = alongX:GetXY()
+	local yx, yy = alongY:GetXY()
+	known = { continent = continent, cx, cy, xx - cx, xy - cy, yx - cx, yy - cy }
+	worldOf[mapID] = known
+	return known
+end
+
+-- Yards between two points of two maps (or of the same one), or nil when it
+-- can't be known (another continent, an instance, a client without the API)
+function ns.Yards(mapA, xa, ya, mapB, xb, yb)
+	if not (mapA and mapB and CreateVector2D and C_Map and C_Map.GetWorldPosFromMapPos) then
+		return nil
+	end
+	local a, b = mapInWorld(mapA), mapInWorld(mapB)
+	if not (a and b) or a.continent ~= b.continent then
+		return nil
+	end
+	local dx = (a[1] + xa * a[3] + ya * a[5]) - (b[1] + xb * b[3] + yb * b[5])
+	local dy = (a[2] + xa * a[4] + ya * a[6]) - (b[2] + xb * b[4] + yb * b[6])
+	return math.sqrt(dx * dx + dy * dy)
+end
+
 -- The game measures in yards: meters for every client but enUS (as Bridge).
 function ns.FormatDistance(yards)
 	if GetLocale() == "enUS" then

@@ -20,7 +20,9 @@ Core/Util.lua
 Core/DB.lua
 Core/Packs.lua
 Core/Recorder.lua
+Core/PackCheck.lua
 Core/Contribute.lua
+Core/ContributeExport.lua
 API/MapScoutAPI.lua
 API/Registry.lua
 Search/Query.lua
