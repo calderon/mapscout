@@ -10,6 +10,8 @@
 -- in the game, like the city services (Providers/Services.lua). Trainers only
 -- the other faction can use are left out. The pack is only loaded when this
 -- provider is on, and its table is let go when it is turned off.
+-- Other sources of ours (Adapters/QuestieDBServices.lua) add their entries
+-- to these (Trainers.SetExtra), as with the services.
 
 local _, ns = ...
 local L = ns.L
@@ -136,6 +138,31 @@ for _, category in ipairs(Trainers.CATEGORIES) do
 end
 
 local provider
+local own -- our pack's entries, while on
+local extra = {} -- source -> its entries (Trainers.SetExtra)
+
+local function push()
+	if not (provider and provider:IsEnabled()) then
+		return
+	end
+	local list = {}
+	for _, entry in ipairs(own or {}) do
+		list[#list + 1] = entry
+	end
+	for _, entries in pairs(extra) do
+		for _, entry in ipairs(entries) do
+			list[#list + 1] = entry
+		end
+	end
+	provider:SetEntries(list)
+end
+
+-- Entries from another source of ours (nil drops them), shown with the pack's
+function Trainers.SetExtra(source, entries)
+	extra[source] = entries
+	push()
+end
+
 local aliases = ns.Words("TRAINER")
 provider = MapScoutAPI:RegisterProvider("trainers", {
 	name = L.TRAINERS_NAME,
@@ -145,9 +172,11 @@ provider = MapScoutAPI:RegisterProvider("trainers", {
 	filterAliases = aliases,
 	categories = categories,
 	OnEnable = function()
-		provider:SetEntries(Trainers.Entries((ns.Packs.Get("trainers"))))
+		own = Trainers.Entries((ns.Packs.Get("trainers")))
+		push()
 	end,
 	OnDisable = function()
+		own = nil
 		ns.Packs.Release("trainers")
 	end,
 })
