@@ -139,7 +139,7 @@ local EN = {
 
 	-- Available quests (QuestieDB)
 	AVAILABLE_NAME = "Available",
-	AVAILABLE_DESCRIPTION = "Quests you can take now, from QuestieDB",
+	AVAILABLE_DESCRIPTION = "Quests you can take now",
 	AVAILABLE_SUBTITLE = "Available · Level %d · %s",
 	AVAILABLE_GIVER = "Given by %s",
 	AVAILABLE_STARTS_AT = "Starts at %s",
@@ -182,6 +182,11 @@ local EN = {
 	BATTLE_warsong = "Warsong Gulch battlemaster",
 	DEBUG_QUESTIE_SERVICES = "services from QuestieDB",
 	DEBUG_QUESTIE_SERVICES_RESULT = "QuestieDB: %d NPCs, %d services, built in %.0f ms",
+	SPIRIT_HEALER = "Spirit Healer",
+	SPIRIT_HEALERS_NAME = "Spirit healers",
+	SPIRIT_HEALERS_DESCRIPTION = "The spirit healers at the graveyards, to come back to life after dying",
+	DEBUG_SPIRIT_HEALERS = "spirit healers from QuestieDB",
+	DEBUG_SPIRIT_HEALERS_RESULT = "QuestieDB: %d NPCs, %d spirit healers, built in %.0f ms",
 
 	-- Trainers (our data pack)
 	TRAINERS_NAME = "Trainers",
@@ -334,6 +339,8 @@ local WORDS = {
 	BARBER = { "barber", "barbershop", "haircut", "barbers" },
 	GUILD = { "guild", "tabard", "guild master" },
 	VENDOR = { "vendor", "merchant", "shop", "vendors" },
+	SPIRIT_HEALERS = { "spirithealer", "graveyard", "spirithealers", "graveyards" },
+	SPIRIT_HEALER = { "spirit healer", "graveyard", "angel", "cemetery", "resurrect" },
 }
 
 ns.L_EN = EN
