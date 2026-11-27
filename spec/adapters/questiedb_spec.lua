@@ -25,6 +25,8 @@ describe("Adapters/QuestieDB.lua", function()
 		[17] = { name = "Sin nivel", level = 0, req = 0, starter = { { 100 } } },
 		[18] = { name = "Repetible", level = 10, req = 1, special = 1, starter = { { 100 } } },
 		[19] = { name = "De Halloween", level = 10, req = 1, sort = -21, starter = { { 100 } } },
+		[20] = { name = "Libro", level = 5, req = 1, starter = { { 100 }, { 300 } }, finisher = { { 100 } } },
+		[21] = { name = "Con cartel", level = 5, req = 1, starter = { { 100 }, { 300 } }, finisher = { { 200 } } },
 	}
 	local NPCS = {
 		[100] = { name = "Brann", friendly = "AH", spawns = { [1537] = { { 30, 60 } } } },
@@ -50,7 +52,7 @@ describe("Adapters/QuestieDB.lua", function()
 				name = field("name"), questLevel = field("level"), requiredLevel = field("req"),
 				requiredMaxLevel = field("max"), requiredRaces = field("races"), requiredClasses = field("classes"),
 				requiredSkill = field("skill"), preQuestGroup = field("group"), preQuestSingle = field("single"),
-				exclusiveTo = field("exclusive"), startedBy = field("starter"), objectivesText = field("text"),
+				exclusiveTo = field("exclusive"), startedBy = field("starter"), finishedBy = field("finisher"), objectivesText = field("text"),
 				zoneOrSort = field("sort"), specialFlags = field("special"),
 			},
 			Npc = {
@@ -137,16 +139,16 @@ describe("Adapters/QuestieDB.lua", function()
 		build()
 		-- not "De temporada" nor "De Halloween" (seasonal), "Muy alta" (11 above) nor "Gris" (9 below);
 		-- "Algo alta" (10 above) is still in
-		assert.are.same({ "Algo alta", "De un objeto", "Lista", "Previa hecha" }, names())
+		assert.are.same({ "Algo alta", "Con cartel", "De un objeto", "Libro", "Lista", "Previa hecha" }, names())
 		local stats = ns.QuestieAdapter.stats
-		assert.are.equal(19, stats.quests) -- "Sin nivel" (level 0) and "Repetible" are left out too
+		assert.are.equal(21, stats.quests) -- "Sin nivel" (level 0) and "Repetible" are left out too
 		assert.are.equal(2, stats.unplaced) -- the Horde giver and the one with no known map
 	end)
 
 	it("shows what the options say: high-level, gray, seasonal and repeatable quests", function()
 		load(fakeDB(4))
 		build()
-		local base = { "Algo alta", "De un objeto", "Lista", "Previa hecha" }
+		local base = { "Algo alta", "Con cartel", "De un objeto", "Libro", "Lista", "Previa hecha" }
 		local function with(...)
 			local list = { ... }
 			for _, name in ipairs(base) do list[#list + 1] = name end
@@ -233,12 +235,29 @@ describe("Adapters/QuestieDB.lua", function()
 		assert.are.same({ "Habla con Brann", "La da: Brann" }, entry.details)
 	end)
 
+	it("places a book quest at its book, handed in to the NPC who also gives it", function()
+		load(fakeDB(4))
+		build()
+		local byName = {}
+		for _, entry in ipairs(ns.Registry.Get("questiedb").entries) do
+			byName[entry.name] = entry
+		end
+		local book = byName["Libro"]
+		assert.are.same({ 0.4, 0.4 }, { book.x, book.y })
+		assert.are.equal("Disponible · Nivel 5 · Cartel de se busca", book.subtitle)
+		assert.are.same({ "Empieza en: Cartel de se busca", "Se entrega a: Brann" }, book.details)
+		-- an NPC who gives it but doesn't take it back stays the giver
+		local other = byName["Con cartel"]
+		assert.are.same({ 1455, 0.3, 0.6 }, { other.mapID, other.x, other.y })
+		assert.are.same({ "La da: Brann" }, other.details)
+	end)
+
 	it("prefers the game's title in the player's language", function()
 		load(fakeDB(4))
 		_G.C_QuestLog.GetTitleForQuestID = function(id) return id == 1 and "Lista (del juego)" or nil end
 		ns.QuestieAdapter.Build()
 		build()
-		assert.are.same({ "Algo alta", "De un objeto", "Lista (del juego)", "Previa hecha" }, names())
+		assert.are.same({ "Algo alta", "Con cartel", "De un objeto", "Libro", "Lista (del juego)", "Previa hecha" }, names())
 	end)
 
 	it("builds in steps without freezing", function()
@@ -251,16 +270,22 @@ describe("Adapters/QuestieDB.lua", function()
 			steps = steps + 1
 		end
 		ns.QuestieAdapter.STEP = 200
-		assert.is_true(steps >= 6) -- 18 quests, 3 per step
-		assert.are.equal(4, #ns.Registry.Get("questiedb").entries)
+		assert.is_true(steps >= 7) -- 21 quests, 3 per step
+		assert.are.equal(6, #ns.Registry.Get("questiedb").entries)
 	end)
 
 	it("is found with @disponible and @mision", function()
 		load(fakeDB(4))
 		build()
-		assert.are.equal(4, #(ns.Engine.Search(ns.Query.Parse("@disponible"))))
-		assert.are.equal(4, #(ns.Engine.Search(ns.Query.Parse("@mision"))))
-		assert.are.equal("Lista", (ns.Engine.Search(ns.Query.Parse("brann")))[1].item.entry.name)
+		assert.are.equal(6, #(ns.Engine.Search(ns.Query.Parse("@disponible"))))
+		assert.are.equal(6, #(ns.Engine.Search(ns.Query.Parse("@mision"))))
+		-- the NPC's name finds the quests he gives and the books handed in to him
+		local found = {}
+		for _, result in ipairs(ns.Engine.Search(ns.Query.Parse("brann"))) do
+			found[result.item.entry.name] = true
+		end
+		assert.is_true(found["Lista"])
+		assert.is_true(found["Libro"])
 	end)
 
 	it("rebuilds when something changes, waiting for the map if it is closed", function()
