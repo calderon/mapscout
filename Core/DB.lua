@@ -23,6 +23,7 @@ DB.ACCOUNT_DEFAULTS = {
 	options = {
 		providers = {}, -- providerID -> false when the player turned it off
 		categories = {}, -- "providerID.categoryID" -> false when turned off
+		settings = {}, -- "providerID.settingID" -> value when not the default
 		waypoint = { native = false, superTrack = false, tomtom = false }, -- going to a result only shows it
 		bar = { position = "TOPLEFT", x = 0, y = 0, scale = 1 },
 		maxResults = 50,

@@ -373,13 +373,64 @@ function Registry.SetCategoryEnabled(id, categoryID, on)
 	notify("categories", id, categoryID)
 end
 
--- Back to the defaults: every saved choice of providers and categories forgotten.
+-- Settings of a provider: on/off choices that change what it gives (which
+-- available quests to show...), shown in the options under its categories.
+-- For MapScout's own providers for now (not in the public API).
+-- list: { { id = "highLevel", name = "...", tooltip = "...", default = false }, ... }
+-- Only values that differ from the default are saved ("providerID.settingID").
+local settingsOf = {} -- providerID -> list
+function Registry.AddSettings(id, list)
+	settingsOf[id] = list
+end
+
+function Registry.Settings(id)
+	return settingsOf[id] or {}
+end
+
+local function findSetting(id, settingID)
+	for _, setting in ipairs(settingsOf[id] or {}) do
+		if setting.id == settingID then
+			return setting
+		end
+	end
+end
+
+function Registry.GetSetting(id, settingID)
+	local setting = findSetting(id, settingID)
+	local options = savedOptions()
+	local saved = options and options.settings[id .. "." .. settingID]
+	if saved ~= nil then
+		return saved
+	end
+	return setting and setting.default or false
+end
+
+function Registry.SetSetting(id, settingID, value)
+	local setting = findSetting(id, settingID)
+	local options = savedOptions()
+	if options then
+		if value == (setting and setting.default or false) then
+			options.settings[id .. "." .. settingID] = nil
+		else
+			options.settings[id .. "." .. settingID] = value
+		end
+	end
+	notify("setting", id, settingID)
+end
+
+-- Back to the defaults: every saved choice of providers, categories and settings forgotten.
 function Registry.ResetChoices()
 	local options = savedOptions()
 	if options then
 		for key in pairs(options.categories) do
 			options.categories[key] = nil
 		end
+		for key in pairs(options.settings) do
+			options.settings[key] = nil
+		end
+	end
+	for id in pairs(settingsOf) do
+		notify("setting", id)
 	end
 	for _, id in ipairs(order) do
 		local record = providers[id]

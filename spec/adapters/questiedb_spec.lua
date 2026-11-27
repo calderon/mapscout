@@ -24,6 +24,7 @@ describe("Adapters/QuestieDB.lua", function()
 		[16] = { name = "Algo alta", level = 20, req = 1, starter = { { 100 } } },
 		[17] = { name = "Sin nivel", level = 0, req = 0, starter = { { 100 } } },
 		[18] = { name = "Repetible", level = 10, req = 1, special = 1, starter = { { 100 } } },
+		[19] = { name = "De Halloween", level = 10, req = 1, sort = -21, starter = { { 100 } } },
 	}
 	local NPCS = {
 		[100] = { name = "Brann", friendly = "AH", spawns = { [1537] = { { 30, 60 } } } },
@@ -134,12 +135,92 @@ describe("Adapters/QuestieDB.lua", function()
 	it("finds the quests the character can take now", function()
 		load(fakeDB(4))
 		build()
-		-- not "De temporada" (seasonal), "Muy alta" (11 above) nor "Gris" (9 below);
+		-- not "De temporada" nor "De Halloween" (seasonal), "Muy alta" (11 above) nor "Gris" (9 below);
 		-- "Algo alta" (10 above) is still in
 		assert.are.same({ "Algo alta", "De un objeto", "Lista", "Previa hecha" }, names())
 		local stats = ns.QuestieAdapter.stats
-		assert.are.equal(18, stats.quests) -- "Sin nivel" (level 0) and "Repetible" are left out too
+		assert.are.equal(19, stats.quests) -- "Sin nivel" (level 0) and "Repetible" are left out too
 		assert.are.equal(2, stats.unplaced) -- the Horde giver and the one with no known map
+	end)
+
+	it("shows what the options say: high-level, gray, seasonal and repeatable quests", function()
+		load(fakeDB(4))
+		build()
+		local base = { "Algo alta", "De un objeto", "Lista", "Previa hecha" }
+		local function with(...)
+			local list = { ... }
+			for _, name in ipairs(base) do list[#list + 1] = name end
+			table.sort(list)
+			return list
+		end
+		ns.Registry.SetSetting("questiedb", "highLevel", true)
+		build() -- rebuilt by itself
+		assert.are.same(with("Demasiado alta", "Muy alta"), names())
+		ns.Registry.SetSetting("questiedb", "highLevel", false)
+		ns.Registry.SetSetting("questiedb", "lowLevel", true)
+		build()
+		assert.are.same(with("Gris"), names())
+		ns.Registry.SetSetting("questiedb", "lowLevel", false)
+		ns.Registry.SetSetting("questiedb", "repeatable", true)
+		build()
+		assert.are.same(with("Repetible"), names())
+		ns.Registry.SetSetting("questiedb", "repeatable", false)
+		ns.Registry.SetSetting("questiedb", "seasonal", true)
+		build()
+		assert.are.same(base, names()) -- no holiday on
+		ns.QuestieAdapter.ActiveHolidays = function() return { HALLOWS_END = true, SEASONAL = true } end
+		ns.QuestieAdapter.Build()
+		build()
+		-- "De temporada" (no known holiday) never shows
+		assert.are.same(with("De Halloween"), names())
+		ns.Registry.ResetChoices()
+		build()
+		assert.are.same(base, names())
+		assert.is_nil(next(ns.db.options.settings)) -- defaults are not saved
+	end)
+
+	it("knows which holidays are on from the game's calendar, without moving it", function()
+		load(fakeDB(4))
+		local opened = 0
+		local events = {
+			{ calendarType = "HOLIDAY", eventID = 324, sequenceType = "ONGOING" }, -- Hallow's End
+			{ calendarType = "HOLIDAY", eventID = 263, sequenceType = "START", startTime = { hour = 10, minute = 0 } },
+			{ calendarType = "HOLIDAY", eventID = 1840, sequenceType = "ONGOING" }, -- Call to Arms: no quests
+			{ calendarType = "PLAYER", eventID = 141, sequenceType = "ONGOING" }, -- not a holiday
+		}
+		StubGlobals({
+			C_DateAndTime = { GetCurrentCalendarTime = function() return { year = 2026, month = 11, monthDay = 27, hour = 9, minute = 30 } end },
+			C_Calendar = {
+				OpenCalendar = function() opened = opened + 1 end,
+				GetMonthInfo = function() return { year = 2026, month = 10 } end, -- the player looks at October
+				GetNumDayEvents = function(offset, day) return (offset == 1 and day == 27) and #events or 0 end,
+				GetDayEvent = function(_, _, i) return events[i] end,
+			},
+		})
+		assert.are.same({ HALLOWS_END = true }, ns.QuestieAdapter.ActiveHolidays()) -- the faire opens at 10:00
+		assert.are.equal(1, opened)
+		ns.QuestieAdapter.ActiveHolidays()
+		assert.are.equal(1, opened) -- asked once
+		local isOn = ns.QuestieAdapter.EventIsOn
+		assert.is_true(isOn({ sequenceType = "START", startTime = { hour = 9, minute = 30 } }, { hour = 9, minute = 30 }))
+		assert.is_true(isOn({ sequenceType = "END", endTime = { hour = 10, minute = 0 } }, { hour = 9, minute = 59 }))
+		assert.is_false(isOn({ sequenceType = "END", endTime = { hour = 10, minute = 0 } }, { hour = 10, minute = 0 }))
+	end)
+
+	it("has no holidays without a calendar", function()
+		load(fakeDB(4))
+		assert.are.same({}, ns.QuestieAdapter.ActiveHolidays())
+	end)
+
+	it("says the level a quest needs when the character can't take it yet", function()
+		load(fakeDB(4))
+		ns.Registry.SetSetting("questiedb", "highLevel", true)
+		build()
+		for _, entry in ipairs(ns.Registry.Get("questiedb").entries) do
+			if entry.name == "Demasiado alta" then
+				assert.are.equal("Requiere nivel 45", entry.details[#entry.details])
+			end
+		end
 	end)
 
 	it("places each quest where its giver is, on the matching zone", function()
