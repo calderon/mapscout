@@ -77,6 +77,73 @@ describe("UI/Preview.lua", function()
 		assert.is_nil(marker())
 	end)
 
+	local function routeFrame()
+		for _, f in ipairs(FakeFrames) do
+			if f.name == "MapScoutPreviewRoute" then
+				return f
+			end
+		end
+	end
+
+	local function shownLines()
+		local list = {}
+		for _, f in ipairs(FakeFrames) do
+			if f.type == "Line" and f.layer == "ARTWORK" and f:IsShown() then
+				list[#list + 1] = { f.startPoint[3], f.startPoint[4], f.endPoint[3], f.endPoint[4] }
+			end
+		end
+		return list
+	end
+
+	it("cuts a route to the part on the open map", function()
+		local route = {
+			{ mapID = 1455, points = { 0.1, 0.1, 0.2, 0.1, 0.2, 0.3 } },
+			{ mapID = 9001, points = { 0.2, 0.2, 0.4, 0.2 } }, -- the sub-map: half the size
+			{ mapID = 1453, points = { 0.5, 0.5, 0.6, 0.6 } },
+		}
+		assert.are.same({ { 0.1, 0.1, 0.2, 0.1 }, { 0.2, 0.1, 0.2, 0.3 }, { 0.1, 0.1, 0.2, 0.1 }, { 0.5, 0.5, 0.6, 0.6 } },
+			ns.Preview.RouteSegments(route, 1455))
+		-- on another map (in this fake world, only Forjaz's points are off it): only its own path
+		assert.are.same({ { 0.5, 0.5, 0.6, 0.6 } }, ns.Preview.RouteSegments(route, 1453))
+	end)
+
+	it("draws the route of a place that has one, instead of the marker", function()
+		local place = { mapID = 1455, x = 0.1, y = 0.1, route = { { mapID = 1455, points = { 0.1, 0.1, 0.2, 0.1, 0.2, 0.3 } } } }
+		assert.is_true(ns.Preview.Show(place))
+		local r = routeFrame()
+		assert.are.equal(canvas, r.parent)
+		assert.is_true(r:IsShown())
+		assert.are.equal(0.5, r.scale) -- the same thickness at any zoom
+		assert.are.same({ 2000, 1200 }, { r:GetSize() })
+		assert.is_nil(marker()) -- no exact point
+		-- 0.1*2000, -0.1*1200...
+		assert.are.same({ { 200, -120, 400, -120 }, { 400, -120, 400, -360 } }, shownLines())
+		assert.is_true(ns.Preview.shown.route)
+		-- a shorter route later hides the lines it doesn't use
+		place.route[1].points = { 0.5, 0.5, 0.6, 0.5 }
+		ns.Preview.Show(place)
+		assert.are.same({ { 1000, -600, 1200, -600 } }, shownLines())
+		ns.Preview.Hide()
+		assert.is_false(r:IsShown())
+	end)
+
+	it("shows a big soft circle without the pin for a place that roams with no route here", function()
+		assert.is_true(ns.Preview.Show({ mapID = 1455, x = 0.3, y = 0.6, roams = true }))
+		local m = marker()
+		assert.is_false(m.Pin:IsShown())
+		assert.are.same({ ns.Preview.ROAM_SIZE, ns.Preview.ROAM_SIZE }, { m.Glow:GetSize() })
+		assert.is_true(ns.Preview.shown.roams)
+		-- a route with nothing on the open map: the circle on the point
+		map.mapID = 1453
+		ns.Preview.Show({ mapID = 1453, x = 0.3, y = 0.6, route = { { mapID = 1455, points = { 0.1, 0.1, 0.2, 0.2 } } } })
+		assert.is_false(m.Pin:IsShown())
+		map.mapID = 1455
+		-- an NPC who stands still: the pin again, normal size
+		ns.Preview.Show({ mapID = 1455, x = 0.3, y = 0.6 })
+		assert.is_true(m.Pin:IsShown())
+		assert.are.same({ ns.Preview.GLOW_SIZE, ns.Preview.GLOW_SIZE }, { m.Glow:GetSize() })
+	end)
+
 	it("hides when the map changes or closes, never changing the map itself", function()
 		ns.Preview.Show({ mapID = 1455, x = 0.3, y = 0.6 })
 		assert.are.equal(1455, map.mapID)

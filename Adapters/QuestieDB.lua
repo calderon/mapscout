@@ -15,6 +15,8 @@
 -- where its giver stands (an NPC friendly to the player, or an object).
 -- QuestieDB groups positions by area (AreaID); they are matched to world map
 -- zones by name. Its Forever positions are used as they come (as Questie does).
+-- A giver who walks a route (QuestieDB has its waypoints) carries it: the map
+-- draws the route instead of one exact point.
 -- Built in small steps so the game never freezes, and rebuilt after a pause
 -- when the quest log or the level changes, while the map is open or when it opens.
 
@@ -100,6 +102,40 @@ function QuestieAdapter.FirstSpawn(spawns)
 		end
 	end
 	return nil
+end
+
+-- The route an NPC walks, as result entries carry it ({ { mapID, points =
+-- { x1, y1, ... } }, ... }), or nil when it stands still. QuestieDB groups its
+-- paths ({ [areaID] = { { {x, y}, ... }, ... } }, 0-100) by area; paths on an
+-- area with no map, and points off the map (negative), are left out.
+function QuestieAdapter.Route(npcID)
+	local paths = DB.Npc.waypoints and DB.Npc.waypoints(npcID)
+	if type(paths) ~= "table" then
+		return nil
+	end
+	local areas = {}
+	for areaID in pairs(paths) do
+		areas[#areas + 1] = areaID
+	end
+	table.sort(areas) -- the same order on every build
+	local route = {}
+	for _, areaID in ipairs(areas) do
+		local mapID = QuestieAdapter.MapOfArea(areaID)
+		for _, path in ipairs(mapID and type(paths[areaID]) == "table" and paths[areaID] or {}) do
+			local points = {}
+			for _, point in ipairs(type(path) == "table" and path or {}) do
+				local x, y = point[1], point[2]
+				if type(x) == "number" and type(y) == "number" and x >= 0 and x <= 100 and y >= 0 and y <= 100 then
+					points[#points + 1] = x / 100
+					points[#points + 1] = y / 100
+				end
+			end
+			if #points >= 4 then
+				route[#route + 1] = { mapID = mapID, points = points }
+			end
+		end
+	end
+	return #route > 0 and route or nil
 end
 
 -- What the options say to show: setting -> true/false
@@ -319,7 +355,7 @@ function QuestieAdapter.Giver(questID, who)
 		if friendlyNpc(npcID, who) then
 			local mapID, x, y = QuestieAdapter.FirstSpawn(DB.Npc.spawns(npcID))
 			if mapID then
-				return DB.Npc.name(npcID), mapID, x, y
+				return DB.Npc.name(npcID), mapID, x, y, nil, npcID
 			end
 		end
 	end
@@ -351,10 +387,11 @@ end
 
 local function entryFor(questID, who)
 	local Q = DB.Quest
-	local giver, mapID, x, y, handIn = QuestieAdapter.Giver(questID, who)
+	local giver, mapID, x, y, handIn, giverID = QuestieAdapter.Giver(questID, who)
 	if not mapID then
 		return nil
 	end
+	local route = giverID and QuestieAdapter.Route(giverID) -- a giver who walks a route
 	local level = Q.questLevel(questID) or Q.requiredLevel(questID) or 0
 	local details = {}
 	for _, line in ipairs(Q.objectivesText(questID) or {}) do
@@ -384,6 +421,8 @@ local function entryFor(questID, who)
 		mapID = mapID,
 		x = x,
 		y = y,
+		roams = route and true or nil,
+		route = route,
 		questID = questID,
 	}
 end

@@ -65,6 +65,19 @@ describe("UI/Results.lua", function()
 		}, search("buzon"))
 	end)
 
+	it("says when a result walks a route, so its place is approximate", function()
+		MapScoutAPI:RegisterProvider("npcs", { name = "NPCs" }):SetEntries({
+			{ id = 1, name = "Guardia que patrulla", subtitle = "Guardia", mapID = 1455, x = 0.5, y = 0.5, roams = true },
+			{ id = 2, name = "Guardia con ruta", subtitle = "Guardia", mapID = 1455, x = 0.5, y = 0.5,
+				route = { { mapID = 1455, points = { 0.4, 0.4, 0.6, 0.6 } } } },
+		})
+		assert.are.same({
+			"zone: In Forjaz",
+			"result: Guardia con ruta | Guardia · Walks a route · approximate position",
+			"result: Guardia que patrulla | Guardia · Walks a route · approximate position",
+		}, search("guardia"))
+	end)
+
 	it("follows the open map", function()
 		map.mapID = 1453
 		local lines = search("buzon")

@@ -63,6 +63,7 @@ L.RESULTS_NONE = "No hay resultados"
 L.RESULTS_HINT = "Prueba con @ o con coordenadas (45 67)"
 L.RESULTS_WIDENED = "Nada en %s; resultados en todo %s"
 L.RESULTS_DISABLED = "%s: desactivado en las opciones (/ms)"
+L.RESULTS_ROAMS = "Recorre una ruta · posición aproximada"
 
 -- Vista previa
 L.PREVIEW_DISTANCE = "a %s"

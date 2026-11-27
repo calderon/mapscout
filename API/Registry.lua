@@ -95,6 +95,27 @@ local function isCoord(value)
 	return type(value) == "number" and value >= 0 and value <= 1
 end
 
+-- What is wrong with a route, or nil: a list of paths, each one on a map,
+-- with its points as x1, y1, x2, y2... (0-1): { { mapID = 1429, points = { … } } }
+local function routeProblem(route)
+	if type(route) ~= "table" then
+		return "route must be a list of paths"
+	end
+	for i, path in ipairs(route) do
+		local mapID, points = type(path) == "table" and path.mapID, type(path) == "table" and path.points
+		if type(mapID) ~= "number" or type(points) ~= "table" or #points < 4 or #points % 2 ~= 0 then
+			return ("route[%d] needs a mapID and at least two points (x1, y1, x2, y2...)"):format(i)
+		end
+		for _, value in ipairs(points) do
+			if not isCoord(value) then
+				return ("route[%d]: points must be numbers from 0 to 1"):format(i)
+			end
+		end
+	end
+	return nil
+end
+Registry.RouteProblem = routeProblem
+
 -- Returns nil if the entry is fine, or what is wrong with it.
 local function entryProblem(record, entry)
 	if type(entry) ~= "table" then
@@ -116,6 +137,12 @@ local function entryProblem(record, entry)
 	end
 	if entry.category ~= nil and not record.categoryIDs[entry.category] then
 		return "unknown category " .. tostring(entry.category)
+	end
+	if entry.roams ~= nil and type(entry.roams) ~= "boolean" then
+		return "roams must be true or false"
+	end
+	if entry.route ~= nil then
+		return routeProblem(entry.route)
 	end
 	return nil
 end

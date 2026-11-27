@@ -175,6 +175,8 @@ function Services.EntryFor(npcID, who)
 		y = y,
 		npcID = npcID,
 	}
+	entry.route = Adapter.Route(npcID) -- an NPC who walks a route
+	entry.roams = entry.route and true or nil
 	if main.id == "trainer" then
 		entry.trainer = true -- goes to Trainers, in the category its title names
 		entry.category = Services.TrainerCategory(subName, who.class)

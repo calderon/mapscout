@@ -29,7 +29,11 @@ describe("Adapters/QuestieDB.lua", function()
 		[21] = { name = "Con cartel", level = 5, req = 1, starter = { { 100 }, { 300 } }, finisher = { { 200 } } },
 	}
 	local NPCS = {
-		[100] = { name = "Brann", friendly = "AH", spawns = { [1537] = { { 30, 60 } } } },
+		[100] = { name = "Brann", friendly = "AH", spawns = { [1537] = { { 30, 60 } } },
+			waypoints = {
+				[1537] = { { { 20, 20 }, { 30, 20 }, { -1, -1 }, { 30, 40 } }, { { 50, 50 } } }, -- a lone point is no path
+				[9999] = { { { 10, 10 }, { 20, 20 } } }, -- an area with no map
+			} },
 		[200] = { name = "Grunt", friendly = "H", spawns = { [1] = { { 50, 50 } } } },
 		[400] = { name = "Perdido", friendly = "AH", spawns = { [9999] = { { 10, 10 } } } },
 	}
@@ -59,6 +63,7 @@ describe("Adapters/QuestieDB.lua", function()
 				name = function(id) return NPCS[id].name end,
 				friendlyToFaction = function(id) return NPCS[id].friendly end,
 				spawns = function(id) return NPCS[id].spawns end,
+				waypoints = function(id) return NPCS[id].waypoints end,
 			},
 			Object = {
 				name = function() return "Cartel de se busca" end,
@@ -233,6 +238,22 @@ describe("Adapters/QuestieDB.lua", function()
 		assert.are.same({ 1455, 0.3, 0.6 }, { entry.mapID, entry.x, entry.y })
 		assert.are.equal("Disponible · Nivel 5 · Brann", entry.subtitle)
 		assert.are.same({ "Habla con Brann", "La da: Brann" }, entry.details)
+	end)
+
+	it("carries the route of a giver who walks one, and none for one who stands still", function()
+		load(fakeDB(4))
+		build()
+		local route = { { mapID = 1455, points = { 0.2, 0.2, 0.3, 0.2, 0.3, 0.4 } } }
+		assert.are.same(route, ns.QuestieAdapter.Route(100))
+		assert.is_nil(ns.QuestieAdapter.Route(200))
+		local byName = {}
+		for _, entry in ipairs(ns.Registry.Get("questiedb").entries) do
+			byName[entry.name] = entry
+		end
+		assert.is_true(byName["Lista"].roams)
+		assert.are.same(route, byName["Lista"].route)
+		assert.is_nil(byName["Libro"].route) -- placed at its book, which doesn't move
+		assert.is_nil(byName["Libro"].roams)
 	end)
 
 	it("places a book quest at its book, handed in to the NPC who also gives it", function()
