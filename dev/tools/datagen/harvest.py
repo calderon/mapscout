@@ -91,8 +91,9 @@ def merge(folder, new):
 
 
 def entrances(folder):
-    """Harvested entrances as manual rows: [(instance, uiMap, x, y, source)]."""
+    """Harvested entrances as manual rows: [(instance, uiMap, x, y, source, wing)]."""
     out = []
     for row in read(folder, "entrances").values():
-        out.append((int(row["instance"]), int(row["uiMap"]), float(row["x"]), float(row["y"]), "harvest (in game)"))
+        out.append((int(row["instance"]), int(row["uiMap"]), float(row["x"]), float(row["y"]), "harvest (in game)",
+                    (row.get("wing") or "").strip()))
     return sorted(out)

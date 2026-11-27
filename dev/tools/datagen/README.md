@@ -100,6 +100,12 @@ game (`ns.PlaceOnMap`).
   that point (Forever's new ones, Naxxramas, Caverns of Time) come from
   `manual/entrances.csv` when there are public sources for them, and later from
   the harvest mode (#40).
+  An instance with several doors (Scarlet Monastery's four wings, Stratholme's
+  two gates, Dire Maul's three wings: a single instance map each in this
+  client) has one row per door in `manual/entrances.csv` and in
+  `manual/verified.csv`, with its `wing` (`WINGS` in `dungeons.py`). The doors
+  go in `doors` and replace the single entrance; MapScout shows each one as
+  its own result, "Scarlet Monastery (Library)".
 - `Transport.lua`: the docks of boats, zeppelins and skyships (the stops of
   their routes in the client) and the two entrances of the Deeprun Tram, each
   with the docks it goes to, named after the town or capital next to it (none:

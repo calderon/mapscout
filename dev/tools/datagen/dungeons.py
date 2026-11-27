@@ -8,7 +8,12 @@ matched by name (NAMES lists the names that differ).
 
 Instances without a corpse point (Forever's own ones, and a few like
 Naxxramas) come from manual/entrances.csv (written by hand, with the public
-sources of each point), and later from the harvest mode (#40).
+sources of each point), and from the harvest mode.
+
+An instance with several doors (the wings of Scarlet Monastery, Stratholme's
+two gates, Dire Maul's three wings: one instance map each in this client) has
+one row per door in manual/entrances.csv, with its wing (WINGS). Those doors
+replace the instance's single entrance: MapScout shows one result per door.
 """
 
 import csv
@@ -19,6 +24,10 @@ from geo import to_int
 # Map.InstanceType
 DUNGEON, RAID = 1, 2
 KINDS = {DUNGEON: "dungeon", RAID: "raid"}
+
+# The wings or gates an instance's doors can have, in the order they are
+# written; MapScout names each one (Locales: DUNGEONS_WING_<WING>)
+WINGS = ("library", "armory", "cathedral", "graveyard", "main", "service", "east", "west", "north")
 
 # Map name -> LFGDungeons name, where they differ (wings share the level)
 NAMES = {
@@ -62,43 +71,65 @@ def entrances(maps, instance_rows, level_by_name):
 
 
 def manual(paths):
-    """Rows of the hand-written files: [(instance, uiMap, x, y, sources)], x and
-    y 0..1. A later file wins over an earlier one for the same instance."""
+    """Rows of the hand-written files: [(instance, uiMap, x, y, sources, wing)],
+    x and y 0..1, wing "" for an instance's only entrance. A later file wins
+    over an earlier one for the same instance and wing."""
     rows = {}
     for path in paths:
         with open(path, newline="", encoding="utf-8") as source:
             lines = [line for line in source if line.strip() and not line.lstrip().startswith("#")]
         for row in csv.DictReader(lines):
             instance = int(row["instance"])
+            wing = (row.get("wing") or "").strip()
             x, y = float(row["x"]), float(row["y"])
             if not (0 <= x <= 100 and 0 <= y <= 100):
                 raise ValueError("%s: instance %d is off the map (%s, %s)" % (path, instance, x, y))
-            if not row["sources"].strip():
+            if not (row["sources"] or "").strip():
                 raise ValueError("%s: instance %d has no sources" % (path, instance))
-            rows[instance] = (instance, int(row["uiMap"]), x / 100, y / 100, row["sources"].strip())
+            if wing and wing not in WINGS:
+                raise ValueError("%s: instance %d has an unknown wing %r (see WINGS)" % (path, instance, wing))
+            rows[(instance, wing)] = (instance, int(row["uiMap"]), x / 100, y / 100, row["sources"].strip(), wing)
     return [rows[k] for k in sorted(rows)]
 
 
 def merge(found, instance_rows, level_by_name, manual_rows):
-    """The client entrances plus the manual ones (a manual row wins)."""
+    """The client entrances plus the manual ones (a manual row wins). An
+    instance with doors keeps no single place: see doors()."""
     by_id = {e[0]: e for e in found}
     rows = {int(r["ID"]): r for r in instance_rows}
-    for instance, ui_map, x, y, _ in manual_rows:
+    with_doors = {m[0] for m in manual_rows if m[5]}
+    for instance, ui_map, x, y, _, wing in manual_rows:
         row = rows.get(instance)
         kind = row and KINDS.get(int(row["InstanceType"]))
         if not kind:
             raise ValueError("manual entrance for %d: not a dungeon or raid in this build" % instance)
         name = row["MapName_lang"]
         level = level_by_name.get(NAMES.get(name, name), 0)
-        by_id[instance] = (instance, kind, ui_map, to_int(x), to_int(y), level)
+        if instance in with_doors:  # its doors replace the single entrance
+            by_id[instance] = (instance, kind, 0, 0, 0, level)
+        else:
+            by_id[instance] = (instance, kind, ui_map, to_int(x), to_int(y), level)
     return [by_id[k] for k in sorted(by_id)]
 
 
+def doors(manual_rows, checked):
+    """{instance: [(wing, uiMap, x, y)]}: the checked doors of the instances
+    with several, x and y 0-10000, in WINGS order."""
+    out = {}
+    for instance, ui_map, x, y, _, wing in manual_rows:
+        if wing and (instance, wing) in checked:
+            out.setdefault(instance, []).append((wing, ui_map, to_int(x), to_int(y)))
+    for found in out.values():
+        found.sort(key=lambda door: WINGS.index(door[0]))
+    return out
+
+
 def verified(path):
-    """Instance IDs whose entrance was checked in the game (manual/verified.csv)."""
+    """(instance, wing) of the entrances checked in the game (manual/verified.csv);
+    wing "" for an instance's only entrance."""
     with open(path, newline="", encoding="utf-8") as source:
         lines = [line for line in source if line.strip() and not line.lstrip().startswith("#")]
-    return {int(row["instance"]) for row in csv.DictReader(lines)}
+    return {(int(row["instance"]), (row.get("wing") or "").strip()) for row in csv.DictReader(lines)}
 
 
 def known(instance_rows, level_by_name):
@@ -119,7 +150,7 @@ def checked_only(found, instance_rows, level_by_name, checked):
     instance without an entrance) stays, with no place: uiMapID 0."""
     out = {}
     for instance, kind, ui_map, x, y, level in found:
-        out[instance] = (instance, kind, ui_map, x, y, level) if instance in checked else (instance, kind, 0, 0, 0, level)
+        out[instance] = (instance, kind, ui_map, x, y, level) if (instance, "") in checked else (instance, kind, 0, 0, 0, level)
     for instance, (kind, level) in known(instance_rows, level_by_name).items():
         out.setdefault(instance, (instance, kind, 0, 0, 0, level))
     return [out[k] for k in sorted(out)]
@@ -134,10 +165,10 @@ def names(rows_by_locale, ids):
     return out
 
 
-def write(path, version, date, found, names_by_locale, manual_rows=()):
+def write(path, version, date, found, names_by_locale, manual_rows=(), doors_by_instance=None):
     lines = [lua.header("dungeon and raid entrances", version, date, [
         "the client's Map (Corpse_0/1, CorpseMapID), UiMapAssignment, UiMap, LFGDungeons and ContentTuning tables, through wago.tools",
-    ] + ["instance %d: %s" % (row[0], row[4]) for row in manual_rows])]
+    ] + ["instance %d%s: %s" % (row[0], " (%s)" % row[5] if row[5] else "", row[4]) for row in manual_rows])]
     lines.append("local _, pack = ...\n")
     lines.append("-- Built only when MapScout asks for it (see Pack.lua)")
     lines.append("pack.categories.dungeons = function()")
@@ -148,6 +179,15 @@ def write(path, version, date, found, names_by_locale, manual_rows=()):
     lines.append("\t\tentrances = {")
     for instance, kind, ui_map, x, y, level in found:
         lines.append("\t\t\t[%d] = %s," % (instance, lua.row([kind, ui_map, x, y, level])))
+    lines.append("\t\t},")
+    lines.append("\t\t-- Instances with several doors: [instance mapID] = { { wing, uiMapID, x, y }, ... },\n"
+                 "\t\t-- one result each (they replace the entrance above)")
+    lines.append("\t\tdoors = {")
+    for instance in sorted(doors_by_instance or {}):
+        lines.append("\t\t\t[%d] = {" % instance)
+        for door in doors_by_instance[instance]:
+            lines.append("\t\t\t\t%s," % lua.row(list(door)))
+        lines.append("\t\t\t},")
     lines.append("\t\t},")
     lines.append("\t\t-- Names in MapScout's languages; any other uses enUS")
     lines.append("\t\tnames = {")

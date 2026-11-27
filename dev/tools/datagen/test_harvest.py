@@ -92,7 +92,7 @@ class HarvestTest(unittest.TestCase):
         rows = harvest.rows_from_saved(SAVED)
         with tempfile.TemporaryDirectory() as folder:
             self.assertEqual(harvest.merge(folder, rows)["npcs"], (1, 0))
-            self.assertEqual(harvest.entrances(folder), [(3065, 1455, 0.2748, 0.4789, "harvest (in game)")])
+            self.assertEqual(harvest.entrances(folder), [(3065, 1455, 0.2748, 0.4789, "harvest (in game)", "")])
             # the same again: nothing new; an older record does not replace a newer one
             older = harvest.rows_from_saved(SAVED.replace("1795717954", "100"))
             counts = harvest.merge(folder, older)

@@ -7,9 +7,17 @@
 -- Source: instance 70: DungeonJournal by Exehn (with permission)
 -- Source: instance 90: DungeonJournal by Exehn (with permission)
 -- Source: instance 109: DungeonJournal by Exehn (with permission)
+-- Source: instance 189 (armory): DungeonJournal by Exehn (with permission)
+-- Source: instance 189 (cathedral): DungeonJournal by Exehn (with permission)
+-- Source: instance 189 (graveyard): DungeonJournal by Exehn (with permission)
+-- Source: instance 189 (library): DungeonJournal by Exehn (with permission)
 -- Source: instance 229: DungeonJournal by Exehn (with permission)
 -- Source: instance 230: DungeonJournal by Exehn (with permission)
--- Source: instance 429: DungeonJournal by Exehn (with permission)
+-- Source: instance 329 (main): DungeonJournal by Exehn (with permission)
+-- Source: instance 329 (service): DungeonJournal by Exehn (with permission)
+-- Source: instance 429 (east): DungeonJournal by Exehn (with permission)
+-- Source: instance 429 (north): DungeonJournal by Exehn (with permission)
+-- Source: instance 429 (west): DungeonJournal by Exehn (with permission)
 -- Source: instance 2959: DungeonJournal by Exehn (with permission)
 -- Source: instance 2970: https://wow.gg/guides/the-drowned-city ; https://conquestcapped.com/guides/wow-forever/wow-forever-the-drowned-city-guide/
 -- Source: instance 2974: DungeonJournal by Exehn (with permission)
@@ -50,7 +58,7 @@ pack.categories.dungeons = function()
 			[349] = { "dungeon", 1443, 2910, 6287, 42 },
 			[389] = { "dungeon", 1454, 5296, 4887, 13 },
 			[409] = { "raid", 0, 0, 0, 60 },
-			[429] = { "dungeon", 1444, 5900, 4500, 54 },
+			[429] = { "dungeon", 0, 0, 0, 54 },
 			[469] = { "raid", 0, 0, 0, 60 },
 			[509] = { "raid", 1451, 2903, 9282, 0 },
 			[531] = { "raid", 1451, 2902, 9270, 0 },
@@ -63,6 +71,25 @@ pack.categories.dungeons = function()
 			[3001] = { "dungeon", 1449, 4810, 610, 60 },
 			[3039] = { "dungeon", 2548, 3750, 3730, 40 },
 			[3065] = { "dungeon", 1455, 2756, 4805, 13 },
+		},
+		-- Instances with several doors: [instance mapID] = { { wing, uiMapID, x, y }, ... },
+		-- one result each (they replace the entrance above)
+		doors = {
+			[189] = {
+				{ "library", 1420, 8535, 3239 },
+				{ "armory", 1420, 8260, 3380 },
+				{ "cathedral", 1420, 8260, 3380 },
+				{ "graveyard", 1420, 8480, 3037 },
+			},
+			[329] = {
+				{ "main", 1423, 3000, 1500 },
+				{ "service", 1423, 4400, 1900 },
+			},
+			[429] = {
+				{ "east", 1444, 5900, 4500 },
+				{ "west", 1444, 5900, 4500 },
+				{ "north", 1444, 5900, 4500 },
+			},
 		},
 		-- Names in MapScout's languages; any other uses enUS
 		names = {

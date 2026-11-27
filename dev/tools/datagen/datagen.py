@@ -72,13 +72,14 @@ def main(argv=None):
         files.append(os.path.join(MANUAL, "entrances.pending.csv"))
     manual = dungeons.manual([f for f in files if os.path.exists(f)])
     harvested = harvest.entrances(HARVEST)  # measured in the game: they win, and count as checked
-    manual = sorted({row[0]: row for row in manual + harvested}.values())
+    manual = sorted({(row[0], row[5]): row for row in manual + harvested}.values())
     found = dungeons.merge(dungeons.entrances(maps, instances, level_by_name), instances, level_by_name, manual)
-    checked = dungeons.verified(os.path.join(MANUAL, "verified.csv")) | {row[0] for row in harvested}
+    checked = dungeons.verified(os.path.join(MANUAL, "verified.csv")) | {(row[0], row[5]) for row in harvested}
     if not args.pending:  # local tests with --pending keep every point
         found = dungeons.checked_only(found, instances, level_by_name, checked)
+    doors = dungeons.doors(manual, checked if not args.pending else {(row[0], row[5]) for row in manual})
     names = dungeons.names({locale: tables.rows("Map", locale) for locale in LOCALES}, [e[0] for e in found])
-    dungeons.write(os.path.join(OUT, "Dungeons.lua"), args.build, date, found, names, manual)
+    dungeons.write(os.path.join(OUT, "Dungeons.lua"), args.build, date, found, names, manual, doors)
     pois = tables.rows("AreaPOI")
     found_places = places.places(maps, pois)
     place_names = places.names({locale: tables.rows("AreaPOI", locale) for locale in LOCALES}, [p[0] for p in found_places])

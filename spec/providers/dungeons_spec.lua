@@ -131,6 +131,33 @@ describe("Providers/Dungeons.lua", function()
 		assert.are.equal(0.12, y)
 	end)
 
+	it("shows every door of an instance with several, each one as \"Name (wing)\"", function()
+		assert.is_nil(entry(189)) -- no single result for the Monastery
+		local library = entry("189:library")
+		assert.are.equal("Monasterio Escarlata (Biblioteca)", library.name)
+		assert.are.equal("Mazmorra · nivel 30", library.subtitle)
+		assert.are.equal(1420, library.mapID)
+		assert.are.equal(0.8535, library.x)
+		assert.are.equal("Stratholme (Puerta de servicio)", entry("329:service").name)
+		local wings = search("monasterio escarlata")
+		assert.are.equal(4, #wings)
+		assert.are.same({ "Monasterio Escarlata (Armería)" }, search("scarlet monastery armory"))
+		assert.are.equal(3, #search("la masacre"))
+	end)
+
+	it("lists the doors of one instance in their order", function()
+		local entries = ns.Dungeons.Entries({
+			entrances = { [189] = { "dungeon", 0, 0, 0, 30 }, [36] = { "dungeon", 1436, 4250, 7170, 16 } },
+			doors = { [189] = { { "library", 1420, 8535, 3239 }, { "graveyard", 1420, 8480, 3037 } } },
+			names = { enUS = { [189] = "Scarlet Monastery", [36] = "Deadmines" } },
+		})
+		local ids = {}
+		for i, e in ipairs(entries) do
+			ids[i] = e.id
+		end
+		assert.are.same({ 36, "189:library", "189:graveyard" }, ids)
+	end)
+
 	it("finds them by name in both languages and by @ words", function()
 		assert.are.equal("Minas de la Muerte", search("minas de la muerte")[1])
 		assert.are.equal("Minas de la Muerte", search("deadmines")[1])
