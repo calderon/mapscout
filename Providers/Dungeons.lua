@@ -14,6 +14,8 @@
 -- An instance with several doors (the pack's doors: Scarlet Monastery's wings,
 -- Stratholme's gates...) is one result per door, "Name (wing)"; searching the
 -- instance's name finds them all.
+-- A raid with no door outside (the pack's via: Molten Core, Blackwing Lair) is
+-- on the entrance of the dungeon it is entered from, and says so.
 -- A point on a continent map (the pack stores it there when zone maps overlap)
 -- is placed in its zone by the game, always on the outdoor zone or city
 -- (ns.PlaceOutdoors).
@@ -55,9 +57,9 @@ function Dungeons.Entries(data)
 		return entries
 	end
 	local names, english = data.names[GetLocale()] or data.names.enUS or {}, data.names.enUS or {}
-	local doors = data.doors or {}
+	local doors, via = data.doors or {}, data.via or {}
 	local order = {}
-	local function add(instance, kind, uiMap, x, y, level, wing, index)
+	local function add(instance, kind, uiMap, x, y, level, wing, index, note)
 		local name = names[instance] or english[instance]
 		if not (name and CATEGORY[kind]) then
 			return
@@ -65,6 +67,7 @@ function Dungeons.Entries(data)
 		local mapID, px, py, details
 		if uiMap and uiMap > 0 then
 			mapID, px, py = Dungeons.Place(uiMap, x, y)
+			details = note and { note }
 		else
 			details = { L.DUNGEONS_NO_ENTRANCE }
 		end
@@ -106,7 +109,15 @@ function Dungeons.Entries(data)
 	end
 	for instance, row in pairs(data.entrances) do
 		local kind, level = row[1], row[5]
-		if doors[instance] and #doors[instance] > 0 then
+		local from = via[instance] and data.entrances[via[instance][1]]
+		if from and from[2] > 0 then
+			local source, part = via[instance][1], via[instance][2]
+			local sourceName = names[source] or english[source] or ""
+			if part then
+				sourceName = L.DUNGEONS_WITH_WING:format(sourceName, (wingNames(part)))
+			end
+			add(instance, kind, from[2], from[3] / 10000, from[4] / 10000, level, nil, nil, L.DUNGEONS_VIA:format(sourceName))
+		elseif doors[instance] and #doors[instance] > 0 then
 			for index, door in ipairs(doors[instance]) do
 				add(instance, kind, door[2], door[3] / 10000, door[4] / 10000, level, door[1], index)
 			end

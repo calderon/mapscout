@@ -91,6 +91,12 @@ pack.categories.dungeons = function()
 				{ "north", 1444, 5900, 4500 },
 			},
 		},
+		-- Instances entered from inside another one: [instance mapID] = { from, part },
+		-- on that one's entrance (part: a wing name, or none)
+		via = {
+			[409] = { 230 },
+			[469] = { 229, "upper" },
+		},
 		-- Names in MapScout's languages; any other uses enUS
 		names = {
 			enUS = {

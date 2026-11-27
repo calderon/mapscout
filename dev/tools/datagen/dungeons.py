@@ -27,7 +27,16 @@ KINDS = {DUNGEON: "dungeon", RAID: "raid"}
 
 # The wings or gates an instance's doors can have, in the order they are
 # written; MapScout names each one (Locales: DUNGEONS_WING_<WING>)
-WINGS = ("library", "armory", "cathedral", "graveyard", "main", "service", "east", "west", "north")
+WINGS = ("library", "armory", "cathedral", "graveyard", "main", "service", "east", "west", "north", "upper")
+
+# Instances with no door outside, entered from inside another one:
+# {instance: (the one it is entered from, its part or "")}. They take that
+# one's entrance, and MapScout says where they are entered from ("upper":
+# Blackwing Lair is reached through Upper Blackrock Spire)
+VIA = {
+    409: (230, ""),  # Molten Core, from Blackrock Depths
+    469: (229, "upper"),  # Blackwing Lair, from Upper Blackrock Spire
+}
 
 # Map name -> LFGDungeons name, where they differ (wings share the level)
 NAMES = {
@@ -165,7 +174,13 @@ def names(rows_by_locale, ids):
     return out
 
 
-def write(path, version, date, found, names_by_locale, manual_rows=(), doors_by_instance=None):
+def via(found):
+    """The VIA rows whose instances are both kept: {instance: (from, part)}."""
+    kept = {row[0] for row in found}
+    return {k: v for k, v in VIA.items() if k in kept and v[0] in kept}
+
+
+def write(path, version, date, found, names_by_locale, manual_rows=(), doors_by_instance=None, via_by_instance=None):
     lines = [lua.header("dungeon and raid entrances", version, date, [
         "the client's Map (Corpse_0/1, CorpseMapID), UiMapAssignment, UiMap, LFGDungeons and ContentTuning tables, through wago.tools",
     ] + ["instance %d%s: %s" % (row[0], " (%s)" % row[5] if row[5] else "", row[4]) for row in manual_rows])]
@@ -188,6 +203,13 @@ def write(path, version, date, found, names_by_locale, manual_rows=(), doors_by_
         for door in doors_by_instance[instance]:
             lines.append("\t\t\t\t%s," % lua.row(list(door)))
         lines.append("\t\t\t},")
+    lines.append("\t\t},")
+    lines.append("\t\t-- Instances entered from inside another one: [instance mapID] = { from, part },\n"
+                 "\t\t-- on that one's entrance (part: a wing name, or none)")
+    lines.append("\t\tvia = {")
+    for instance in sorted(via_by_instance or {}):
+        source, part = via_by_instance[instance]
+        lines.append("\t\t\t[%d] = %s," % (instance, lua.row([source, part] if part else [source])))
     lines.append("\t\t},")
     lines.append("\t\t-- Names in MapScout's languages; any other uses enUS")
     lines.append("\t\tnames = {")
