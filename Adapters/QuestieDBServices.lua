@@ -4,18 +4,24 @@
 -- packs, which stay needed for players without QuestieDB.
 -- Needs Adapters/QuestieDB.lua (loaded first): without QuestieDB it does nothing.
 --
+-- Not a provider of its own: where a service comes from is MapScout's
+-- business, not the player's. Its services go into MapScout's Services
+-- (Providers/Services.lua) and its trainers into Trainers, so their toggles
+-- and categories work for both sources. It adds to Services the kinds only
+-- it gives (quartermaster, vendor). Built while Services or Trainers is on.
+--
 -- A quartermaster (its title, "Quartermaster" or "Intendente", says so: no flag
--- does) goes in that category instead.
+-- does) goes in that category instead. A trainer goes in the Trainers
+-- category its title names (class, profession, riding, weapon), or none.
 -- Each NPC goes in one category, the first of SERVICES it has (an innkeeper
 -- also sells: it is an inn); its keywords name all its services, so typing
 -- finds it under any of them. Flight masters have their own provider.
--- Only NPCs friendly to the player, placed where they stand. Built once per
--- session, in small steps.
--- A stopgap until MapScout's own data covers the world: where MapScout's
--- services (Providers/Services.lua, on) have a service on a map, this adapter
--- leaves that service out on that map; trainers likewise where MapScout's
--- trainers (Providers/Trainers.lua, on) have any on that map. Each city harvested moves to our data
--- by itself; turning our services or trainers on or off builds this list again.
+-- Only NPCs friendly to the player, placed where they stand. Built in small
+-- steps.
+-- A stopgap until MapScout's own data covers the world: where our pack has a
+-- service on a map, this adapter leaves that service out on that map;
+-- trainers likewise where our pack has any on that map. Each city harvested
+-- moves to our data by itself.
 
 local _, ns = ...
 local L = ns.L
@@ -73,6 +79,46 @@ function Services.IsQuartermaster(title)
 	return false
 end
 
+-- Trainers' categories by the words of their title, in the order they are
+-- tried: { category, word keys }. Classes last ("Weapon Master" is no class).
+Services.TRAINER_KINDS = {
+	{ "riding", { "TRAINER_RIDING" } },
+	{ "weapon", { "TRAINER_WEAPON" } },
+	{ "profession", { "TRAINER_ALCHEMY", "TRAINER_BLACKSMITHING", "TRAINER_COOKING", "TRAINER_ENCHANTING",
+		"TRAINER_ENGINEERING", "TRAINER_FISHING", "TRAINER_HERBALISM", "TRAINER_FIRSTAID", "TRAINER_SKINNING",
+		"TRAINER_LEATHERWORKING", "TRAINER_TAILORING", "TRAINER_MINING" } },
+}
+Services.CLASSES = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID" }
+
+local function names(text, key)
+	for _, word in ipairs(ns.Words(key)) do
+		if text:find(" " .. ns.Normalize(word) .. " ", 1, true) then
+			return true
+		end
+	end
+	return false
+end
+
+-- The Trainers category of a trainer by its title ("Mage Trainer",
+-- "Instructora de herrería"), or nil when it doesn't say. ownClass: the
+-- player's class (CLASS token): its trainers are "class", others "otherclass".
+function Services.TrainerCategory(title, ownClass)
+	local text = " " .. ns.Normalize(title or "") .. " "
+	for _, kind in ipairs(Services.TRAINER_KINDS) do
+		for _, key in ipairs(kind[2]) do
+			if names(text, key) then
+				return kind[1]
+			end
+		end
+	end
+	for _, class in ipairs(Services.CLASSES) do
+		if names(text, "TRAINER_" .. class) then
+			return (ownClass and class ~= ownClass) and "otherclass" or "class"
+		end
+	end
+	return nil
+end
+
 local function has(flags, mask)
 	return mask > 0 and band and band(flags, mask) ~= 0
 end
@@ -117,7 +163,7 @@ function Services.EntryFor(npcID, who)
 			end
 		end
 	end
-	return {
+	local entry = {
 		id = npcID,
 		name = DB.Npc.name(npcID) or ("#" .. npcID),
 		subtitle = (subName and subName ~= "") and subName or L["SERVICE_" .. main.id],
@@ -129,11 +175,49 @@ function Services.EntryFor(npcID, who)
 		y = y,
 		npcID = npcID,
 	}
+	if main.id == "trainer" then
+		entry.trainer = true -- goes to Trainers, in the category its title names
+		entry.category = Services.TrainerCategory(subName, who.class)
+		local trainers = ns.Trainers
+		if trainers and entry.category then
+			entry.icon = trainers.ICONS[entry.category == "otherclass" and "class" or entry.category] or entry.icon
+			if entry.category == "class" then
+				entry.weight = trainers.OWN_WEIGHT
+			elseif entry.category == "otherclass" then
+				entry.weight = trainers.OTHER_WEIGHT
+			end
+		end
+	end
+	return entry
 end
 
-local provider
 local building
+local built -- the last list built, while Services or Trainers is on
 Services.stats = {}
+
+-- Whether one of MapScout's providers is on
+local function isOn(id)
+	local record = ns.Registry.Get(id)
+	return record ~= nil and record.enabled == true
+end
+
+-- Hands the list to Services and Trainers (nil: takes it back)
+local function share(entries)
+	local services, trainers
+	if entries then
+		services, trainers = {}, {}
+		for _, entry in ipairs(entries) do
+			local into = entry.trainer and trainers or services
+			into[#into + 1] = entry
+		end
+	end
+	if ns.Services then
+		ns.Services.SetExtra("questiedb", services)
+	end
+	if ns.Trainers then
+		ns.Trainers.SetExtra("questiedb", trainers)
+	end
+end
 
 local step
 step = function(build)
@@ -161,17 +245,15 @@ step = function(build)
 		return
 	end
 	building = nil
+	built = build.entries
 	Services.stats = { npcs = #build.ids, services = #build.entries, ms = debugprofilestop() - build.start }
-	if provider and provider:IsEnabled() then
-		provider:SetEntries(build.entries)
-	end
+	share(built)
 end
 
 -- The pack data of one of MapScout's own providers, or nil when it is off
 -- (or has no data)
 local function ownData(id, module)
-	local own = ns.Registry.Get(id)
-	if not (own and own.enabled and module) then
+	if not (isOn(id) and module) then
 		return nil
 	end
 	return ns.Packs.Get(id)
@@ -195,6 +277,8 @@ end
 function Services.Build()
 	local who = Adapter.Player()
 	who.covered = ownCoverage()
+	local _, class = UnitClass("player")
+	who.class = class
 	local build = {
 		ids = DB.Npc.GetAllIds() or {}, index = 1, entries = {}, who = who, start = debugprofilestop(),
 	}
@@ -204,34 +288,38 @@ function Services.Build()
 	end)
 end
 
-local categories = {}
-for _, service in ipairs(Services.SERVICES) do
-	local words = ns.Words(service.words)
-	categories[#categories + 1] = {
-		id = service.id,
-		name = L["SERVICE_" .. service.id],
-		filter = table.remove(words, 1), -- the main @ word (English, singular)
-		filterAliases = words,
-	}
+-- Services or Trainers turned on or off: what our pack covers changed, so
+-- build again; with both off, nothing is kept
+local pending = false
+local function rebuild()
+	pending = false
+	if isOn("services") or isOn("trainers") then
+		Services.Build()
+	else
+		building, built = nil, nil
+		share(nil)
+	end
 end
 
-provider = MapScoutAPI:RegisterProvider("questiedb-services", {
-	name = L.QUESTIE_SERVICES_NAME,
-	description = L.QUESTIE_SERVICES_DESCRIPTION,
-	icon = Services.SERVICES[1].icon,
-	filter = "service",
-	filterAliases = ns.Words("SERVICES"),
-	categories = categories,
-	OnEnable = Services.Build, -- once per session: services don't change
-	OnDisable = function()
-		building = nil
-	end,
-})
+-- The kinds of service only QuestieDB gives, added to our Services
+local extraKinds = {}
+for _, service in ipairs(Services.SERVICES) do
+	if service.id == "quartermaster" or service.id == "vendor" then
+		local words = ns.Words(service.words)
+		extraKinds[#extraKinds + 1] = {
+			id = service.id,
+			name = L["SERVICE_" .. service.id],
+			filter = table.remove(words, 1), -- the main @ word (English, singular)
+			filterAliases = words,
+		}
+	end
+end
+ns.Registry.AddCategories("services", extraKinds)
 
--- Our services turned on or off: what they cover changed
 ns.Registry.Listen(function(what, id)
-	if what == "toggled" and (id == "services" or id == "trainers") and provider and provider:IsEnabled() then
-		Services.Build()
+	if what == "toggled" and (id == "services" or id == "trainers") and not pending then
+		pending = true -- both turned on at login: one build
+		C_Timer.After(0, rebuild)
 	end
 end)
 

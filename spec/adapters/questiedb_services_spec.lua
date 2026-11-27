@@ -66,8 +66,8 @@ describe("Adapters/QuestieDBServices.lua", function()
 			C_AddOns = {
 				LoadAddOn = function()
 					rawset(_G, "MapScoutDataForever", { categories = {
-						services = function() return OWN end,
-						trainers = function() return OWN_TRAINERS end,
+						services = function() return withOwn and OWN or { maps = {} } end,
+						trainers = function() return withOwn and OWN_TRAINERS or { maps = {} } end,
 					} })
 					return true
 				end,
@@ -84,10 +84,8 @@ describe("Adapters/QuestieDBServices.lua", function()
 		local frame = FakeFrames[before + 1]
 		local files = { "Core/Caps.lua", "Core/Util.lua", "Core/DB.lua", "Core/Packs.lua", "API/MapScoutAPI.lua",
 			"API/Registry.lua", "Search/Query.lua", "Search/Index.lua", "Search/Engine.lua" }
-		if withOwn then
-			files[#files + 1] = "Providers/Services.lua"
-			files[#files + 1] = "Providers/Trainers.lua"
-		end
+		files[#files + 1] = "Providers/Services.lua"
+		files[#files + 1] = "Providers/Trainers.lua"
 		for _, file in ipairs({ "Adapters/QuestieDB.lua", "Adapters/QuestieDBServices.lua", "UI/Map.lua" }) do
 			files[#files + 1] = file
 		end
@@ -109,12 +107,25 @@ describe("Adapters/QuestieDBServices.lua", function()
 		end
 	end
 
+	-- QuestieDB's entries (numeric ids: the pack's are text) in Services and Trainers
 	local function byName()
 		local list = {}
-		for _, entry in ipairs(ns.Registry.Get("questiedb-services").entries) do
-			list[entry.name] = entry
+		for _, id in ipairs({ "services", "trainers" }) do
+			for _, entry in ipairs(ns.Registry.Get(id).entries) do
+				if type(entry.id) == "number" then
+					list[entry.name] = entry
+				end
+			end
 		end
 		return list
+	end
+
+	local function categoryNames(id)
+		local names = {}
+		for _, category in ipairs(ns.Registry.Get(id).spec.categories) do
+			names[#names + 1] = category.id
+		end
+		return names
 	end
 
 	local function search(text)
@@ -128,7 +139,73 @@ describe("Adapters/QuestieDBServices.lua", function()
 
 	it("does nothing without QuestieDB", function()
 		load(false)
+		assert.is_nil(ns.QuestieServices)
+		assert.are.same({}, byName())
+		assert.is_false(ns.Registry.Get("services").categoryIDs.vendor or false)
+	end)
+
+	it("has no option of its own: its services are in Services, its trainers in Trainers", function()
+		load(true)
 		assert.is_nil(ns.Registry.Get("questiedb-services"))
+		assert.are.equal("services", ns.Registry.Get("services").id)
+		local list = byName()
+		local function inside(id, name)
+			for _, entry in ipairs(ns.Registry.Get(id).entries) do
+				if entry.name == name then return true end
+			end
+			return false
+		end
+		assert.is_true(inside("services", "Olthran"))
+		assert.is_true(inside("trainers", "Bixi"))
+		assert.is_false(inside("services", "Bixi"))
+		assert.is_truthy(list.Bixi)
+	end)
+
+	it("adds to Services the kinds only it gives", function()
+		load(true)
+		local names = categoryNames("services")
+		assert.are.same({ "quartermaster", "vendor" }, { names[#names - 1], names[#names] })
+		assert.are.equal(14, #names) -- our 12 and those two, once
+	end)
+
+	it("follows the Services and Trainers toggles and their categories", function()
+		load(true)
+		assert.are.same({ "Olthran" }, search("@banco"))
+		ns.Registry.SetCategoryEnabled("services", "bank", false)
+		assert.are.same({}, search("@banco"))
+		assert.are.same({}, search("olthran"))
+		ns.Registry.SetCategoryEnabled("services", "bank", true)
+		ns.Registry.SetCategoryEnabled("services", "vendor", false)
+		assert.are.same({}, search("@vendedor"))
+		ns.Registry.SetCategoryEnabled("services", "vendor", true)
+		ns.Registry.SetEnabled("services", false)
+		settle()
+		assert.is_nil(byName().Olthran)
+		assert.is_truthy(byName().Bixi) -- trainers still on
+		ns.Registry.SetCategoryEnabled("trainers", "profession", false)
+		assert.are.same({}, search("bixi"))
+		ns.Registry.SetEnabled("trainers", false)
+		settle()
+		assert.are.same({}, byName()) -- both off: nothing kept
+		ns.Registry.SetEnabled("services", true)
+		settle()
+		assert.is_truthy(byName().Olthran)
+	end)
+
+	it("puts each trainer in the Trainers category its title names", function()
+		load(true)
+		local T = ns.QuestieServices.TrainerCategory
+		assert.are.equal("profession", byName().Bixi.category)
+		assert.are.equal("profession", T("Instructora de herrería"))
+		assert.are.equal("profession", T("Alchemy Trainer"))
+		assert.are.equal("class", T("Warrior Trainer", "WARRIOR"))
+		assert.are.equal("otherclass", T("Mage Trainer", "WARRIOR"))
+		assert.are.equal("otherclass", T("Instructor de magos", "WARRIOR"))
+		assert.are.equal("riding", T("Riding Trainer"))
+		assert.are.equal("weapon", T("Weapon Master"))
+		assert.are.equal("weapon", T("Maestro de armas"))
+		assert.is_nil(T("Trainer"))
+		assert.is_nil(T(nil))
 	end)
 
 	it("lists friendly NPCs with a service, placed where they stand", function()
@@ -174,29 +251,24 @@ describe("Adapters/QuestieDBServices.lua", function()
 		assert.are.same({ "Vendedora" }, search("@proveedor"))
 		-- by subname (first; "Herrero" follows as a near match: few results allow typos)
 		assert.are.equal("Bixi", (ns.Engine.Search(ns.Query.Parse("herreria")))[1].item.entry.name)
-		assert.are.equal(6, #search("@servicio"))
+		assert.are.equal(5, #search("@servicio")) -- the trainer is in Trainers
 	end)
 
-	it("leaves out what MapScout's own services have on that map, while they are on", function()
+	it("leaves out what our pack has on that map", function()
 		load(true, true)
 		local list = byName()
 		assert.is_nil(list.Olthran) -- our pack has a bank in Ironforge
 		assert.is_truthy(list["Tabernero Brebefuego"]) -- but no inn: still from QuestieDB
-		ns.Registry.SetEnabled("services", false)
-		settle()
-		assert.is_truthy(byName().Olthran) -- ours off: QuestieDB's again
-		ns.Registry.SetEnabled("services", true)
-		settle()
-		assert.is_nil(byName().Olthran)
+		assert.are.same({ "Banco" }, search("@banco")) -- ours, not both
 	end)
 
-	it("leaves out trainers on maps where MapScout's own trainers have any, while they are on", function()
+	it("leaves out trainers on maps where our pack has any", function()
 		load(true, true)
 		assert.is_nil(byName().Bixi) -- our pack has trainers in Ironforge
 		assert.is_truthy(byName()["Herrero Rudo"]) -- repairs are not trainers
 		ns.Registry.SetEnabled("trainers", false)
 		settle()
-		assert.is_truthy(byName().Bixi)
+		assert.is_nil(byName().Bixi) -- Trainers off: QuestieDB's go too
 		assert.is_nil(byName().Olthran) -- our services still on
 	end)
 end)

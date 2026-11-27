@@ -373,6 +373,30 @@ function Registry.SetCategoryEnabled(id, categoryID, on)
 	notify("categories", id, categoryID)
 end
 
+-- More categories for a provider already registered, after its own (for
+-- MapScout's own providers, not in the public API): the QuestieDB adapter
+-- adds the kinds of service only it gives to our services. Before its
+-- entries are pushed (they are checked against its categories).
+-- list: { { id, name, filter, filterAliases }, ... }; ids it has are skipped.
+function Registry.AddCategories(id, list)
+	local record = providers[id]
+	if not record then
+		return
+	end
+	record.spec.categories = record.spec.categories or {}
+	for _, category in ipairs(list) do
+		if not record.categoryIDs[category.id] then
+			table.insert(record.spec.categories, category)
+			record.categoryIDs[category.id] = true
+			for _, word in ipairs(filterWords(category)) do
+				record.categoryFilters[word] = record.categoryFilters[word] or {}
+				table.insert(record.categoryFilters[word], category.id)
+			end
+		end
+	end
+	notify("categories", id)
+end
+
 -- Settings of a provider: on/off choices that change what it gives (which
 -- available quests to show...), shown in the options under its categories.
 -- For MapScout's own providers for now (not in the public API).
