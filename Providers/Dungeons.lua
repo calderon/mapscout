@@ -27,8 +27,18 @@ Dungeons.ICONS = {
 }
 local CATEGORY = { dungeon = "dungeons", raid = "raids" }
 
--- Where an entrance goes on the map: (mapID, x, y), always a zone or city
-Dungeons.Place = ns.PlaceOutdoors
+-- Where an entrance goes on the map: (mapID, x, y), always a zone or city.
+-- Only a continent point is placed by the game: a point already on its zone
+-- stays there (near a border, the game may answer with the zone next to it:
+-- Uldaman, at the north edge of the Badlands).
+local MAP_TYPE_CONTINENT = 2
+function Dungeons.Place(mapID, x, y)
+	local place = ns.MapPlace(mapID)
+	if place and place.mapType == MAP_TYPE_CONTINENT then
+		return ns.PlaceOutdoors(mapID, x, y)
+	end
+	return mapID, x, y
+end
 
 function Dungeons.Entries(data)
 	local entries = {}
