@@ -29,6 +29,8 @@ MapScout/
     Util.lua                   # text normalization, coordinates, map helpers
     Recorder.lua               # the moments the game tells where something is (talking to a service NPC,
                                # a mailbox, entering a dungeon, dying, a guard's directions); stores nothing
+    Contribute.lua             # contribution mode: the player turns it on or off (/ms contribute), it keeps
+                               # what the recorder notices, with an anonymous ID
   Search/
     Query.lua                  # splits the text into @filters, handler matches and free text
     Index.lua                  # static entries, normalized once, per-provider buckets
@@ -57,6 +59,7 @@ MapScout/
     QuestieDBSpiritHealers.lua # spirit healers, handed to SpiritHealers (stopgap)
   Options/
     Panel.lua                  # Settings canvas category (fallback if missing)
+    Contribute.lua             # the checkbox that turns contributing on or off
 MapScout_Data_Forever/         # LoadOnDemand static data packs (data-only providers), one file per category
 
 dev/tools/                     # data generators (not packaged, not checked)
@@ -123,6 +126,8 @@ In this order of preference (research and links: #104):
 4. **Our in-game harvest mode** — NPCs and objects recorded when interacting with them (#40): services, Forever-only content, and corrections to the seed.
 
    The moments are noticed by `Core/Recorder.lua`, shared by the development harvest mode (`Debug/Harvest.lua`, not in the released zip), the released contribution mode (#172) and learning places while playing (#212). It stores nothing and listens to no event until one of them starts it (`Recorder.Start(owner, fn)`, `fn(kind, record, why)`); each keeps what it gets in its own way, with the shared helpers to join NPCs (`AddNPC`, `AddSighting`) and guards' directions (`AddDirection`).
+
+   **Contribution mode** (`Core/Contribute.lua`, #172): off by default; the player turns it on or off from the options or with `/ms contribute on|off` (account-wide, in `MapScoutDB.contribution`). Once on, it starts the recorder by itself every session until turned off; turned off, it stops the recorder at once (no event is listened to unless the harvest mode is on too). What it keeps is as the harvest mode keeps it, one record per place and without times, with a random anonymous ID made the first time something is kept. `/ms contribute clear` forgets the records and the ID; on or off stays as it was.
 5. **Single facts from public sources, by hand** — a point the client lacks (e.g. the entrance of a Forever dungeon) written in `dev/tools/datagen/manual/`, only when at least two public sources agree, each row citing them. Never another addon's list: data from an addon needs its author's written permission, and is credited.
 6. **Other addons, only read at runtime** — never copied. **QuestieDB** (by the Questie team, GPLv3, a separate addon, supports Forever) for available quests (#83); its NPCs' waypoints are the route of a quest giver or service NPC who walks one (#179).
 

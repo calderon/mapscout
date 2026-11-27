@@ -231,6 +231,21 @@ local EN = {
 	OPTIONS_CATEGORIES_TITLE = "What to search",
 	OPTIONS_CATEGORIES_HELP = "What you turn off is not loaded nor kept in memory. Turning off a kind (Bank, Inn...) only leaves it out of the results.",
 	OPTIONS_RESET = "Restore defaults",
+	OPTIONS_CONTRIBUTE = "Help improve MapScout's data",
+	OPTIONS_CONTRIBUTE_HELP = "Saves on your computer where service NPCs, mailboxes, dungeons and graveyards are, so you can send them and improve MapScout. It is 100% anonymous (no account, character or realm data), and nothing is shared unless you send it yourself.",
+
+	-- Contributing (/ms contribute)
+	HELP_CONTRIBUTE = "help improve MapScout's data: on, off, status or clear",
+	CONTRIBUTE_TURNED_ON = "thank you! From now on we save the places you find on this computer, every time you play. To stop: /ms contribute off.",
+	CONTRIBUTE_TURNED_OFF = "we have stopped saving information. What was saved is kept; if you want to delete it, use /ms contribute clear.",
+	CONTRIBUTE_STATUS_ON = "thank you for helping improve MapScout. Right now %s.",
+	CONTRIBUTE_STATUS_OFF = "you are not contributing (to start: /ms contribute on). Right now %s.",
+	CONTRIBUTE_PLACES_NONE = "no place is saved yet",
+	CONTRIBUTE_PLACES_ONE = "one place is saved",
+	CONTRIBUTE_PLACES = "%d places are saved",
+	CONTRIBUTE_CLEARED_ON = "everything saved has been forgotten. We keep saving what you find; to stop, use /ms contribute off.",
+	CONTRIBUTE_CLEARED_OFF = "everything saved has been forgotten. To contribute again, use /ms contribute on.",
+	CONTRIBUTE_USAGE = "use /ms contribute on, off, status or clear.",
 
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",

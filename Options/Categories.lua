@@ -268,7 +268,9 @@ local function build(parent, anchor)
 
 	local reset = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
 	reset:SetSize(160, 22)
-	reset:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -16, -16)
+	-- centred on the page title's line (16 from the top)
+	local titleHeight = ns.Options.title and ns.Options.title:GetStringHeight() or 22
+	reset:SetPoint("RIGHT", parent, "TOPRIGHT", -16, -16 - titleHeight / 2)
 	reset:SetText(L.OPTIONS_RESET)
 	reset:SetScript("OnClick", Categories.Reset)
 
