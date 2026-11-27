@@ -170,15 +170,23 @@ class ManualTest(unittest.TestCase):
         self.assertEqual(dungeons.doors(doors, checked),
                          {189: [("library", 1420, 8535, 3239), ("graveyard", 1420, 8480, 3037)]})
 
+    def test_via_only_between_kept_instances(self):
+        found = [(229, "dungeon", 1427, 3480, 8400, 53), (230, "dungeon", 1427, 3480, 8400, 48),
+                 (409, "raid", 0, 0, 0, 60)]
+        self.assertEqual(dungeons.via(found), {409: (230, "")})
+
     def test_write_doors(self):
         with tempfile.TemporaryDirectory() as folder:
             path = os.path.join(folder, "Dungeons.lua")
             dungeons.write(path, "1.60.1.1", "2026-01-02", [(329, "dungeon", 0, 0, 0, 55)], {"enUS": {329: "Stratholme"}},
-                           [(329, 1423, 0.3, 0.15, "s", "main")], {329: [("main", 1423, 3000, 1500)]})
+                           [(329, 1423, 0.3, 0.15, "s", "main")], {329: [("main", 1423, 3000, 1500)]},
+                           {409: (230, ""), 469: (229, "upper")})
             with open(path, encoding="utf-8") as source:
                 text = source.read()
         self.assertIn("-- Source: instance 329 (main): s", text)
         self.assertIn('\t\t\t[329] = {\n\t\t\t\t{ "main", 1423, 3000, 1500 },\n\t\t\t},', text)
+        self.assertIn("[409] = { 230 },", text)
+        self.assertIn('[469] = { 229, "upper" },', text)
 
 
 def poi(id_, name, flags, continent=0, x=750, y=600, condition=0):

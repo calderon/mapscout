@@ -118,6 +118,9 @@ game (`ns.PlaceOnMap`).
   `manual/verified.csv`, with its `wing` (`WINGS` in `dungeons.py`). The doors
   go in `doors` and replace the single entrance; MapScout shows each one as
   its own result, "Scarlet Monastery (Library)".
+  Raids with no door outside, entered from inside a dungeon (Molten Core,
+  Blackwing Lair: `VIA` in `dungeons.py`), go in `via`: MapScout puts them on
+  that dungeon's entrance and says they are entered from it.
 - `Transport.lua`: the docks of boats, zeppelins and skyships (the stops of
   their routes in the client) and the two entrances of the Deeprun Tram, each
   with the docks it goes to, named after the town or capital next to it (none:

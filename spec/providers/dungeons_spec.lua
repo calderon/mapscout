@@ -92,11 +92,22 @@ describe("Providers/Dungeons.lua", function()
 	end)
 
 	it("finds an unconfirmed entrance by name, with no place and saying so", function()
-		local core = entry(409)
-		assert.are.equal("Núcleo de Magma", core.name)
-		assert.are.equal("Banda · nivel 60 · entrada por confirmar", core.subtitle)
-		assert.is_nil(core.mapID)
-		assert.are.same({ ns.L.DUNGEONS_NO_ENTRANCE }, core.details)
+		local naxx = ns.Dungeons.Entries({
+			entrances = { [533] = { "raid", 0, 0, 0, 60 } },
+			names = { enUS = { [533] = "Naxxramas" } },
+		})[1] -- every entrance in the pack has a place now
+		assert.are.equal("Naxxramas", naxx.name)
+		assert.are.equal("Banda · nivel 60 · entrada por confirmar", naxx.subtitle)
+		assert.is_nil(naxx.mapID)
+		assert.are.same({ ns.L.DUNGEONS_NO_ENTRANCE }, naxx.details)
+	end)
+
+	it("places a raid with no door outside on the dungeon it is entered from, and says so", function()
+		local core, depths = entry(409), entry(230)
+		assert.are.equal("Banda · nivel 60", core.subtitle)
+		assert.are.same({ depths.mapID, depths.x, depths.y }, { core.mapID, core.x, core.y })
+		assert.are.same({ "Se entra desde Profundidades de Roca Negra." }, core.details)
+		assert.are.same({ "Se entra desde Cumbre de Roca Negra (Superior)." }, entry(469).details)
 	end)
 
 	it("places Forever's new dungeons", function()
