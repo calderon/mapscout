@@ -9,7 +9,10 @@
 --                        (anvils and forges have no window to notice them by)
 -- What it records, in MapScoutDB.harvest (account SavedVariables):
 --   * entrances: entering a dungeon or raid, where the player stood just
---     before the loading screen (the instance's map ID from GetInstanceInfo)
+--     before the loading screen (the instance's map ID from GetInstanceInfo).
+--     Every entry is kept ("instance:time"): the point depends on where the
+--     player walked in, so the generator averages them, and an instance with
+--     several doors (Dire Maul's wings) has several
 --   * npcs: talking to a service NPC (bank, auction, vendor and repair,
 --     trainer, stable, flight master, guild, battlemaster, innkeeper), with
 --     the options of its gossip window, to tell its services apart later, the
@@ -256,7 +259,7 @@ function Harvest.EnteringWorld()
 		return nil
 	end
 	local record = { instance = instanceID, name = name, kind = kind, map = from.map, x = from.x, y = from.y, at = time() }
-	store().entrances[instanceID] = record
+	store().entrances[("%d:%d"):format(instanceID, record.at)] = record
 	ns.Print(("harvest: entrada de %s guardada (%d, %.1f, %.1f)"):format(tostring(name), from.map, from.x * 100, from.y * 100))
 	return record
 end

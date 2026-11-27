@@ -1,3 +1,6 @@
-instance,name,kind,uiMap,x,y,at
-34,Mazmorras de Ventormenta,party,1453,0.5034,0.6616,1795788472
-3065,El Salón de los Feudales,party,1455,0.2756,0.4805,1795724176
+key,instance,name,kind,uiMap,x,y,at,wing
+34,34,Mazmorras de Ventormenta,party,1453,0.5022,0.6639,1795788972,
+3065,3065,El Salón de los Feudales,party,1455,0.2756,0.4805,1795724176,
+34:1795789039,34,Mazmorras de Ventormenta,party,1453,0.5013,0.6642,1795789039,
+34:1795789050,34,Mazmorras de Ventormenta,party,1453,0.5055,0.6592,1795789050,
+34:1795789067,34,Mazmorras de Ventormenta,party,1453,0.5039,0.661,1795789067,

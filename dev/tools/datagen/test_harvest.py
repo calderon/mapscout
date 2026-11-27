@@ -87,6 +87,36 @@ class SavedVarsTest(unittest.TestCase):
         self.assertAlmostEqual(npc["x"], 0.3631)
 
 
+def entry(key, instance, x, y, at, wing="", ui_map=1444):
+    return {"key": key, "instance": instance, "name": "", "kind": "party", "uiMap": ui_map, "x": x, "y": y,
+            "at": at, "wing": wing}
+
+
+class EntrancesTest(unittest.TestCase):
+    def test_average_of_the_entries_of_each_door(self):
+        with tempfile.TemporaryDirectory() as folder:
+            empty = {name: {} for name in harvest.FILES}
+            harvest.merge(folder, dict(empty, entrances={
+                "429:1": entry("429:1", 429, 0.60, 0.30, 1, "west"),
+                "429:2": entry("429:2", 429, 0.62, 0.32, 2, "west"),
+                "429:3": entry("429:3", 429, 0.65, 0.48, 3, "east"),
+                "34:4": entry("34:4", 34, 0.50, 0.66, 4, ui_map=1453),
+            }))
+            found = harvest.entrances(folder)
+        self.assertEqual([(r[0], r[5]) for r in found], [(34, ""), (429, "east"), (429, "west")])
+        west = found[2]
+        self.assertEqual((west[1], west[2], west[3]), (1444, 0.61, 0.31))
+        self.assertEqual(west[4], "harvest (in game, average of 2 entries)")
+        self.assertEqual(found[0][4], "harvest (in game)")
+
+    def test_a_new_import_keeps_the_wing_written_by_hand(self):
+        with tempfile.TemporaryDirectory() as folder:
+            empty = {name: {} for name in harvest.FILES}
+            harvest.merge(folder, dict(empty, entrances={"429:1": entry("429:1", 429, 0.6, 0.3, 1, "west")}))
+            harvest.merge(folder, dict(empty, entrances={"429:1": entry("429:1", 429, 0.6, 0.3, 1)}))
+            self.assertEqual(harvest.read(folder, "entrances")["429:1"]["wing"], "west")
+
+
 class HarvestTest(unittest.TestCase):
     def test_import_and_merge(self):
         rows = harvest.rows_from_saved(SAVED)
@@ -98,6 +128,7 @@ class HarvestTest(unittest.TestCase):
             counts = harvest.merge(folder, older)
             self.assertEqual(counts["npcs"], (0, 1))
             self.assertEqual(counts["entrances"], (0, 0))
+            self.assertEqual(harvest.read(folder, "entrances")["3065"]["key"], "3065")
             npc = harvest.read(folder, "npcs")["5099"]
             self.assertEqual(npc["services"], "bank")
             self.assertEqual(npc["gossip"], "132053:Banco | 132053:La posada")

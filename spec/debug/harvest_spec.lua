@@ -97,14 +97,44 @@ describe("Debug/Harvest.lua", function()
 		assert.are.equal(1455, object.map)
 	end)
 
+	-- the last entrance recorded for an instance (one record per entry)
+	local function entrance(id)
+		local found
+		for _, record in pairs(ns.db.harvest.entrances) do
+			if record.instance == id and (not found or record.at >= found.at) then
+				found = record
+			end
+		end
+		return found
+	end
+
 	it("pairs the last place outside with the instance entered next", function()
 		SlashCmdList.MAPSCOUT("harvest on")
 		position = { map = 1437, x = 0.4779, y = 0.5616 }
 		frame:Fire("PLAYER_LEAVING_WORLD")
 		instance = { inside = true, kind = "party", name = "Excavación: Los Humedales", id = 2998 }
 		frame:Fire("PLAYER_ENTERING_WORLD")
-		local record = ns.db.harvest.entrances[2998]
+		local record = entrance(2998)
 		assert.are.same({ 1437, 0.4779, 0.5616, "party" }, { record.map, record.x, record.y, record.kind })
+	end)
+
+	it("keeps every entry of an instance, not only the last one", function()
+		SlashCmdList.MAPSCOUT("harvest on")
+		for i, x in ipairs({ 0.59, 0.62 }) do -- two doors of Dire Maul, a second apart
+			StubGlobals({ time = function() return 1000 + i end })
+			position = { map = 1444, x = x, y = 0.45 }
+			frame:Fire("PLAYER_LEAVING_WORLD")
+			instance = { inside = true, kind = "party", name = "La Masacre", id = 429 }
+			frame:Fire("PLAYER_ENTERING_WORLD")
+			instance = { inside = false }
+			frame:Fire("PLAYER_ENTERING_WORLD")
+		end
+		local xs = {}
+		for _, record in pairs(ns.db.harvest.entrances) do
+			xs[#xs + 1] = record.x
+		end
+		table.sort(xs)
+		assert.are.same({ 0.59, 0.62 }, xs)
 	end)
 
 	it("pairs too without a loading screen: the place noted every second, then a zone change", function()
@@ -113,7 +143,7 @@ describe("Debug/Harvest.lua", function()
 		RunTimers()
 		instance = { inside = true, kind = "party", name = "El Salón de los Feudales", id = 3065 }
 		frame:Fire("ZONE_CHANGED_NEW_AREA")
-		assert.are.equal(1455, ns.db.harvest.entrances[3065].map)
+		assert.are.equal(1455, entrance(3065).map)
 		local messages = #ChatLog
 		frame:Fire("PLAYER_ENTERING_WORLD") -- the same instance: nothing changes, no message
 		assert.are.equal(messages, #ChatLog)
@@ -135,7 +165,7 @@ describe("Debug/Harvest.lua", function()
 		now = now + 12 -- a long loading screen
 		instance = { inside = true, kind = "party", name = "El Salón de los Feudales", id = 3065 }
 		frame:Fire("PLAYER_ENTERING_WORLD")
-		assert.are.equal(1455, ns.db.harvest.entrances[3065].map)
+		assert.are.equal(1455, entrance(3065).map)
 	end)
 
 	it("says when the game gives no position outside", function()

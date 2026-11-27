@@ -5,19 +5,27 @@ our own data, measured in the game. Run it after playing with /ms harvest on:
     python3 dev/tools/datagen/datagen.py harvest [path/to/SavedVariables/MapScout.lua]
 
 New records are added to what is already there; a newer record of the same
-NPC, object or entrance replaces the old one. Then run the generator again.
+NPC or object replaces the old one. Every entry into a dungeon is a record of
+its own (where the player walks into the portal changes the point a little):
+the generator uses their average. For an instance with several doors (Dire
+Maul's wings), write each record's wing by hand in harvest/entrances.csv
+(WINGS in dungeons.py); importing again keeps it. Then run the generator again.
 """
 
 import csv
 import glob
 import os
+from collections import defaultdict
 
 import savedvars
+
+# Columns written by hand after importing: a new import keeps them
+KEEP = {"entrances": ["wing"]}
 
 FOREVER_SAVED = "/Applications/World of Warcraft/_forever_/WTF/Account/*/SavedVariables/MapScout.lua"
 
 FILES = {
-    "entrances": ["instance", "name", "kind", "uiMap", "x", "y", "at"],
+    "entrances": ["key", "instance", "name", "kind", "uiMap", "x", "y", "at", "wing"],
     "npcs": ["npc", "locale", "name", "faction", "title", "services", "skill", "uiMap", "x", "y", "gossip", "at"],
     "objects": ["key", "service", "object", "uiMap", "x", "y", "at"],
     "directions": ["key", "locale", "asked", "name", "poi", "texture", "guard", "uiMap", "x", "y", "at"],
@@ -33,10 +41,10 @@ def rows_from_saved(text):
     """{file: {key: row}} from the SavedVariables text."""
     data = (savedvars.load(text).get("MapScoutDB") or {}).get("harvest") or {}
     out = {name: {} for name in FILES}
-    for instance, e in (data.get("entrances") or {}).items():
-        out["entrances"][str(instance)] = {
-            "instance": instance, "name": e.get("name", ""), "kind": e.get("kind", ""),
-            "uiMap": e["map"], "x": e["x"], "y": e["y"], "at": e.get("at", 0)}
+    for key, e in (data.get("entrances") or {}).items():  # "instance:time" (older ones: the instance)
+        out["entrances"][str(key)] = {
+            "key": str(key), "instance": e.get("instance") or key, "name": e.get("name", ""), "kind": e.get("kind", ""),
+            "uiMap": e["map"], "x": e["x"], "y": e["y"], "at": e.get("at", 0), "wing": ""}
     for npc, n in (data.get("npcs") or {}).items():
         services = sorted(k for k, v in (n.get("services") or {}).items() if v)
         gossip = n.get("gossip") or []
@@ -80,6 +88,9 @@ def merge(folder, new):
                 continue  # what is there is newer
             else:
                 updated += 1
+                row = dict(row)
+                for column in KEEP.get(name, ()):
+                    row[column] = row.get(column) or old.get(column, "")
             rows[key] = row
         with open(os.path.join(folder, name + ".csv"), "w", newline="", encoding="utf-8") as out:
             writer = csv.DictWriter(out, fieldnames=columns, lineterminator="\n")
@@ -91,9 +102,18 @@ def merge(folder, new):
 
 
 def entrances(folder):
-    """Harvested entrances as manual rows: [(instance, uiMap, x, y, source, wing)]."""
-    out = []
+    """Harvested entrances as manual rows: [(instance, uiMap, x, y, source, wing)],
+    one per instance and wing: the average of its entries (on the map of the
+    latest one)."""
+    groups = defaultdict(list)
     for row in read(folder, "entrances").values():
-        out.append((int(row["instance"]), int(row["uiMap"]), float(row["x"]), float(row["y"]), "harvest (in game)",
-                    (row.get("wing") or "").strip()))
-    return sorted(out)
+        groups[(int(row["instance"]), (row.get("wing") or "").strip())].append(row)
+    out = []
+    for (instance, wing), rows in groups.items():
+        latest = max(rows, key=lambda r: int(float(r.get("at") or 0)))
+        same = [r for r in rows if r["uiMap"] == latest["uiMap"]]
+        x = round(sum(float(r["x"]) for r in same) / len(same), 4)
+        y = round(sum(float(r["y"]) for r in same) / len(same), 4)
+        source = "harvest (in game)" if len(same) == 1 else "harvest (in game, average of %d entries)" % len(same)
+        out.append((instance, int(latest["uiMap"]), x, y, source, wing))
+    return sorted(out, key=lambda r: (r[0], r[5]))
