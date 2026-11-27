@@ -136,6 +136,29 @@ class HarvestTest(unittest.TestCase):
             direction = harvest.read(folder, "directions")["1455:356:609"]
             self.assertEqual((direction["name"], direction["guard"], direction["uiMap"]), ("Banco de Forjaz", "5595", "1455"))
 
+    def test_places_an_npc_was_seen_add_up_across_imports(self):
+        def npc(x, at, seen):
+            return {"npc": "5109", "name": "Myra", "uiMap": 1455, "x": x, "y": 0.7, "at": at,
+                    "seen": harvest.spots_text(seen)}
+        with tempfile.TemporaryDirectory() as folder:
+            empty = {name: {} for name in harvest.FILES}
+            harvest.merge(folder, dict(empty, npcs={"5109": npc(0.27, 1, [(1455, 0.27, 0.7)])}))
+            self.assertEqual(harvest.read(folder, "npcs")["5109"]["seen"], "1455:0.27:0.7")
+            # a later import (the SavedVariables were cleared): its places are added
+            harvest.merge(folder, dict(empty, npcs={"5109": npc(0.4, 2, [(1455, 0.4, 0.7)])}))
+            self.assertEqual(harvest.read(folder, "npcs")["5109"]["seen"], "1455:0.27:0.7 1455:0.4:0.7")
+            # an older one doesn't replace the row, but its places count
+            harvest.merge(folder, dict(empty, npcs={"5109": npc(0.5, 0, [(1455, 0.5, 0.7)])}))
+            row = harvest.read(folder, "npcs")["5109"]
+            self.assertEqual(row["x"], "0.4")
+            self.assertEqual(harvest.spots(row["seen"]), [(1455, 0.27, 0.7), (1455, 0.4, 0.7), (1455, 0.5, 0.7)])
+
+    def test_reads_the_places_from_the_saved_variables(self):
+        text = SAVED.replace('["x"] = 0.3631,', '["x"] = 0.3631, ["seen"] = { { 1455, 0.3631, 0.6 }, { 1455, 0.5, 0.6 } },')
+        self.assertIn('["seen"]', text)
+        npc = harvest.rows_from_saved(text)["npcs"]["5099"]
+        self.assertEqual(npc["seen"], "1455:0.3631:0.6 1455:0.5:0.6")
+
 
 if __name__ == "__main__":
     unittest.main()

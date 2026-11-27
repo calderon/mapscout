@@ -83,6 +83,7 @@ function Services.Entries(data)
 					mapID = mapID,
 					x = row[2] / 10000,
 					y = row[3] / 10000,
+					roams = row[8] == true or nil, -- an NPC who walks a route
 					icon = kind.icon,
 				}
 			end

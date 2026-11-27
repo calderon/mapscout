@@ -8,11 +8,12 @@ local _, pack = ...
 pack.categories.trainers = function()
 	return {
 		build = "1.60.1.71139",
-		-- [uiMapID] = { { kind, what, x, y, faction, locale, name }, ... }: kind "class",
+		-- [uiMapID] = { { kind, what, x, y, faction, locale, name[, roams] }, ... }: kind "class",
 		-- "profession", "riding" or "weapon"; what = class token ("MAGE") or profession
 		-- ("alchemy"), "" for the others; x, y 0-10000 on the map; faction "Alliance", "Horde"
 		-- or "" (anyone); name = index in names[locale] of the place's name as the game wrote it
-		-- in that language (0: none)
+		-- in that language (0: none); roams: true when the NPC walks a route (the point is one
+		-- spot of it)
 		maps = {
 			[1455] = {
 				{ "class", "HUNTER", 6831, 8602, "Alliance", "esES", 1 },

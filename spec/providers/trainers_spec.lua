@@ -9,7 +9,7 @@ describe("Providers/Trainers.lua", function()
 				{ "class", "MAGE", 2692, 1095, "Alliance", "esES", 1 },
 				{ "class", "WARRIOR", 6831, 8602, "Alliance", "esES", 2 },
 				{ "profession", "blacksmithing", 5016, 4316, "Alliance", "esES", 3 },
-				{ "weapon", "", 6176, 8923, "Alliance", "", 0 },
+				{ "weapon", "", 6176, 8923, "Alliance", "", 0, true }, -- walks a route
 			},
 			[1454] = {
 				{ "class", "MAGE", 4000, 4000, "Horde", "esES", 4 },
@@ -96,6 +96,8 @@ describe("Providers/Trainers.lua", function()
 		local weapon = entry("weapon::1455:4")
 		assert.are.equal("Instructor de armas", weapon.name)
 		assert.are.equal("Forjaz", weapon.subtitle) -- no place name: its city
+		assert.is_true(weapon.roams) -- an NPC who walks a route
+		assert.is_nil(mage.roams)
 	end)
 
 	it("puts the player's class in its own toggle, and other classes in another", function()

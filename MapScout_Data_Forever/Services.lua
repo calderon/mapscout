@@ -9,12 +9,14 @@ local _, pack = ...
 pack.categories.services = function()
 	return {
 		build = "1.60.1.71139",
-		-- [uiMapID] = { { service, x, y, faction, locale, name[, battleground] }, ... }: service
+		-- [uiMapID] = { { service, x, y, faction, locale, name[, battleground[, roams]] }, ... }:
+		-- service
 		-- "bank", "auction", "inn", "mailbox", "stable", "repair", "barber", "transmog",
 		-- "guild", "battle", "anvil" or "forge"; x, y 0-10000 on the map; faction
 		-- "Alliance", "Horde" or "" (anyone); name = index in names[locale] of the place's
 		-- name as the game wrote it in that language (0: none); battleground (battlemasters only)
-		-- "alterac", "arathi" or "warsong"
+		-- "alterac", "arathi" or "warsong" ("" for the others); roams: true when the NPC
+		-- walks a route (the point is one spot of it)
 		maps = {
 			[1453] = {
 				{ "mailbox", 5473, 5760, "", "", 0 },

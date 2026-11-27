@@ -77,6 +77,20 @@ class TrainersTest(unittest.TestCase):
         ])
         self.assertEqual(merged[1][5:7], ("Alliance", "esES"))  # the guard's faction
 
+    def test_an_npc_who_walks_a_route(self):
+        with tempfile.TemporaryDirectory() as folder:
+            write_csv(folder, "npcs", NPCS)
+            write_csv(folder, "directions", DIRECTIONS)
+            found, _ = trainers.points(folder, {4772})
+        riding = [p for p in found if p[1] == "riding"][0]
+        self.assertIs(riding[8], True)
+        self.assertTrue(all(len(p) == 8 for p in found if p[1] != "riding"))
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "Trainers.lua")
+            trainers.write(path, "1.2.3.4", "2026-01-01", [riding])
+            with open(path, encoding="utf-8") as source:
+                self.assertIn(", 1, true },", source.read())
+
     def test_write(self):
         found = [(1455, "class", "MAGE", 0.2692, 0.1095, "Alliance", "esES", "Sala de los Misterios"),
                  (1455, "class", "PALADIN", 0.2692, 0.1095, "Alliance", "esES", "Sala de los Misterios"),

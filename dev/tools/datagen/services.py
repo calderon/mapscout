@@ -116,9 +116,10 @@ def _faction(value):
     return value if value in FACTIONS else ""
 
 
-def points(folder):
-    """[(uiMap, kind, x, y, faction, locale, name, what)] from the harvest CSV
-    files (what: the battleground of a battlemaster, else ""), and the guard
+def points(folder, roaming=frozenset()):
+    """[(uiMap, kind, x, y, faction, locale, name, what[, True])] from the
+    harvest CSV files (what: the battleground of a battlemaster, else ""; a
+    ninth True: an NPC who walks a route, its ID in roaming), and the guard
     answers whose words are not known."""
     npcs = _read(folder, "npcs")
     faction_of = {row["npc"]: _faction(row["faction"]) for row in npcs}
@@ -147,8 +148,9 @@ def points(folder):
         for service in row["services"].split():
             kind = NPC_SERVICES.get(service)
             if kind and (ui_map, kind) not in from_guards:
-                found.append((ui_map, kind, float(row["x"]), float(row["y"]), _faction(row["faction"]),
-                              row.get("locale") or DEFAULT_LOCALE, row["name"], ""))
+                point = (ui_map, kind, float(row["x"]), float(row["y"]), _faction(row["faction"]),
+                         row.get("locale") or DEFAULT_LOCALE, row["name"], "")
+                found.append(point + (True,) if int(row["npc"]) in roaming else point)
     for row in _read(folder, "objects"):
         if row["service"] in OBJECTS:
             found.append((int(row["uiMap"]), row["service"], float(row["x"]), float(row["y"]), "", "", "", ""))
@@ -199,7 +201,8 @@ def write(path, version, date, found):
     """Writes Services.lua; names are numbered in their order of appearance."""
     names, index = {}, {}
     rows = {}
-    for ui_map, kind, x, y, faction, locale, name, what in found:
+    for point in found:
+        ui_map, kind, x, y, faction, locale, name, what = point[:8]
         number = 0
         if name:
             key = (locale, name)
@@ -208,8 +211,10 @@ def write(path, version, date, found):
                 index[key] = len(names[locale])
             number = index[key]
         row = [kind, to_int(x), to_int(y), faction, locale if number else "", number]
-        if what:
+        if what or point[8:9] == (True,):
             row.append(what)
+        if point[8:9] == (True,):
+            row.append(True)  # walks a route: the point is one spot of it
         rows.setdefault(ui_map, []).append(row)
     lines_out = [lua.header("city services", version, date, [
         "harvest/directions.csv (the places city guards mark on the map), harvest/npcs.csv (service NPCs talked "
@@ -222,12 +227,14 @@ def write(path, version, date, found):
     lines_out.append("pack.categories.services = function()")
     lines_out.append("\treturn {")
     lines_out.append("\t\tbuild = %s," % lua.string(version))
-    lines_out.append("\t\t-- [uiMapID] = { { service, x, y, faction, locale, name[, battleground] }, ... }: service")
+    lines_out.append("\t\t-- [uiMapID] = { { service, x, y, faction, locale, name[, battleground[, roams]] }, ... }:")
+    lines_out.append("\t\t-- service")
     lines_out.append("\t\t-- \"bank\", \"auction\", \"inn\", \"mailbox\", \"stable\", \"repair\", \"barber\", \"transmog\",")
     lines_out.append("\t\t-- \"guild\", \"battle\", \"anvil\" or \"forge\"; x, y 0-10000 on the map; faction")
     lines_out.append("\t\t-- \"Alliance\", \"Horde\" or \"\" (anyone); name = index in names[locale] of the place's")
     lines_out.append("\t\t-- name as the game wrote it in that language (0: none); battleground (battlemasters only)")
-    lines_out.append("\t\t-- \"alterac\", \"arathi\" or \"warsong\"")
+    lines_out.append("\t\t-- \"alterac\", \"arathi\" or \"warsong\" (\"\" for the others); roams: true when the NPC")
+    lines_out.append("\t\t-- walks a route (the point is one spot of it)")
     lines_out.append("\t\tmaps = {")
     for ui_map in sorted(rows):
         lines_out.append("\t\t\t[%d] = {" % ui_map)

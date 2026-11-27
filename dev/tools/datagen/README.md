@@ -57,6 +57,14 @@ reports a path with stops that is not listed (a new build's new line), and a
 kind that does not fit the route's height (zeppelins and skyships fly, boats
 stay at sea level).
 
+`manual/roams.csv` flags NPCs who walk a route by hand (`npc`, `name`,
+`sources`: who saw it walking and when, or public sources; required). The
+harvest finds them too: it keeps every place an NPC was talked to (`seen` in
+`harvest/npcs.csv`, added up across imports), and an NPC seen on one map in two
+places more than `FAR_YARDS` (40) apart walks a route (`roams.py`). Their
+services and trainers carry `true` at the end of their row, and MapScout shows
+their point as approximate.
+
 `manual/verified.csv` lists the entrances checked in the game. Only those get
 a place on the map; every other dungeon or raid the group finder knows is still
 written, with no place (uiMapID 0), and MapScout shows it as "entrance to be

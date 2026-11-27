@@ -26,7 +26,8 @@ FOREVER_SAVED = "/Applications/World of Warcraft/_forever_/WTF/Account/*/SavedVa
 
 FILES = {
     "entrances": ["key", "instance", "name", "kind", "uiMap", "x", "y", "at", "wing"],
-    "npcs": ["npc", "locale", "name", "faction", "title", "services", "skill", "uiMap", "x", "y", "gossip", "at"],
+    "npcs": ["npc", "locale", "name", "faction", "title", "services", "skill", "uiMap", "x", "y", "gossip", "at",
+             "seen"],
     "objects": ["key", "service", "object", "uiMap", "x", "y", "at"],
     "directions": ["key", "locale", "asked", "name", "poi", "texture", "guard", "uiMap", "x", "y", "at"],
     "graveyards": ["key", "how", "npc", "uiMap", "x", "y", "continent", "cx", "cy", "died", "at"],
@@ -51,10 +52,14 @@ def rows_from_saved(text):
         gossip = n.get("gossip") or []
         if isinstance(gossip, dict):
             gossip = [gossip[k] for k in sorted(gossip)]
+        seen = n.get("seen") or []
+        if isinstance(seen, dict):
+            seen = [seen[k] for k in sorted(seen)]
         out["npcs"][str(npc)] = {
             "npc": npc, "locale": n.get("locale") or "esES", "name": n.get("name", ""), "faction": n.get("faction", ""),
             "title": n.get("title", ""), "services": " ".join(services), "skill": n.get("skill", ""), "uiMap": n["map"], "x": n["x"], "y": n["y"],
-            "gossip": " | ".join(gossip), "at": n.get("at", 0)}
+            "gossip": " | ".join(gossip), "at": n.get("at", 0),
+            "seen": spots_text([_spot(s) for s in seen if _spot(s)])}
     for key, o in (data.get("objects") or {}).items():
         out["objects"][key] = {
             "key": key, "service": o.get("service", ""), "object": o.get("objectID") or "",
@@ -69,6 +74,50 @@ def rows_from_saved(text):
             "continent": g.get("continent") or "", "cx": g.get("cx", ""), "cy": g.get("cy", ""),
             "died": g.get("died") or "", "at": g.get("at", 0)}
     return out
+
+
+def _spot(value):
+    """(uiMap, x, y) of a saved place ({ map, x, y }, read as a list or a dict)."""
+    if isinstance(value, dict):
+        value = [value[k] for k in sorted(value)]
+    if not isinstance(value, (list, tuple)) or len(value) < 3:
+        return None
+    return int(value[0]), float(value[1]), float(value[2])
+
+
+def spots(text):
+    """[(uiMap, x, y)] of a "seen" cell ("1455:0.2756:0.7192 1455:0.3:0.6")."""
+    out = []
+    for part in (text or "").split():
+        ui_map, x, y = part.split(":")
+        out.append((int(ui_map), float(x), float(y)))
+    return out
+
+
+def spots_text(found):
+    """A "seen" cell: each place once, in order."""
+    out = []
+    for spot in found:
+        if spot not in out:
+            out.append(spot)
+    return " ".join("%d:%s:%s" % (m, _num(x), _num(y)) for m, x, y in out)
+
+
+def _num(value):
+    return ("%.4f" % value).rstrip("0").rstrip(".")
+
+
+def _npc_seen(old, row):
+    """Where an NPC was seen, from both imports: the old row's places and
+    position, then the new one's (a position alone counts as a place)."""
+    found = []
+    for r in (old, row):
+        if not r:
+            continue
+        found += spots(r.get("seen"))
+        if r.get("uiMap") not in (None, "") and r.get("x") not in (None, ""):
+            found.append((int(r["uiMap"]), float(r["x"]), float(r["y"])))
+    return spots_text(found)
 
 
 def read(folder, name):
@@ -88,6 +137,12 @@ def merge(folder, new):
         added = updated = 0
         for key, row in new[name].items():
             old = rows.get(key)
+            if name == "npcs":
+                seen = _npc_seen(old, row)
+                if old is not None and int(float(old.get("at") or 0)) > int(row["at"] or 0):
+                    old["seen"] = seen  # what is there is newer, but the places add up
+                    continue
+                row = dict(row, seen=seen)
             if old is None:
                 added += 1
             elif int(float(old.get("at") or 0)) > int(row["at"] or 0):

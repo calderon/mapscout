@@ -101,9 +101,10 @@ def npc_trainer(skill):
     return ("profession", profession) if profession else None
 
 
-def points(folder):
-    """[(uiMap, kind, what, x, y, faction, locale, name)] from the harvest CSV
-    files, and the guard answers whose words are not known."""
+def points(folder, roaming=frozenset()):
+    """[(uiMap, kind, what, x, y, faction, locale, name[, True])] from the
+    harvest CSV files (a ninth True: an NPC who walks a route, its ID in
+    roaming), and the guard answers whose words are not known."""
     npcs = services._read(folder, "npcs")
     faction_of = {row["npc"]: services._faction(row["faction"]) for row in npcs}
     found, unknown, from_guards = [], [], set()
@@ -125,9 +126,9 @@ def points(folder):
         trainer = npc_trainer(row.get("skill", ""))
         ui_map = int(row["uiMap"])
         if trainer and (ui_map,) + trainer not in from_guards:
-            found.append((ui_map, trainer[0], trainer[1], float(row["x"]), float(row["y"]),
-                          services._faction(row["faction"]), row.get("locale") or services.DEFAULT_LOCALE,
-                          row["name"]))
+            point = (ui_map, trainer[0], trainer[1], float(row["x"]), float(row["y"]),
+                     services._faction(row["faction"]), row.get("locale") or services.DEFAULT_LOCALE, row["name"])
+            found.append(point + (True,) if int(row["npc"]) in roaming else point)
     return found, sorted(set(unknown))
 
 
@@ -146,7 +147,8 @@ def merge(found):
 def write(path, version, date, found):
     """Writes Trainers.lua; names are numbered in their order of appearance."""
     names, index, rows = {}, {}, {}
-    for ui_map, kind, what, x, y, faction, locale, name in found:
+    for point in found:
+        ui_map, kind, what, x, y, faction, locale, name = point[:8]
         number = 0
         if name:
             key = (locale, name)
@@ -154,8 +156,10 @@ def write(path, version, date, found):
                 names.setdefault(locale, []).append(name)
                 index[key] = len(names[locale])
             number = index[key]
-        rows.setdefault(ui_map, []).append(
-            [kind, what, to_int(x), to_int(y), faction, locale if number else "", number])
+        row = [kind, what, to_int(x), to_int(y), faction, locale if number else "", number]
+        if point[8:9] == (True,):
+            row.append(True)  # walks a route: the point is one spot of it
+        rows.setdefault(ui_map, []).append(row)
     out = [lua.header("trainers", version, date, [
         "harvest/directions.csv (the places city guards mark on the map) and harvest/npcs.csv (trainers talked "
         "to): recorded in the game with the harvest mode",
@@ -165,11 +169,12 @@ def write(path, version, date, found):
     out.append("pack.categories.trainers = function()")
     out.append("\treturn {")
     out.append("\t\tbuild = %s," % lua.string(version))
-    out.append("\t\t-- [uiMapID] = { { kind, what, x, y, faction, locale, name }, ... }: kind \"class\",")
+    out.append("\t\t-- [uiMapID] = { { kind, what, x, y, faction, locale, name[, roams] }, ... }: kind \"class\",")
     out.append("\t\t-- \"profession\", \"riding\" or \"weapon\"; what = class token (\"MAGE\") or profession")
     out.append("\t\t-- (\"alchemy\"), \"\" for the others; x, y 0-10000 on the map; faction \"Alliance\", \"Horde\"")
     out.append("\t\t-- or \"\" (anyone); name = index in names[locale] of the place's name as the game wrote it")
-    out.append("\t\t-- in that language (0: none)")
+    out.append("\t\t-- in that language (0: none); roams: true when the NPC walks a route (the point is one")
+    out.append("\t\t-- spot of it)")
     out.append("\t\tmaps = {")
     for ui_map in sorted(rows):
         out.append("\t\t\t[%d] = {" % ui_map)
