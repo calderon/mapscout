@@ -116,6 +116,8 @@ def main(argv=None):
     stops, heights = transport.path_stops(tables.rows("TaxiPathNode"))
     for problem in transport.check(listed, stops, heights):
         print("transport: " + problem)
+    for line in transport.pending(listed):
+        print("transport: line %d: faction pending (shown to anyone until checked)" % line)
     found_docks = transport.docks(maps, listed, stops, tables.rows("AreaTrigger"), pois)
     dock_names = transport.names({locale: tables.rows("AreaPOI", locale) for locale in LOCALES},
                                  [d[5] for d in found_docks])

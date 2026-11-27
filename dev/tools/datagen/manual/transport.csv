@@ -1,16 +1,16 @@
-line,kind,path,triggers,note
-241,boat,241,,Booty Bay - Ratchet
-285,zeppelin,285,,Grom'gol - Orgrimmar
-292,boat,292,,Menethil Harbor - Theramore Isle
-293,boat,293,,Rut'theran Village - Auberdine
-295,boat,295,,Menethil Harbor - Auberdine (the original route)
-301,zeppelin,301,,Grom'gol - Undercity
-302,zeppelin,302,,Orgrimmar - Undercity
-303,boat,303,,Feathermoon Stronghold - Feralas coast
-369,tram,,2173 2175,"Deeprun Tram: Stormwind (trigger 2173, 4 yards from the Map 369 corpse point) and Ironforge, Tinker Town (2175)"
-436,none,436,,Naxxramas: the necropolis itself, not a transport for players
-11167,boat,11167,,Menethil Harbor - Southshore - Auberdine (Forever)
-11391,boat,11391,,Tanaris - Riverglades (Forever)
-11398,skyship,11398,,Dalaran Skycuter: Dalaran - Zephras Isle (Forever)
-11457,skyship,11457,,Mulgore Skycuter: Mulgore - Zephras Isle (Forever)
-11616,boat,11616,,Auberdine - Stormwind Harbor (Forever)
+line,kind,faction,path,triggers,note
+241,boat,Anyone,241,,Booty Bay - Ratchet
+285,zeppelin,Horde,285,,Grom'gol - Orgrimmar
+292,boat,Alliance,292,,Menethil Harbor - Theramore Isle
+293,boat,Alliance,293,,Rut'theran Village - Auberdine
+295,boat,Alliance,295,,Menethil Harbor - Auberdine (the original route)
+301,zeppelin,Horde,301,,Grom'gol - Undercity
+302,zeppelin,Horde,302,,Orgrimmar - Undercity
+303,boat,Alliance,303,,Feathermoon Stronghold - Feralas coast
+369,tram,Alliance,,2173 2175,"Deeprun Tram: Stormwind (trigger 2173, 4 yards from the Map 369 corpse point) and Ironforge, Tinker Town (2175)"
+436,none,,436,,Naxxramas: the necropolis itself, not a transport for players
+11167,boat,Alliance,11167,,Menethil Harbor - Southshore - Auberdine (Forever)
+11391,boat,Anyone,11391,,Tanaris - Riverglades (Forever)
+11398,skyship,pending,11398,,Dalaran Skycuter: Dalaran - Zephras Isle (Forever): faction not checked yet
+11457,skyship,pending,11457,,Mulgore Skycuter: Mulgore - Zephras Isle (Forever): faction not checked yet
+11616,boat,Alliance,11616,,Auberdine - Stormwind Harbor (Forever)

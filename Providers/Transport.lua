@@ -2,7 +2,9 @@
 -- MapScoutAPI). One result per dock, named after where it is (the town next to
 -- it, or its map), with where it goes in the subtitle: "Boat to Ratchet". The
 -- destinations are search words too, so "Booty Bay" and "Ratchet" both find
--- the Booty Bay dock.
+-- the Booty Bay dock. Docks of the other faction (the zeppelins for the
+-- Alliance, the tram for the Horde) are left out, and so are they as
+-- destinations.
 --   @transport (all)  @boat  @zeppelin (skyships too)  @tram
 -- From the static data pack (Core/Packs.lua, category "transport"): the game
 -- does not tell where its transports stop. The pack is only loaded when this
@@ -48,9 +50,11 @@ function Transport.Entries(data)
 		return entries
 	end
 	local names, english = data.names[GetLocale()] or data.names.enUS or {}, data.names.enUS or {}
+	local faction = UnitFactionGroup("player")
 	local docks = {}
 	for id, row in pairs(data.docks) do
-		if CATEGORY[row[1]] then
+		local side = row[6]
+		if CATEGORY[row[1]] and (side == "" or not faction or side == faction) then
 			local name, englishName, mapID, x, y = place(row, names, english)
 			if name then
 				docks[id] = { row = row, name = name, english = englishName, mapID = mapID, x = x, y = y }
@@ -64,7 +68,7 @@ function Transport.Entries(data)
 			keywords[#keywords + 1] = dock.english:lower()
 		end
 		local to = {}
-		for i = 6, #dock.row do
+		for i = 7, #dock.row do
 			local other = docks[dock.row[i]]
 			if other then
 				to[#to + 1] = other.name
