@@ -48,7 +48,7 @@ describe("Debug/Harvest.lua", function()
 		})
 		ns = LoadAddonFile("Core/Init.lua")
 		frame = FakeFrames[1]
-		for _, file in ipairs({ "Core/Util.lua", "Core/DB.lua", "Debug/Harvest.lua" }) do
+		for _, file in ipairs({ "Core/Util.lua", "Core/DB.lua", "Core/Recorder.lua", "Debug/Harvest.lua" }) do
 			LoadAddonFile(file, ns)
 		end
 		frame:Fire("ADDON_LOADED", "MapScout")
@@ -56,9 +56,9 @@ describe("Debug/Harvest.lua", function()
 	end)
 
 	it("reads the kind and ID of a GUID", function()
-		assert.are.same({ "Creature", 4092, "000" }, { ns.Harvest.ParseGUID("Creature-0-1-2-3-4092-000") })
-		assert.are.same({ "GameObject", 32349, "000" }, { ns.Harvest.ParseGUID("GameObject-0-1-2-3-32349-000") })
-		assert.is_nil(ns.Harvest.ParseGUID(nil))
+		assert.are.same({ "Creature", 4092, "000" }, { ns.Recorder.ParseGUID("Creature-0-1-2-3-4092-000") })
+		assert.are.same({ "GameObject", 32349, "000" }, { ns.Recorder.ParseGUID("GameObject-0-1-2-3-32349-000") })
+		assert.is_nil(ns.Recorder.ParseGUID(nil))
 	end)
 
 	it("records nothing while off, and service NPCs once on", function()
@@ -88,9 +88,9 @@ describe("Debug/Harvest.lua", function()
 			record.seen)
 		assert.are.same({ 0.4, 0.7 }, { record.x, record.y }) -- the last one
 		for i = 1, 20 do
-			ns.Harvest.AddSighting(record, 1455, i / 100, 0.1)
+			ns.Recorder.AddSighting(record, 1455, i / 100, 0.1)
 		end
-		assert.are.equal(ns.Harvest.SIGHTINGS, #record.seen)
+		assert.are.equal(ns.Recorder.SIGHTINGS, #record.seen)
 	end)
 
 	it("adds services to the same NPC, repair included, and keeps its gossip options", function()
@@ -261,8 +261,8 @@ describe("Debug/Harvest.lua", function()
 
 	it("does not register events the client does not have", function()
 		StubGlobals({ C_EventUtils = { IsEventValid = function(event) return event ~= "TRANSMOGRIFY_OPEN" end } })
-		assert.is_false(ns.Harvest.HasEvent("TRANSMOGRIFY_OPEN"))
-		assert.is_true(ns.Harvest.HasEvent("BANKFRAME_OPENED"))
+		assert.is_false(ns.Recorder.HasEvent("TRANSMOGRIFY_OPEN"))
+		assert.is_true(ns.Recorder.HasEvent("BANKFRAME_OPENED"))
 		SlashCmdList.MAPSCOUT("harvest on")
 		frame:Fire("TRANSMOGRIFY_OPEN")
 		assert.is_nil(next(ns.db.harvest.npcs))
