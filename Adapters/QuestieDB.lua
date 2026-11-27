@@ -380,6 +380,7 @@ local function entryFor(questID, who)
 		keywords = keywords,
 		details = details,
 		icon = QuestieAdapter.ICON,
+		category = handIn and "books" or nil, -- the rest have no category: always shown
 		mapID = mapID,
 		x = x,
 		y = y,
@@ -494,6 +495,10 @@ provider = MapScoutAPI:RegisterProvider("questiedb", {
 	groupName = L.GROUP_QUESTS,
 	filter = "available",
 	filterAliases = aliases,
+	-- Book quests (started at a book, handed in to an NPC): found on their own with @book
+	categories = {
+		{ id = "books", name = L.AVAILABLE_BOOKS, filter = "book", filterAliases = ns.Words("BOOKS") },
+	},
 	OnEnable = function()
 		followMap()
 		QuestieAdapter.Build()

@@ -252,6 +252,29 @@ describe("Adapters/QuestieDB.lua", function()
 		assert.are.same({ "La da: Brann" }, other.details)
 	end)
 
+	it("finds book quests on their own with @libro and @book, and can turn them off", function()
+		load(fakeDB(4))
+		build()
+		local function found(text)
+			local list = {}
+			for _, result in ipairs(ns.Engine.Search(ns.Query.Parse(text))) do
+				list[#list + 1] = result.item.entry.name
+			end
+			table.sort(list)
+			return list
+		end
+		-- only the book: not the one at a sign, nor the one started only at an object
+		assert.are.same({ "Libro" }, found("@libro"))
+		assert.are.same({ "Libro" }, found("@libros"))
+		assert.are.same({ "Libro" }, found("@book"))
+		assert.is_true(ns.Registry.IsCategoryEnabled("questiedb", "books")) -- on by default
+		assert.are.equal(6, #found("@disponible"))
+		-- turned off in the options: the other available quests stay
+		ns.Registry.SetCategoryEnabled("questiedb", "books", false)
+		assert.are.same({ "Algo alta", "Con cartel", "De un objeto", "Lista", "Previa hecha" }, found("@disponible"))
+		assert.are.same({}, found("@libro"))
+	end)
+
 	it("prefers the game's title in the player's language", function()
 		load(fakeDB(4))
 		_G.C_QuestLog.GetTitleForQuestID = function(id) return id == 1 and "Lista (del juego)" or nil end

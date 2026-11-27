@@ -144,6 +144,7 @@ local EN = {
 	AVAILABLE_GIVER = "Given by %s",
 	AVAILABLE_STARTS_AT = "Starts at %s",
 	AVAILABLE_HAND_IN = "Hand in to %s",
+	AVAILABLE_BOOKS = "Books",
 	AVAILABLE_REQUIRES = "Requires level %d",
 	AVAILABLE_SHOW_HIGHLEVEL = "Show high-level quests",
 	AVAILABLE_SHOW_HIGHLEVEL_TIP = "Also quests more than 10 levels above you, and the ones you can't take yet.",
@@ -286,6 +287,7 @@ local WORDS = {
 	QUEST = { "quest" },
 	QUEST_LOG = { "log" },
 	AVAILABLE = { "availables" },
+	BOOKS = { "books" },
 	-- services: the first word is the main @ word (singular)
 	SERVICES = { "services" },
 	BANK = { "bank", "banks", "banker" },
