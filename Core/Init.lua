@@ -6,7 +6,7 @@ local ADDON_NAME, ns = ...
 local L = ns.L
 
 -- Kept up to date by release-please (the game doesn't re-read the .toc on /reload)
-ns.VERSION = "0.0.0" -- x-release-please-version
+ns.VERSION = "0.1.0" -- x-release-please-version
 ns.NAME = ADDON_NAME
 
 -- Chat output -------------------------------------------------------------

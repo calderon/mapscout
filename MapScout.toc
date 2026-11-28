@@ -5,7 +5,7 @@
 ## Notes-esMX: Buscador ligero y rápido en el mapa del mundo: lugares, viajes, servicios, misiones y coordenadas.
 ## Author: Daniel Calderón
 # x-release-please-start-version
-## Version: 0.0.0
+## Version: 0.1.0
 # x-release-please-end
 ## Category: Map
 ## OptionalDeps: Bridge, TomTom, QuestieDB
