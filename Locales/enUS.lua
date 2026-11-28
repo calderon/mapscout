@@ -265,6 +265,7 @@ local EN = {
 	CONTRIBUTE_WINDOW_NEW_ONE = "New since you last sent: 1 location.",
 	CONTRIBUTE_WINDOW_NEW = "New since you last sent: %d locations.",
 	CONTRIBUTE_WINDOW_STEPS = "1. Copy the text below: click it and press %s+C.\n2. Open the page below in your browser and paste it there.\n3. When you have sent it, press «I sent it».",
+	CONTRIBUTE_WINDOW_PART = "It is too much for one form, so it goes in parts. When you send this one, the next will appear. In this part:",
 	CONTRIBUTE_WINDOW_ADDRESS = "Page to send it (copy it into your browser):",
 	CONTRIBUTE_WINDOW_SENT = "I sent it",
 	CONTRIBUTE_FORM_URL = "https://forms.gle/LZ7aBC4aH2Yb7Kgj8",
