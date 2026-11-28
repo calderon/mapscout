@@ -97,36 +97,68 @@ function Export.Header(id)
 end
 
 -- What has not been sent yet: the text (nil when nothing is new), how many
--- records it has, how many of each kind ({ npcs = 3, ... }) and the records
--- themselves (to mark them as sent: Export.MarkSent)
-function Export.Collect()
+-- records it has, how many of each kind ({ npcs = 3, ... }), the records
+-- themselves (to mark them as sent: Export.MarkSent) and how many are left
+-- for a later part. With a limit, the text holds the first records whose
+-- copy (Export.Wrap) fits in that many letters (at least one): the form that
+-- receives it takes a limited answer.
+function Export.Collect(limit)
 	local data = ns.db and ns.db.contribution
 	local counts, picked = {}, {}
 	if not (data and data.id) then
-		return nil, 0, counts, picked
+		return nil, 0, counts, picked, 0
 	end
-	local lines, n = { Export.Header(data.id) }, 0
+	local rows = {}
 	for _, spec in ipairs(ROWS) do
 		local kind, tag, row = spec[1], spec[2], spec[3]
-		local rows = {}
+		local list = {}
 		for key, entry in pairs(data[kind] or {}) do
 			if not entry.sent then
 				local fields, count = row(entry)
-				rows[#rows + 1] = tag .. "\t" .. line(fields, count)
-				picked[#picked + 1] = { kind, key, entry }
+				list[#list + 1] = { tag .. "\t" .. line(fields, count), kind, key, entry }
 			end
 		end
-		table.sort(rows)
-		for _, text in ipairs(rows) do
-			lines[#lines + 1] = text
+		table.sort(list, function(a, b)
+			return a[1] < b[1]
+		end)
+		for _, item in ipairs(list) do
+			rows[#rows + 1] = item
 		end
-		counts[kind] = #rows
-		n = n + #rows
 	end
-	if n == 0 then
-		return nil, 0, counts, picked
+	if #rows == 0 then
+		return nil, 0, counts, picked, 0
 	end
-	return table.concat(lines, "\n"), n, counts, picked
+	local header = Export.Header(data.id)
+	local function textOf(n)
+		local lines = { header }
+		for i = 1, n do
+			lines[i + 1] = rows[i][1]
+		end
+		return table.concat(lines, "\n")
+	end
+	local n = #rows
+	if limit and #Export.Wrap(textOf(n)) > limit then
+		-- the most records that fit: fits(low) and not fits(high)
+		local low, high = 1, n
+		while high - low > 1 do
+			local mid = math.floor((low + high) / 2)
+			if #Export.Wrap(textOf(mid)) <= limit then
+				low = mid
+			else
+				high = mid
+			end
+		end
+		n = low
+	end
+	for _, spec in ipairs(ROWS) do
+		counts[spec[1]] = 0
+	end
+	for i = 1, n do
+		local kind = rows[i][2]
+		counts[kind] = counts[kind] + 1
+		picked[i] = { kind, rows[i][3], rows[i][4] }
+	end
+	return textOf(n), n, counts, picked, #rows - n
 end
 
 -- The text of what has not been sent yet, and how many records it has
@@ -152,6 +184,7 @@ function Export.MarkSent(picked)
 end
 
 Export.MARKS = 1 -- version of the marks around the copied text
+Export.LIMIT = 30000 -- most letters per copied text (the form takes about 32000)
 Export.WIDTH = 76 -- letters per line of the compressed text
 
 -- The text compressed and in Base64, or nil when the client can't

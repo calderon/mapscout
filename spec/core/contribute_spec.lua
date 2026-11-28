@@ -588,5 +588,54 @@ describe("Core/Contribute.lua", function()
 			assert.are.equal(4, n)
 			assert.is_nil(text:find("npc\t", 1, true))
 		end)
+
+		it("goes in parts when the copy would not fit in the limit", function()
+			pack = { version = "0.2.0", categories = {} }
+			session(nil)
+			ns.Contribute.SetOn(true)
+			for i = 1, 5 do
+				ns.Contribute.Keep("entrance", { instance = 90 + i, name = "Dungeon " .. i, kind = "party", map = 1426,
+					x = 0.1 * i, y = 0.3 })
+			end
+			local Export = ns.Contribute.Export
+			local all = Export.Collect()
+			local limit = #Export.Wrap(all) - 1
+			local text, n, counts, picked, left = Export.Collect(limit)
+			assert.are.equal(4, n)
+			assert.are.equal(1, left)
+			assert.are.equal(4, counts.entrances)
+			assert.is_true(#Export.Wrap(text) <= limit)
+			assert.are.equal(all:sub(1, #text), text)
+			assert.are.equal(4, Export.MarkSent(picked))
+			text, n, counts, picked, left = Export.Collect(limit)
+			assert.are.equal(1, counts.entrances)
+			assert.are.equal(1, #picked)
+			assert.are.same({ 1, 0 }, { n, left })
+			assert.matches("Dungeon 5", text, 1, true)
+			-- at least one record, even when none fits
+			assert.are.equal(1, select(2, Export.Collect(1)))
+		end)
+
+		it("shows the next part after «I sent it»", function()
+			pack = { version = "0.2.0", categories = {} }
+			session(nil)
+			ns.Contribute.SetOn(true)
+			for i = 1, 3 do
+				ns.Contribute.Keep("entrance", { instance = 90 + i, name = "Dungeon " .. i, kind = "party", map = 1426,
+					x = 0.1 * i, y = 0.3 })
+			end
+			local Export = ns.Contribute.Export
+			local saved = Export.LIMIT
+			Export.LIMIT = #Export.Wrap((Export.Collect())) - 1
+			local shown = {}
+			ns.CopyWindow = { Open = function(spec) shown[#shown + 1] = spec end }
+			ns.Contribute.Share()
+			assert.matches("in parts", shown[1].intro, 1, true)
+			assert.matches("New since you last sent: 3 locations", shown[1].intro, 1, true)
+			shown[1].confirm.onClick()
+			assert.are.equal(2, #shown)
+			assert.is_nil(shown[2].intro:find("in parts", 1, true))
+			Export.LIMIT = saved
+		end)
 	end)
 end)

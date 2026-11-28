@@ -25,7 +25,9 @@ It never saves your character's, account's, realm's or guild's name, your chat, 
 
 Nothing leaves your computer unless you send it yourself. To stop: `/ms contribute off` (what was saved is kept). To forget everything saved: `/ms contribute clear`. To see how much is saved: `/ms contribute status`.
 
-To send what you saved: `/ms contribute`, the *Share what you saved* button in the options, or the link in the chat when you log in. A window shows what is new and a text: copy it and paste it in the page the window shows, in your browser. Then press *I sent it*, so the same locations are not sent again.
+To send what you saved: `/ms contribute`, the *Share what you saved* button in the options, or the link in the chat when you log in. A window shows what is new and a text: copy it and paste it in the form the window shows ([in English](https://forms.gle/LZ7aBC4aH2Yb7Kgj8) or [in Spanish](https://forms.gle/SG6tvwH6ovp8QLpD8)), in your browser. Then press *I sent it*, so the same locations are not sent again.
+
+The form is a Google Form: you don't need an account or to sign in, and it asks only for that text. What you send goes to a spreadsheet that only MapScout's author can see; nothing reaches MapScout's data until several players agree on it and it has been reviewed.
 
 While it is on, the chat says when you log in how many new locations you have, with a link to share them, and says each time a new location is saved. To hide those and keep contributing: `/ms contribute messages off`, or the checkbox under it in the options.
 
@@ -64,7 +66,9 @@ Nunca guarda el nombre de tu personaje, tu cuenta, tu reino ni tu hermandad, tu 
 
 Nada sale de tu ordenador si no lo envías tú. Para parar: `/ms contribute off` (lo guardado se conserva). Para olvidar todo lo guardado: `/ms contribute clear`. Para ver cuánto hay guardado: `/ms contribute status`.
 
-Para enviar lo guardado: `/ms contribute`, el botón *Compartir lo guardado* de las opciones o el enlace del chat al entrar en el juego. Una ventana te enseña lo nuevo y un texto: cópialo y pégalo en la página que indica la ventana, en tu navegador. Después pulsa *Ya lo he enviado*, para no enviar dos veces las mismas ubicaciones.
+Para enviar lo guardado: `/ms contribute`, el botón *Compartir lo guardado* de las opciones o el enlace del chat al entrar en el juego. Una ventana te enseña lo nuevo y un texto: cópialo y pégalo en el formulario que indica la ventana ([en español](https://forms.gle/SG6tvwH6ovp8QLpD8) o [en inglés](https://forms.gle/LZ7aBC4aH2Yb7Kgj8)), en tu navegador. Después pulsa *Ya lo he enviado*, para no enviar dos veces las mismas ubicaciones.
+
+El formulario es de Google Forms: no necesitas cuenta ni iniciar sesión, y solo te pide ese texto. Lo que envías va a una hoja de cálculo que solo ve el autor de MapScout; nada llega a los datos de MapScout hasta que varios jugadores coinciden y se ha revisado.
 
 Mientras está encendido, el chat te dice al entrar en el juego cuántas ubicaciones nuevas tienes, con un enlace para compartirlas y avisa cada vez que se guarda una ubicación nueva. Para no ver esos avisos y seguir contribuyendo: `/ms contribute messages off`, o la casilla de debajo en las opciones.
 

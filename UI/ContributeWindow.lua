@@ -2,7 +2,8 @@
 -- UI/CopyWindow.lua, with the export text, Core/ContributeExport.lua).
 -- It shows how many new records of each kind there are, the text to copy and
 -- the address of the page where to paste it. «I sent it» marks those records
--- as sent; closing the window does not.
+-- as sent; closing the window does not. When the text would not fit in the
+-- form (Export.LIMIT), it goes in parts: «I sent it» opens the next one.
 -- Opened with /ms contribute, the options' button and a link in the chat
 -- (Contribute.ShareLink, in the login line): a chat link of type "addon"
 -- that the game hands to EventRegistry's "SetItemRef" (or SetItemRef's hook,
@@ -33,12 +34,16 @@ end
 
 -- What the copy window is given (nil when nothing is new)
 function Contribute.ShareSpec()
-	local text, n, counts, picked = Export.Collect()
+	local text, n, counts, picked, left = Export.Collect(Export.LIMIT)
 	if not text then
 		return nil
 	end
-	local intro = (n == 1 and L.CONTRIBUTE_WINDOW_NEW_ONE or L.CONTRIBUTE_WINDOW_NEW:format(n)) .. "\n"
-		.. countLines(counts) .. "\n\n" .. L.CONTRIBUTE_WINDOW_STEPS:format(ns.KeyName("CTRL"))
+	local total = n + left
+	local intro = (total == 1 and L.CONTRIBUTE_WINDOW_NEW_ONE or L.CONTRIBUTE_WINDOW_NEW:format(total)) .. "\n"
+	if left > 0 then
+		intro = intro .. L.CONTRIBUTE_WINDOW_PART .. "\n"
+	end
+	intro = intro .. countLines(counts) .. "\n\n" .. L.CONTRIBUTE_WINDOW_STEPS:format(ns.KeyName("CTRL"))
 	return {
 		title = L.CONTRIBUTE_WINDOW_TITLE,
 		intro = intro,
@@ -50,6 +55,9 @@ function Contribute.ShareSpec()
 			onClick = function()
 				local marked = Export.MarkSent(picked)
 				ns.Print(marked == 1 and L.CONTRIBUTE_SENT_ONE or L.CONTRIBUTE_SENT)
+				if left > 0 then
+					Contribute.Share() -- the next part
+				end
 			end,
 		},
 	}
