@@ -4,13 +4,15 @@
 -- Off by default. Once turned on, it starts by itself every session until it
 -- is turned off; turned off, it stops listening at once (the recorder stops
 -- when nobody else uses it).
+--   /ms contribute          open the window to send what is new
+--                           (UI/ContributeWindow.lua)
 --   /ms contribute on|off   turn it on or off (account-wide)
 --   /ms contribute status   whether it is on and how much is kept
 --   /ms contribute clear    forget everything kept and the anonymous ID
 --   /ms contribute messages on|off   whether the chat says when it saves
 -- At login, one line says MapScout is loaded and, while contributing is on,
--- how many locations are new (not sent yet) and ready to share, or thanks the
--- player when none is; while it is off, it says how to turn it on. While it is on, the chat also says
+-- how many locations are new (not sent yet), with a chat link that opens the
+-- window to send them, or thanks the player when none is; while it is off, it says how to turn it on. While it is on, the chat also says
 -- each time a new location is saved (one kept already says nothing): those
 -- can be silenced without turning it off (quiet = true); the login line can't.
 -- What it keeps, in MapScoutDB.contribution (account SavedVariables):
@@ -389,7 +391,7 @@ function Contribute.PlacesText(n)
 	return L.CONTRIBUTE_PLACES:format(n)
 end
 
--- "You have 2 new locations ready to share with /ms contribute."; thanks when none is new
+-- "You have 2 new locations."; thanks when none is new
 function Contribute.NewText(n)
 	if n == 0 then
 		return L.CONTRIBUTE_NEW_NONE
@@ -415,7 +417,9 @@ ns.RegisterCommand("contribute", function(args)
 	elseif args == "messages on" or args == "messages off" then
 		Contribute.SetTells(args == "messages on")
 		ns.Print(args == "messages on" and L.CONTRIBUTE_MESSAGES_ON or L.CONTRIBUTE_MESSAGES_OFF)
-	elseif args == "status" or args == "" then
+	elseif args == "" then
+		Contribute.Share()
+	elseif args == "status" then
 		status()
 	else
 		ns.Print(L.CONTRIBUTE_USAGE)
@@ -426,7 +430,12 @@ ns.RegisterEvent("PLAYER_LOGIN", "Contribute", function()
 	ns.UnregisterEvent("PLAYER_LOGIN", "Contribute")
 	if Contribute.IsOn() then
 		Contribute.SetOn(true)
-		ns.Print(L.CONTRIBUTE_LOGIN_ON:format(ns.VERSION, Contribute.NewText(Contribute.CountNew())))
+		local n = Contribute.CountNew()
+		local text = Contribute.NewText(n)
+		if n > 0 and Contribute.ShareLink then
+			text = text .. " " .. Contribute.ShareLink(n)
+		end
+		ns.Print(L.CONTRIBUTE_LOGIN_ON:format(ns.VERSION, text))
 		pruneIfNewPack()
 	else
 		ns.Print(L.CONTRIBUTE_LOGIN_OFF:format(ns.VERSION))

@@ -45,6 +45,8 @@ UI/SearchBar.lua
 UI/Preview.lua
 UI/Results.lua
 UI/Waypoint.lua
+UI/CopyWindow.lua
+UI/ContributeWindow.lua
 Options/Panel.lua
 Options/Contribute.lua
 Options/Categories.lua
