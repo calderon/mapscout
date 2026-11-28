@@ -25,7 +25,9 @@ It never saves your character's, account's, realm's or guild's name, your chat, 
 
 Nothing leaves your computer unless you send it yourself. To stop: `/ms contribute off` (what was saved is kept). To forget everything saved: `/ms contribute clear`. To see how much is saved: `/ms contribute status`.
 
-While it is on, the chat says when you log in how many new locations you have ready to share, and says each time a new location is saved. To hide those and keep contributing: `/ms contribute messages off`, or the checkbox under it in the options.
+To send what you saved: `/ms contribute`, the *Share what you saved* button in the options, or the link in the chat when you log in. A window shows what is new and a text: copy it and paste it in the page the window shows, in your browser. Then press *I sent it*, so the same locations are not sent again.
+
+While it is on, the chat says when you log in how many new locations you have, with a link to share them, and says each time a new location is saved. To hide those and keep contributing: `/ms contribute messages off`, or the checkbox under it in the options.
 
 ### For developers
 
@@ -62,7 +64,9 @@ Nunca guarda el nombre de tu personaje, tu cuenta, tu reino ni tu hermandad, tu 
 
 Nada sale de tu ordenador si no lo envías tú. Para parar: `/ms contribute off` (lo guardado se conserva). Para olvidar todo lo guardado: `/ms contribute clear`. Para ver cuánto hay guardado: `/ms contribute status`.
 
-Mientras está encendido, el chat te dice al entrar en el juego cuántas ubicaciones nuevas tienes listas para compartir y avisa cada vez que se guarda una ubicación nueva. Para no ver esos avisos y seguir contribuyendo: `/ms contribute messages off`, o la casilla de debajo en las opciones.
+Para enviar lo guardado: `/ms contribute`, el botón *Compartir lo guardado* de las opciones o el enlace del chat al entrar en el juego. Una ventana te enseña lo nuevo y un texto: cópialo y pégalo en la página que indica la ventana, en tu navegador. Después pulsa *Ya lo he enviado*, para no enviar dos veces las mismas ubicaciones.
+
+Mientras está encendido, el chat te dice al entrar en el juego cuántas ubicaciones nuevas tienes, con un enlace para compartirlas y avisa cada vez que se guarda una ubicación nueva. Para no ver esos avisos y seguir contribuyendo: `/ms contribute messages off`, o la casilla de debajo en las opciones.
 
 ### Para desarrolladores
 

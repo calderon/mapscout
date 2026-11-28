@@ -47,7 +47,7 @@ read_globals = {
 	"date", "time", "debugprofilestop", "GetBuildInfo", "geterrorhandler", "hooksecurefunc", "securecallfunction",
 	-- Namespaces
 	"C_AddOns", "C_AreaPoiInfo", "C_Calendar", "C_DateAndTime", "C_EventUtils", "C_XMLUtil", "C_Texture", "C_EncounterJournal", "C_Map", "C_QuestLog", "C_SuperTrack",
-	"C_TaskQuest", "C_TaxiMap", "C_Timer", "C_TooltipInfo", "C_VignetteInfo", "Enum",
+	"C_TaskQuest", "C_TaxiMap", "C_Timer", "C_TooltipInfo", "C_VignetteInfo", "Enum", "C_EncodingUtil",
 	-- Functions
 	"CreateFrame", "CreateFramePool", "GetTaxiMapID", "bit", "UnitLevel", "UnitRace", "UnitClass", "GetNumTrainerServices", "GetTrainerServiceSkillLine", "UnitQuestTrivialLevelRange", "NumTaxiNodes", "TaxiNodeName", "TaxiNodeGetType", "CreateVector2D", "UnitPosition", "GetLocale", "GetTime", "InCombatLockdown", "IsMacClient",
 	"IsInInstance", "GetInstanceInfo", "C_GossipInfo", "CanMerchantRepair",
@@ -55,5 +55,5 @@ read_globals = {
 	"UnitGUID", "UnitName", "UpdateAddOnMemoryUsage", "GetAddOnMemoryUsage", "UnitIsGhost", "C_DeathInfo",
 	-- Frames and UI
 	"UIParent", "WorldFrame", "WorldMapFrame", "GameTooltip", "MenuUtil", "Settings", "UiMapPoint",
-	"ChatFrame_OpenChat", "DEFAULT_CHAT_FRAME", "EventRegistry", "TomTom",
+	"ChatFrame_OpenChat", "DEFAULT_CHAT_FRAME", "EventRegistry", "TomTom", "UISpecialFrames",
 }

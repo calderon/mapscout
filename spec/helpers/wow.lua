@@ -305,9 +305,13 @@ newFrame = function(frameType, name, parent, template)
 	return frame
 end
 
--- hooksecurefunc(table, "Method", fn): fn runs after the method, like the game
+-- hooksecurefunc(table, "Method", fn): fn runs after the method, like the game;
+-- hooksecurefunc("Function", fn) for a global function
 local function fakeHooksecurefunc(target, method, fn)
-	local original = target[method]
+	if type(target) == "string" then
+		target, method, fn = _G, target, method
+	end
+	local original = target[method] or function() end
 	target[method] = function(...)
 		local results = { original(...) }
 		fn(...)

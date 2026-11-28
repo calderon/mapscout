@@ -69,7 +69,7 @@ describe("Core/Contribute.lua", function()
 		ns = LoadAddonFile("Core/Init.lua")
 		frame = FakeFrames[1]
 		for _, file in ipairs({ "Core/Caps.lua", "Core/Util.lua", "Core/DB.lua", "Core/Packs.lua", "Core/Recorder.lua",
-			"Core/PackCheck.lua", "Core/Contribute.lua", "Core/ContributeExport.lua" }) do
+			"Core/PackCheck.lua", "Core/Contribute.lua", "Core/ContributeExport.lua", "UI/ContributeWindow.lua" }) do
 			LoadAddonFile(file, ns)
 		end
 		frame:Fire("ADDON_LOADED", "MapScout")
@@ -144,7 +144,7 @@ describe("Core/Contribute.lua", function()
 		assert.matches("no location is saved yet", ChatLog[#ChatLog], 1, true)
 		ns.Contribute.SetOn(true)
 		frame:Fire("BANKFRAME_OPENED")
-		SlashCmdList.MAPSCOUT("contribute")
+		SlashCmdList.MAPSCOUT("contribute status")
 		assert.matches("thank you for helping improve MapScout. Right now one location is saved.", ChatLog[#ChatLog], 1, true)
 		npc.guid = "Creature-0-1-2-3-5000-000"
 		frame:Fire("BANKFRAME_OPENED")
@@ -182,7 +182,7 @@ describe("Core/Contribute.lua", function()
 			_G.MapScoutDB.contribution.npcs[4092].sent = true
 			session(_G.MapScoutDB)
 			assert.are.same({ "|cff33ff99MapScout|r: v0.0.0 loaded. "
-				.. "You have 1 new location ready to share with /ms contribute." }, ChatLog)
+				.. "You have 1 new location. |cff71d5ff|Haddon:MapScout:contribute|hShare it now!|h|r" }, ChatLog)
 		end)
 
 		it("at login says when nothing is new yet, and while off how to turn it on", function()
@@ -431,6 +431,125 @@ describe("Core/Contribute.lua", function()
 			withPack("0.3.0") -- same version: not checked again
 			RunTimers()
 			assert.are.equal(1, ns.Contribute.Count())
+		end)
+	end)
+
+	describe("sending", function()
+		local opened
+
+		local function said(text)
+			for _, line in ipairs(ChatLog) do
+				if line:find(text, 1, true) then
+					return true
+				end
+			end
+			return false
+		end
+
+		local function keepTwo()
+			pack = { version = "0.2.0", categories = {} }
+			session(nil)
+			ns.Contribute.SetOn(true)
+			frame:Fire("BANKFRAME_OPENED")
+			ns.Contribute.Keep("entrance", { instance = 90, name = "Gnomeregan", kind = "party", map = 1426, x = 0.3, y = 0.3 })
+			opened = nil
+			ns.CopyWindow = { Open = function(spec) opened = spec end }
+		end
+
+		it("the login line links to the window, with the plural", function()
+			keepTwo()
+			session(_G.MapScoutDB)
+			assert.is_true(said("You have 2 new locations. |cff71d5ff|Haddon:MapScout:contribute|hShare them now!|h|r"))
+		end)
+
+		it("/ms contribute and the chat link open the window with what is new", function()
+			keepTwo()
+			SlashCmdList.MAPSCOUT("contribute")
+			assert.are.equal("Share what you saved", opened.title)
+			assert.matches("New since you last sent: 2 locations.\n· 1 NPC\n· 1 dungeon entrance\n", opened.intro, 1, true)
+			assert.matches("Ctrl+C", opened.intro, 1, true)
+			assert.are.equal("https://forms.gle/LZ7aBC4aH2Yb7Kgj8", opened.address)
+			assert.matches("^%-%-%-%-%-BEGIN MAPSCOUT 1 PLAIN%-%-%-%-%-\ncontribution\t1\t", opened.text)
+			assert.matches("\n%-%-%-%-%-END MAPSCOUT%-%-%-%-%-$", opened.text)
+			opened = nil
+			assert.is_true(ns.Contribute.OnLink("addon:MapScout:contribute"))
+			assert.is_not_nil(opened)
+			assert.is_false(ns.Contribute.OnLink("addon:Other:thing"))
+		end)
+
+		it("«I sent it» marks what was in the text as sent; closing does not", function()
+			keepTwo()
+			ns.Contribute.Share() -- opened and closed without sending
+			assert.are.equal(2, ns.Contribute.CountNew())
+			ns.Contribute.Share()
+			ns.Contribute.Keep("graveyard", nil) -- nothing
+			ns.Contribute.Keep("healer", { npc = 6491, map = 1426, x = 0.7, y = 0.7 }) -- after the text was made
+			opened.confirm.onClick()
+			assert.are.equal("|cff33ff99MapScout|r: Thank you for contributing! We have marked the locations as sent.",
+				ChatLog[#ChatLog])
+			assert.are.equal(1, ns.Contribute.CountNew()) -- the graveyard was not in the text
+			assert.are.equal(3, ns.Contribute.Count())
+		end)
+
+		it("with nothing new, says so instead of opening", function()
+			pack = { version = "0.2.0", categories = {} }
+			session(nil)
+			opened = nil
+			ns.CopyWindow = { Open = function(spec) opened = spec end }
+			SlashCmdList.MAPSCOUT("contribute")
+			assert.is_nil(opened)
+			assert.matches("there is nothing to send yet", ChatLog[#ChatLog], 1, true)
+			keepTwo()
+			ns.Contribute.Share()
+			opened.confirm.onClick()
+			opened = nil
+			SlashCmdList.MAPSCOUT("contribute")
+			assert.is_nil(opened)
+			assert.matches("you have already sent everything saved", ChatLog[#ChatLog], 1, true)
+		end)
+
+		it("a record forgotten while the window was open is not marked", function()
+			keepTwo()
+			ns.Contribute.Share()
+			SlashCmdList.MAPSCOUT("contribute clear")
+			assert.are.equal(0, ns.Contribute.Export.MarkSent({ { "npcs", 4092, {} } }))
+			opened.confirm.onClick()
+			assert.are.equal(0, ns.Contribute.Count())
+		end)
+	end)
+
+	describe("the copied text", function()
+		local Export
+
+		before_each(function()
+			session(nil)
+			Export = ns.Contribute.Export
+		end)
+
+		it("is plain between its marks when the client can't compress", function()
+			assert.are.equal("-----BEGIN MAPSCOUT 1 PLAIN-----\na\tb\n-----END MAPSCOUT-----", Export.Wrap("a\tb"))
+		end)
+
+		it("is compressed in Base64 lines of 76 letters when it can be and it is shorter", function()
+			local long = ("x"):rep(200)
+			StubGlobals({ C_EncodingUtil = {
+				CompressString = function(text, method)
+					assert.are.equal(0, method)
+					return "z" .. #text
+				end,
+				EncodeBase64 = function(data) return ("Q"):rep(100) .. data end,
+			} })
+			assert.are.equal("-----BEGIN MAPSCOUT 1 DEFLATE-----\n" .. ("Q"):rep(76) .. "\n" .. ("Q"):rep(24) .. "z200"
+				.. "\n-----END MAPSCOUT-----", Export.Wrap(long))
+			assert.matches("PLAIN", Export.Wrap("short")) -- compressed it would be longer
+		end)
+
+		it("is plain when compressing fails", function()
+			StubGlobals({ C_EncodingUtil = {
+				CompressString = function() error("no") end,
+				EncodeBase64 = function(data) return data end,
+			} })
+			assert.matches("PLAIN", Export.Wrap(("x"):rep(200)))
 		end)
 	end)
 

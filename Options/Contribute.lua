@@ -1,8 +1,9 @@
 -- MapScout options: help improve MapScout's data. One checkbox that turns the
 -- contribution mode (Core/Contribute.lua) on or off, with a line on what it
 -- does, in a box of its own so it stands out, and one under it for the chat
--- messages (greyed while contributing is off). They follow /ms contribute
--- on|off and messages on|off too.
+-- messages (greyed while contributing is off), and a button that opens the
+-- window to send what was saved (UI/ContributeWindow.lua; with nothing new,
+-- the chat says so). They follow /ms contribute on|off and messages on|off too.
 
 local _, ns = ...
 local L = ns.L
@@ -70,9 +71,17 @@ local function build(parent, anchor)
 		ns.Contribute.SetTells(self:GetChecked())
 	end)
 
+	local share = CreateFrame("Button", "MapScoutOptionsContributeShare", box, "UIPanelButtonTemplate")
+	share:SetText(L.OPTIONS_CONTRIBUTE_SHARE)
+	share:SetSize(math.max(160, share:GetFontString():GetStringWidth() + 32), 22)
+	share:SetPoint("TOPLEFT", messages, "BOTTOMLEFT", 2, -8)
+	share:SetScript("OnClick", function()
+		ns.Contribute.Share()
+	end)
+
 	-- The box grows with the explanation (its lines depend on the page's width)
 	local function fit()
-		box:SetHeight(PADDING + 24 + 4 + help:GetStringHeight() + 6 + 20 + PADDING)
+		box:SetHeight(PADDING + 24 + 4 + help:GetStringHeight() + 6 + 20 + 8 + 22 + PADDING)
 	end
 	box:SetScript("OnSizeChanged", fit)
 	box:SetScript("OnShow", fit)

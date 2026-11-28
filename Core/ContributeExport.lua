@@ -18,7 +18,14 @@
 --   entrance   instance  name  kind  uiMap  x  y
 --   direction  locale  asked  name  poi  texture  guard  uiMap  x  y
 --   graveyard  how  npc  uiMap  x  y  continent  cx  cy  died
--- The marks around it and its compression belong to the export window.
+-- What is copied (Export.Wrap) has marks around it, so a cut copy is noticed:
+--   -----BEGIN MAPSCOUT 1 PLAIN-----     the text as it is, or
+--   -----BEGIN MAPSCOUT 1 DEFLATE-----   compressed (Deflate) and in Base64,
+--                                        in lines of 76 letters
+--   ...
+--   -----END MAPSCOUT-----
+-- (1 is the version of the marks; the text inside says its own format). It
+-- is compressed when the client can (C_EncodingUtil) and it is shorter.
 
 local _, ns = ...
 
@@ -89,31 +96,94 @@ function Export.Header(id)
 		build and (version .. "." .. build) or version }, 6)
 end
 
--- The text of what has not been sent yet, and how many records it has
--- (0 and nil when there is nothing to send)
-function Export.Text()
+-- What has not been sent yet: the text (nil when nothing is new), how many
+-- records it has, how many of each kind ({ npcs = 3, ... }) and the records
+-- themselves (to mark them as sent: Export.MarkSent)
+function Export.Collect()
 	local data = ns.db and ns.db.contribution
+	local counts, picked = {}, {}
 	if not (data and data.id) then
-		return nil, 0
+		return nil, 0, counts, picked
 	end
 	local lines, n = { Export.Header(data.id) }, 0
 	for _, spec in ipairs(ROWS) do
 		local kind, tag, row = spec[1], spec[2], spec[3]
 		local rows = {}
-		for _, entry in pairs(data[kind] or {}) do
+		for key, entry in pairs(data[kind] or {}) do
 			if not entry.sent then
 				local fields, count = row(entry)
 				rows[#rows + 1] = tag .. "\t" .. line(fields, count)
+				picked[#picked + 1] = { kind, key, entry }
 			end
 		end
 		table.sort(rows)
 		for _, text in ipairs(rows) do
 			lines[#lines + 1] = text
 		end
+		counts[kind] = #rows
 		n = n + #rows
 	end
 	if n == 0 then
-		return nil, 0
+		return nil, 0, counts, picked
 	end
-	return table.concat(lines, "\n"), n
+	return table.concat(lines, "\n"), n, counts, picked
+end
+
+-- The text of what has not been sent yet, and how many records it has
+-- (nil and 0 when there is nothing to send)
+function Export.Text()
+	local text, n = Export.Collect()
+	return text, n
+end
+
+-- Marks those records as sent (the ones still kept: clear may have forgotten
+-- them while the window was open). Returns how many.
+function Export.MarkSent(picked)
+	local data = ns.db and ns.db.contribution
+	local n = 0
+	for _, record in ipairs(picked or {}) do
+		local kind, key, entry = record[1], record[2], record[3]
+		if data and data[kind] and data[kind][key] == entry then
+			entry.sent = true
+			n = n + 1
+		end
+	end
+	return n
+end
+
+Export.MARKS = 1 -- version of the marks around the copied text
+Export.WIDTH = 76 -- letters per line of the compressed text
+
+-- The text compressed and in Base64, or nil when the client can't
+local function compress(text)
+	local util = C_EncodingUtil
+	if not (util and util.CompressString and util.EncodeBase64) then
+		return nil
+	end
+	local deflate = Enum and Enum.CompressionMethod and Enum.CompressionMethod.Deflate or 0
+	local ok, packed = pcall(util.CompressString, text, deflate)
+	if not (ok and type(packed) == "string") then
+		return nil
+	end
+	local encoded
+	ok, encoded = pcall(util.EncodeBase64, packed)
+	if not (ok and type(encoded) == "string" and encoded ~= "") then
+		return nil
+	end
+	local lines = {}
+	for i = 1, #encoded, Export.WIDTH do
+		lines[#lines + 1] = encoded:sub(i, i + Export.WIDTH - 1)
+	end
+	return table.concat(lines, "\n")
+end
+
+-- What the player copies: the text between its marks, compressed when it can
+-- be and it is shorter
+function Export.Wrap(text)
+	local how, body = "PLAIN", text
+	local packed = compress(text)
+	if packed and #packed < #text then
+		how, body = "DEFLATE", packed
+	end
+	return ("-----BEGIN MAPSCOUT %d %s-----\n%s\n-----END MAPSCOUT-----"):format(Export.MARKS, how, body)
 end
