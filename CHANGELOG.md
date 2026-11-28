@@ -1,0 +1,57 @@
+# Changelog
+
+## 0.1.0 (2026-11-28)
+
+
+### Features
+
+* **api:** let other addons add their own search results ([667ae22](https://github.com/calderon/mapscout/commit/667ae22fb19f04b6b76a668fa8ab436a33179ed1)), closes [#67](https://github.com/calderon/mapscout/issues/67)
+* find banks, auction houses, inns, mailboxes and stables ([3a735a5](https://github.com/calderon/mapscout/commit/3a735a5db78e4125c23dcb1555787b3f9665629a)), closes [#45](https://github.com/calderon/mapscout/issues/45)
+* find barbers, guild masters and battlemasters ([89652b1](https://github.com/calderon/mapscout/commit/89652b1cec65a44406b11779ab7471fe544a394b)), closes [#47](https://github.com/calderon/mapscout/issues/47)
+* find boats, zeppelins, skyships and the tram ([04773ee](https://github.com/calderon/mapscout/commit/04773ee5a213644dbeca8bdb3b5591673178922b)), closes [#44](https://github.com/calderon/mapscout/issues/44)
+* find book quests on their own with [@book](https://github.com/book) ([b21efdc](https://github.com/calderon/mapscout/commit/b21efdc1f7919c9fa126912de23ceb9339b2efee)), closes [#195](https://github.com/calderon/mapscout/issues/195)
+* find class, profession, riding and weapon trainers ([fed45fb](https://github.com/calderon/mapscout/commit/fed45fbde3edfdcb7990f22473dd19b7b57276f2)), closes [#46](https://github.com/calderon/mapscout/issues/46)
+* find dungeons and raids ([0fcf483](https://github.com/calderon/mapscout/commit/0fcf483a4a1b4c2d6b859b73de939dcabb819442)), closes [#42](https://github.com/calderon/mapscout/issues/42)
+* find dungeons by their other names ([c01d4a3](https://github.com/calderon/mapscout/commit/c01d4a3a76c1fec3afc3c88c7afbcd7fa1a5586c)), closes [#162](https://github.com/calderon/mapscout/issues/162)
+* find spirit healers ([46c18e3](https://github.com/calderon/mapscout/commit/46c18e3e9cbec9cdaba2584cff26b93390331933)), closes [#208](https://github.com/calderon/mapscout/issues/208)
+* find spirit healers without QuestieDB ([f9c9e64](https://github.com/calderon/mapscout/commit/f9c9e645031afedb44c08891bad2c21a341b0b6a)), closes [#209](https://github.com/calderon/mapscout/issues/209)
+* find subzones whose name is part of the map's art ([e960954](https://github.com/calderon/mapscout/commit/e960954c5dc36daa7d32fa75bb01a0bd86e25155)), closes [#165](https://github.com/calderon/mapscout/issues/165)
+* find towns and named places ([877e0d9](https://github.com/calderon/mapscout/commit/877e0d9b00decde9115886a9f5a3c4c08b330aea)), closes [#140](https://github.com/calderon/mapscout/issues/140)
+* find transmogrifiers, anvils, forges and quartermasters ([8f286ce](https://github.com/calderon/mapscout/commit/8f286ce12ee9d60520867322368ac006e908b0aa)), closes [#47](https://github.com/calderon/mapscout/issues/47)
+* keep only what the data pack lacks when contributing ([76f4cf5](https://github.com/calderon/mapscout/commit/76f4cf52416baf7ce29c734e4fb6f9edeb3e76f4)), closes [#223](https://github.com/calderon/mapscout/issues/223)
+* **map:** add a search bar to the world map ([7861eb1](https://github.com/calderon/mapscout/commit/7861eb1fd41ca7148efd2ef34fb1725a71ec2a94)), closes [#33](https://github.com/calderon/mapscout/issues/33)
+* **map:** draw the route of NPCs who walk one ([42ee96a](https://github.com/calderon/mapscout/commit/42ee96aefaf81fa04457169f57a7ff9073621d4e)), closes [#179](https://github.com/calderon/mapscout/issues/179)
+* **map:** go to a result with a click or Enter ([1718d98](https://github.com/calderon/mapscout/commit/1718d989c29d6660489efbd274ae0e430ea46eb5)), closes [#37](https://github.com/calderon/mapscout/issues/37)
+* **map:** move the search bar to the world map's title strip ([d06cb88](https://github.com/calderon/mapscout/commit/d06cb8864b669a6d73857523505c80667f5dfdde)), closes [#133](https://github.com/calderon/mapscout/issues/133)
+* **map:** preview a result on the map when hovering it ([748ee6a](https://github.com/calderon/mapscout/commit/748ee6a7cb69df664a62969b45db0e58f4d5dd0c)), closes [#36](https://github.com/calderon/mapscout/issues/36)
+* **map:** show search results grouped by this zone and the rest ([02f0c1c](https://github.com/calderon/mapscout/commit/02f0c1c32ec6778fb8b1a16c1a4a6db80eb4c401)), closes [#34](https://github.com/calderon/mapscout/issues/34)
+* mark harvested NPCs who walk a route as approximate ([c74f925](https://github.com/calderon/mapscout/commit/c74f9253a4921cb38b7476d495c7f5f57d362008)), closes [#179](https://github.com/calderon/mapscout/issues/179)
+* **options:** choose what to search ([689e271](https://github.com/calderon/mapscout/commit/689e271a85dffe16ec05c5fe397f22a5cf43b4b1)), closes [#50](https://github.com/calderon/mapscout/issues/50)
+* **options:** choose which available quests to show ([e6bf4b5](https://github.com/calderon/mapscout/commit/e6bf4b580abaa8b91904abf9ab9c16550cb14935)), closes [#147](https://github.com/calderon/mapscout/issues/147)
+* **options:** show trainers inside services ([4bd46bf](https://github.com/calderon/mapscout/commit/4bd46bf10494d7d58b06d59349ced6036f53837f)), closes [#201](https://github.com/calderon/mapscout/issues/201)
+* place dungeon entrances at the average of every entry recorded ([882c008](https://github.com/calderon/mapscout/commit/882c0081384bacc4fdf65c07243ce1ca449da54f)), closes [#161](https://github.com/calderon/mapscout/issues/161)
+* place the Stockade entrance where players walk in ([a24cd15](https://github.com/calderon/mapscout/commit/a24cd154a267a5b703e3bca102e84ca0e601ba27)), closes [#161](https://github.com/calderon/mapscout/issues/161)
+* **search:** find available quests with QuestieDB ([229ed4e](https://github.com/calderon/mapscout/commit/229ed4e7084f774ab2b2c23b38984e758aea307e)), closes [#82](https://github.com/calderon/mapscout/issues/82) [#83](https://github.com/calderon/mapscout/issues/83)
+* **search:** find banks, inns, trainers and other services ([14dfa95](https://github.com/calderon/mapscout/commit/14dfa95032862148e948612ad9e3bbb811f094cd)), closes [#146](https://github.com/calderon/mapscout/issues/146)
+* **search:** find continents, cities, zones and battlegrounds ([6524806](https://github.com/calderon/mapscout/commit/652480636de6b1dd7196f7cae0901ddb2f9f4e08)), closes [#41](https://github.com/calderon/mapscout/issues/41)
+* **search:** find flight masters, known and unknown ([3ab0aa7](https://github.com/calderon/mapscout/commit/3ab0aa70bda6008086ae28541a0a28e8a7f00a3b)), closes [#43](https://github.com/calderon/mapscout/issues/43)
+* **search:** find the quests in your log ([64a35fb](https://github.com/calderon/mapscout/commit/64a35fb140962e7dceea76d46aabdd292d91763c)), closes [#48](https://github.com/calderon/mapscout/issues/48)
+* **search:** go to coordinates typed in the search ([9089bd0](https://github.com/calderon/mapscout/commit/9089bd0cc51b53658234ec5a0a06d4704b93fddc)), closes [#31](https://github.com/calderon/mapscout/issues/31)
+* send contributions through a Google Form ([b973dbf](https://github.com/calderon/mapscout/commit/b973dbf87b5bfdca306b1236acbc38b2a219a14a)), closes [#220](https://github.com/calderon/mapscout/issues/220)
+* send what you saved from a window in the game ([4f7b0c9](https://github.com/calderon/mapscout/commit/4f7b0c9ea071a2a127a4e6872465dfc02529e99e)), closes [#173](https://github.com/calderon/mapscout/issues/173)
+* show each wing and gate of a dungeon as its own result ([bfa91d5](https://github.com/calderon/mapscout/commit/bfa91d536c7aef5277649ebd2f98b0c7a42185d8)), closes [#161](https://github.com/calderon/mapscout/issues/161)
+* show QuestieDB's services under the one Services option ([4c2e37e](https://github.com/calderon/mapscout/commit/4c2e37e5822aa92d269037106922ea42af4c1f62)), closes [#185](https://github.com/calderon/mapscout/issues/185)
+* show the entrances of 16 more dungeons on the map ([f05faa3](https://github.com/calderon/mapscout/commit/f05faa3cd6e3195232ded0bf9434091fb1768381)), closes [#196](https://github.com/calderon/mapscout/issues/196)
+* show where Molten Core and Blackwing Lair are entered from ([d0b9d9e](https://github.com/calderon/mapscout/commit/d0b9d9e1b7062a221e036310bcde1e4b70f42e29)), closes [#161](https://github.com/calderon/mapscout/issues/161)
+* tell apart NPCs that share an ID when finding who roams ([d4cd2a4](https://github.com/calderon/mapscout/commit/d4cd2a4ab7602b1d1266eca53077c955fa14b6af)), closes [#179](https://github.com/calderon/mapscout/issues/179)
+* tell the player when MapScout saves locations ([2fced7e](https://github.com/calderon/mapscout/commit/2fced7edeacbea0cd48bd0581c7768df755e5046)), closes [#217](https://github.com/calderon/mapscout/issues/217)
+* **transport:** hide docks of the other faction ([721ad21](https://github.com/calderon/mapscout/commit/721ad21d24df355ad3f69f6b1561027c063700fa)), closes [#205](https://github.com/calderon/mapscout/issues/205)
+* turn contributing on or off ([52cfce8](https://github.com/calderon/mapscout/commit/52cfce876bdf242fd808ac7ea2ca5439df0ec6b5)), closes [#216](https://github.com/calderon/mapscout/issues/216)
+* **ui:** close the results list when clicking outside it ([64c9ebc](https://github.com/calderon/mapscout/commit/64c9ebcf4a61ba0f774e1d282b3409110b310c22)), closes [#44](https://github.com/calderon/mapscout/issues/44)
+
+
+### Bug Fixes
+
+* find vendors by "proveedor" too ([c50c3fd](https://github.com/calderon/mapscout/commit/c50c3fd50148915ab64a730df7b9a56408188a72)), closes [#169](https://github.com/calderon/mapscout/issues/169)
+* **map:** keep distances up to date while the results list is open ([9398c4e](https://github.com/calderon/mapscout/commit/9398c4e9a93de1701e00ea27ac4d58cf6715bc01)), closes [#148](https://github.com/calderon/mapscout/issues/148)
+* place book quests at the book that starts them ([b6ccd2a](https://github.com/calderon/mapscout/commit/b6ccd2a05496a3a399f089d19bea6d4b76ad236b)), closes [#181](https://github.com/calderon/mapscout/issues/181)
