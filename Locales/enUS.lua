@@ -235,7 +235,7 @@ local EN = {
 	OPTIONS_CONTRIBUTE_HELP = "Saves on your computer where service NPCs, mailboxes, dungeons and graveyards are, so you can send them and improve MapScout. It is 100% anonymous (no account, character or realm data), and nothing is shared unless you send it yourself.",
 
 	-- Contributing (/ms contribute)
-	HELP_CONTRIBUTE = "help improve MapScout's data: on, off, status or clear",
+	HELP_CONTRIBUTE = "help improve MapScout's data: on, off, status, clear or messages on|off",
 	CONTRIBUTE_TURNED_ON = "thank you! From now on we save the locations you find on this computer, every time you play. To stop: /ms contribute off.",
 	CONTRIBUTE_TURNED_OFF = "we have stopped saving information. What was saved is kept; if you want to delete it, use /ms contribute clear.",
 	CONTRIBUTE_STATUS_ON = "thank you for helping improve MapScout. Right now %s.",
@@ -245,7 +245,20 @@ local EN = {
 	CONTRIBUTE_PLACES = "%d locations are saved",
 	CONTRIBUTE_CLEARED_ON = "everything saved has been forgotten. We keep saving what you find; to stop, use /ms contribute off.",
 	CONTRIBUTE_CLEARED_OFF = "everything saved has been forgotten. To contribute again, use /ms contribute on.",
-	CONTRIBUTE_USAGE = "use /ms contribute on, off, status or clear.",
+	CONTRIBUTE_USAGE = "use /ms contribute on, off, status, clear, messages on or messages off.",
+	CONTRIBUTE_LOGIN_ON = "v%s loaded. %s",
+	CONTRIBUTE_LOGIN_OFF = "v%s loaded. Help us improve MapScout with /ms contribute on. For more help type /ms help",
+	CONTRIBUTE_NEW_NONE = "Thank you for helping improve MapScout.",
+	CONTRIBUTE_NEW_ONE = "You have 1 new location ready to share with /ms contribute.",
+	CONTRIBUTE_NEW = "You have %d new locations ready to share with /ms contribute.",
+	CONTRIBUTE_SAVED = "location saved: %s (%s).",
+	CONTRIBUTE_SAVED_PLAIN = "location saved: %s.",
+	CONTRIBUTE_GRAVEYARD = "Graveyard",
+	CONTRIBUTE_GUILD_BANK = "Guild bank",
+	CONTRIBUTE_PLACE = "Location",
+	CONTRIBUTE_MESSAGES_ON = "the chat will tell you each time a location is saved.",
+	CONTRIBUTE_MESSAGES_OFF = "the chat won't tell you when a location is saved, but we keep saving them. To see the messages again: /ms contribute messages on.",
+	OPTIONS_CONTRIBUTE_MESSAGES = "Tell me in the chat when a location is saved",
 
 	-- Search providers
 	PROVIDER_FAILED = "the search source \"%s\" failed %d times and is turned off until you reload the interface.",
