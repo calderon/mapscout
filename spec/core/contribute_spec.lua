@@ -164,6 +164,92 @@ describe("Core/Contribute.lua", function()
 		SlashCmdList.MAPSCOUT("help")
 		assert.matches("/ms contribute", table.concat(ChatLog, "\n"), 1, true)
 	end)
+	describe("tells the player in the chat", function()
+		local function said(text)
+			for _, line in ipairs(ChatLog) do
+				if line:find(text, 1, true) then
+					return true
+				end
+			end
+			return false
+		end
+
+		it("at login while on, with how many locations are new (not sent)", function()
+			ns.Contribute.SetOn(true)
+			frame:Fire("BANKFRAME_OPENED")
+			npc.guid = "Creature-0-1-2-3-5000-000"
+			frame:Fire("BANKFRAME_OPENED")
+			_G.MapScoutDB.contribution.npcs[4092].sent = true
+			session(_G.MapScoutDB)
+			assert.are.same({ "|cff33ff99MapScout|r: v0.0.0 loaded. "
+				.. "You have 1 new location ready to share with /ms contribute." }, ChatLog)
+		end)
+
+		it("at login says when nothing is new yet, and while off how to turn it on", function()
+			ns.Contribute.SetOn(true)
+			session(_G.MapScoutDB)
+			assert.are.same({ "|cff33ff99MapScout|r: v0.0.0 loaded. Thank you for helping improve MapScout." }, ChatLog)
+			ns.Contribute.SetOn(false)
+			session(_G.MapScoutDB)
+			assert.are.same({ "|cff33ff99MapScout|r: v0.0.0 loaded. Help us improve MapScout with /ms contribute on. "
+				.. "For more help type /ms help" }, ChatLog)
+		end)
+
+		it("each new location once, with what it is", function()
+			ns.Contribute.SetOn(true)
+			frame:Fire("BANKFRAME_OPENED")
+			assert.are.equal("|cff33ff99MapScout|r: location saved: Banquero Tilda (Bank).", ChatLog[#ChatLog])
+			local lines = #ChatLog
+			frame:Fire("BANKFRAME_OPENED") -- kept already
+			frame:Fire("MERCHANT_SHOW") -- one more service of the same NPC
+			assert.are.equal(lines, #ChatLog)
+			npc.guid = nil
+			frame:Fire("MAIL_SHOW")
+			assert.matches("location saved: Mailbox.", ChatLog[#ChatLog], 1, true)
+		end)
+
+		it("a dungeon once, even entered again by another spot", function()
+			ns.Contribute.SetOn(true)
+			ns.Contribute.Keep("entrance", { instance = 90, name = "Gnomeregan", kind = "party", map = 1426, x = 0.3, y = 0.3 })
+			assert.matches("location saved: Gnomeregan (Dungeon).", ChatLog[#ChatLog], 1, true)
+			local lines = #ChatLog
+			ns.Contribute.Keep("entrance", { instance = 90, name = "Gnomeregan", kind = "party", map = 1426, x = 0.4, y = 0.3 })
+			assert.are.equal(lines, #ChatLog)
+			assert.are.equal(2, ns.Contribute.Count())
+		end)
+
+		it("a guard's answer with the question asked, and a graveyard", function()
+			ns.Contribute.SetOn(true)
+			ns.Contribute.Keep("direction", { map = 1455, x = 0.2, y = 0.2, name = "Las Arcas", locale = "esES", asked = "Banco" })
+			assert.matches("location saved: Las Arcas (Banco).", ChatLog[#ChatLog], 1, true)
+			ns.Contribute.Keep("healer", { npc = 6491, map = 1426, x = 0.7, y = 0.7 })
+			assert.matches("location saved: Graveyard.", ChatLog[#ChatLog], 1, true)
+		end)
+
+		it("each location can be silenced without turning contributing off, also after clear", function()
+			ns.Contribute.SetOn(true)
+			SlashCmdList.MAPSCOUT("contribute messages off")
+			assert.matches("we keep saving them", ChatLog[#ChatLog], 1, true)
+			SlashCmdList.MAPSCOUT("contribute clear")
+			local lines = #ChatLog
+			frame:Fire("BANKFRAME_OPENED")
+			assert.are.equal(lines, #ChatLog)
+			assert.are.equal(1, ns.Contribute.Count())
+			session(_G.MapScoutDB)
+			assert.is_true(ns.Contribute.IsOn())
+			assert.is_true(said("v0.0.0 loaded. You have 1 new location")) -- the login line always
+			SlashCmdList.MAPSCOUT("contribute messages on")
+			npc.guid = "Creature-0-1-2-3-5000-000"
+			frame:Fire("BANKFRAME_OPENED")
+			assert.matches("location saved:", ChatLog[#ChatLog], 1, true)
+		end)
+
+		it("says nothing while off", function()
+			ns.Contribute.Keep("entrance", { instance = 90, name = "Gnomeregan", kind = "party", map = 1426, x = 0.3, y = 0.3 })
+			assert.is_false(said("location saved"))
+		end)
+	end)
+
 	describe("keeps only what the data pack lacks", function()
 		local services, trainers, dungeons, healers
 

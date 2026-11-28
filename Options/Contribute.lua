@@ -1,7 +1,8 @@
 -- MapScout options: help improve MapScout's data. One checkbox that turns the
 -- contribution mode (Core/Contribute.lua) on or off, with a line on what it
--- does, in a box of its own so it stands out. It follows /ms contribute on|off
--- too.
+-- does, in a box of its own so it stands out, and one under it for the chat
+-- messages (greyed while contributing is off). They follow /ms contribute
+-- on|off and messages on|off too.
 
 local _, ns = ...
 local L = ns.L
@@ -9,11 +10,20 @@ local L = ns.L
 local PADDING = 14
 local SPACING = 3 -- between the lines of the explanation
 
-local check
+local check, messages
 
 local function refresh()
-	if check then
-		check:SetChecked(ns.Contribute.IsOn())
+	if not check then
+		return
+	end
+	local on = ns.Contribute.IsOn()
+	check:SetChecked(on)
+	messages:SetChecked(ns.Contribute.Tells())
+	messages.Label:SetFontObject(on and "GameFontHighlightSmall" or "GameFontDisableSmall")
+	if on then
+		messages:Enable()
+	else
+		messages:Disable()
 	end
 end
 
@@ -50,9 +60,19 @@ local function build(parent, anchor)
 	help:SetSpacing(SPACING)
 	help:SetText(L.OPTIONS_CONTRIBUTE_HELP)
 
+	messages = CreateFrame("CheckButton", "MapScoutOptionsContributeMessages", box, "UICheckButtonTemplate")
+	messages:SetSize(20, 20)
+	messages:SetPoint("TOPLEFT", help, "BOTTOMLEFT", -2, -6)
+	messages.Label = messages:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+	messages.Label:SetPoint("LEFT", messages, "RIGHT", 4, 0)
+	messages.Label:SetText(L.OPTIONS_CONTRIBUTE_MESSAGES)
+	messages:SetScript("OnClick", function(self)
+		ns.Contribute.SetTells(self:GetChecked())
+	end)
+
 	-- The box grows with the explanation (its lines depend on the page's width)
 	local function fit()
-		box:SetHeight(PADDING + 24 + 4 + help:GetStringHeight() + PADDING)
+		box:SetHeight(PADDING + 24 + 4 + help:GetStringHeight() + 6 + 20 + PADDING)
 	end
 	box:SetScript("OnSizeChanged", fit)
 	box:SetScript("OnShow", fit)

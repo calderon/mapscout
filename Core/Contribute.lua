@@ -7,6 +7,12 @@
 --   /ms contribute on|off   turn it on or off (account-wide)
 --   /ms contribute status   whether it is on and how much is kept
 --   /ms contribute clear    forget everything kept and the anonymous ID
+--   /ms contribute messages on|off   whether the chat says when it saves
+-- At login, one line says MapScout is loaded and, while contributing is on,
+-- how many locations are new (not sent yet) and ready to share, or thanks the
+-- player when none is; while it is off, it says how to turn it on. While it is on, the chat also says
+-- each time a new location is saved (one kept already says nothing): those
+-- can be silenced without turning it off (quiet = true); the login line can't.
 -- What it keeps, in MapScoutDB.contribution (account SavedVariables):
 --   on   true while it is on
 --   id   a random anonymous ID for this installation, made the first time
@@ -15,6 +21,7 @@
 --        keeps them, one record per place, without the time it was seen;
 --        sent = true once the player has sent it (the export window)
 --   pack the data pack's version the records were last checked against
+--   quiet true when the chat should not say each location saved
 -- Only what the data pack lacks is kept (Core/PackCheck.lua): a service, a
 -- mailbox, an entrance or a graveyard the pack has near that place is not.
 -- When the pack changes version, what it has gained is dropped, sent or not.
@@ -103,66 +110,123 @@ local function fits(kind, vendor)
 	return false
 end
 
--- Keeps entry under key, if the pack lacks it and it fits
+-- Keeps entry under key, if the pack lacks it and it fits. Returns true
+-- when it was not kept yet.
 local function put(kind, key, entry)
 	if not PackCheck.Lacks(kind, entry) then
-		return
+		return false
 	end
 	local records = store()[kind]
-	if records[key] or fits(kind, false) then
+	local new = not records[key]
+	if not new or fits(kind, false) then
 		records[key] = entry
+		return new
 	end
+	return false
 end
 
+-- What the chat calls each service
+local SERVICE_TEXT = {
+	bank = "SERVICE_bank", auction = "SERVICE_auction", vendor = "SERVICE_vendor", trainer = "SERVICE_trainer",
+	stable = "SERVICE_stable", guild = "SERVICE_guild", tabard = "SERVICE_guild", battlemaster = "SERVICE_battle",
+	innkeeper = "SERVICE_inn", transmog = "SERVICE_transmog", barber = "SERVICE_barber",
+	guildbank = "CONTRIBUTE_GUILD_BANK", mailbox = "SERVICE_mailbox",
+}
+
+local function serviceText(service)
+	local key = SERVICE_TEXT[service]
+	return key and L[key] or nil
+end
+
+local function zoneName(mapID)
+	local info = mapID and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
+	return info and info.name or nil
+end
+
+-- Each keep.<kind> keeps what the recorder noticed; when it is a new
+-- location, it returns how the chat names it and what it is (or nil)
 local keep = {}
 
 function keep.npc(npc)
 	local services = { [npc.service] = true, repair = npc.repair }
 	if not PackCheck.Lacks("npcs", { services = services, map = npc.map, x = npc.x, y = npc.y }) then
-		return
+		return nil
 	end
 	local npcs = store().npcs
-	if npcs[npc.id] or fits("npcs", npc.service == "vendor") then
+	local new = not npcs[npc.id]
+	if not new or fits("npcs", npc.service == "vendor") then
 		local entry = Recorder.AddNPC(npcs, timeless(npc))
 		entry.at, entry.sent = nil, nil -- something new about it: not sent yet
+		if new then
+			return npc.name, serviceText(npc.service)
+		end
 	end
+	return nil
 end
 
 function keep.object(object)
-	put("objects", Recorder.PlaceKey(object.service, object.map, object.x, object.y), {
+	if put("objects", Recorder.PlaceKey(object.service, object.map, object.x, object.y), {
 		service = object.service, objectID = object.id, map = object.map, x = object.x, y = object.y,
-	})
+	}) then
+		return serviceText(object.service) or object.service, zoneName(object.map)
+	end
+	return nil
+end
+
+-- Entering a dungeon again by another spot keeps that spot too, but it is not
+-- a new location
+local function hasInstance(instance)
+	for _, entry in pairs(store().entrances) do
+		if entry.instance == instance then
+			return true
+		end
+	end
+	return false
 end
 
 function keep.entrance(record)
-	if record then
-		put("entrances", Recorder.PlaceKey(tostring(record.instance), record.map, record.x, record.y), timeless(record))
+	if not record then
+		return nil
 	end
+	local first = not hasInstance(record.instance)
+	local key = Recorder.PlaceKey(tostring(record.instance), record.map, record.x, record.y)
+	if put("entrances", key, timeless(record)) and first then
+		return record.name, record.kind == "raid" and L.DUNGEONS_RAID or L.DUNGEONS_DUNGEON
+	end
+	return nil
+end
+
+local function graveyard(record, how)
+	local entry = timeless(record)
+	entry.how = how
+	if put("graveyards", Recorder.PlaceKey(how, record.map, record.x, record.y), entry) then
+		return L.CONTRIBUTE_GRAVEYARD, zoneName(record.map)
+	end
+	return nil
 end
 
 function keep.death(record)
-	if record then
-		local entry = timeless(record)
-		entry.how = "death"
-		put("graveyards", Recorder.PlaceKey("death", record.map, record.x, record.y), entry)
-	end
+	return record and graveyard(record, "death") or nil
 end
 
 function keep.healer(record)
-	local entry = timeless(record)
-	entry.how = "healer"
-	put("graveyards", Recorder.PlaceKey("healer", record.map, record.x, record.y), entry)
+	return graveyard(record, "healer")
 end
 
 function keep.direction(direction)
 	local entry = timeless(direction)
 	if not PackCheck.Lacks("directions", entry) then
-		return
+		return nil
 	end
 	local directions = store().directions
-	if directions[Recorder.PlaceKey(nil, entry.map, entry.x, entry.y)] or fits("directions", false) then
+	local new = not directions[Recorder.PlaceKey(nil, entry.map, entry.x, entry.y)]
+	if not new or fits("directions", false) then
 		Recorder.AddDirection(directions, entry)
+		if new then
+			return entry.name or L.CONTRIBUTE_PLACE, entry.asked ~= "" and entry.asked or zoneName(entry.map)
+		end
 	end
+	return nil
 end
 
 -- In combat nothing is checked nor kept: the moments wait for the fight to end
@@ -191,8 +255,11 @@ function Contribute.Keep(kind, record, why)
 		return
 	end
 	afterCombat(function()
-		keep[kind](record, why)
+		local name, what = keep[kind](record, why)
 		PackCheck.Done()
+		if name and Contribute.IsOn() and Contribute.Tells() then
+			ns.Print(what and L.CONTRIBUTE_SAVED:format(name, what) or L.CONTRIBUTE_SAVED_PLAIN:format(name))
+		end
 	end)
 end
 
@@ -258,7 +325,24 @@ function Contribute.SetOn(on)
 	end
 end
 
--- fn(on) when contributing is turned on or off (the options checkbox)
+-- Whether the chat says each new location saved
+function Contribute.Tells()
+	local data = saved()
+	return not (data and data.quiet)
+end
+
+function Contribute.SetTells(on)
+	local data = saved()
+	if not data then
+		return
+	end
+	data.quiet = not on or nil
+	for _, fn in ipairs(listeners) do
+		xpcall(fn, geterrorhandler(), Contribute.IsOn())
+	end
+end
+
+-- fn(on) when contributing is turned on or off, or its messages (the options)
 function Contribute.Listen(fn)
 	listeners[#listeners + 1] = fn
 end
@@ -267,7 +351,7 @@ end
 function Contribute.Clear()
 	local data = saved()
 	if data then
-		ns.db.contribution = { on = data.on }
+		ns.db.contribution = { on = data.on, quiet = data.quiet }
 	end
 end
 
@@ -277,6 +361,19 @@ function Contribute.Count()
 	for _, kind in ipairs(Contribute.KINDS) do
 		for _ in pairs(data and data[kind] or {}) do
 			n = n + 1
+		end
+	end
+	return n
+end
+
+-- How many records are new: not sent yet
+function Contribute.CountNew()
+	local data, n = saved(), 0
+	for _, kind in ipairs(Contribute.KINDS) do
+		for _, entry in pairs(data and data[kind] or {}) do
+			if not entry.sent then
+				n = n + 1
+			end
 		end
 	end
 	return n
@@ -292,6 +389,16 @@ function Contribute.PlacesText(n)
 	return L.CONTRIBUTE_PLACES:format(n)
 end
 
+-- "You have 2 new locations ready to share with /ms contribute."; thanks when none is new
+function Contribute.NewText(n)
+	if n == 0 then
+		return L.CONTRIBUTE_NEW_NONE
+	elseif n == 1 then
+		return L.CONTRIBUTE_NEW_ONE
+	end
+	return L.CONTRIBUTE_NEW:format(n)
+end
+
 local function status()
 	local text = Contribute.IsOn() and L.CONTRIBUTE_STATUS_ON or L.CONTRIBUTE_STATUS_OFF
 	ns.Print(text:format(Contribute.PlacesText(Contribute.Count())))
@@ -305,6 +412,9 @@ ns.RegisterCommand("contribute", function(args)
 	elseif args == "clear" then
 		Contribute.Clear()
 		ns.Print(Contribute.IsOn() and L.CONTRIBUTE_CLEARED_ON or L.CONTRIBUTE_CLEARED_OFF)
+	elseif args == "messages on" or args == "messages off" then
+		Contribute.SetTells(args == "messages on")
+		ns.Print(args == "messages on" and L.CONTRIBUTE_MESSAGES_ON or L.CONTRIBUTE_MESSAGES_OFF)
 	elseif args == "status" or args == "" then
 		status()
 	else
@@ -316,6 +426,9 @@ ns.RegisterEvent("PLAYER_LOGIN", "Contribute", function()
 	ns.UnregisterEvent("PLAYER_LOGIN", "Contribute")
 	if Contribute.IsOn() then
 		Contribute.SetOn(true)
+		ns.Print(L.CONTRIBUTE_LOGIN_ON:format(ns.VERSION, Contribute.NewText(Contribute.CountNew())))
 		pruneIfNewPack()
+	else
+		ns.Print(L.CONTRIBUTE_LOGIN_OFF:format(ns.VERSION))
 	end
 end)

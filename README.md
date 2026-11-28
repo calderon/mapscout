@@ -25,6 +25,8 @@ It never saves your character's, account's, realm's or guild's name, your chat, 
 
 Nothing leaves your computer unless you send it yourself. To stop: `/ms contribute off` (what was saved is kept). To forget everything saved: `/ms contribute clear`. To see how much is saved: `/ms contribute status`.
 
+While it is on, the chat says when you log in how many new locations you have ready to share, and says each time a new location is saved. To hide those and keep contributing: `/ms contribute messages off`, or the checkbox under it in the options.
+
 ### For developers
 
 Any addon can add its own results and actions to MapScout through `MapScoutAPI`. How MapScout is built: [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -59,6 +61,8 @@ Mientras está encendido, MapScout guarda en tu ordenador solo lo que a sus dato
 Nunca guarda el nombre de tu personaje, tu cuenta, tu reino ni tu hermandad, tu chat ni cuándo jugaste. No hace nada mientras estás en combate y guarda una cantidad limitada: cuando los datos de MapScout ya incluyen lo que encontraste, se olvida.
 
 Nada sale de tu ordenador si no lo envías tú. Para parar: `/ms contribute off` (lo guardado se conserva). Para olvidar todo lo guardado: `/ms contribute clear`. Para ver cuánto hay guardado: `/ms contribute status`.
+
+Mientras está encendido, el chat te dice al entrar en el juego cuántas ubicaciones nuevas tienes listas para compartir y avisa cada vez que se guarda una ubicación nueva. Para no ver esos avisos y seguir contribuyendo: `/ms contribute messages off`, o la casilla de debajo en las opciones.
 
 ### Para desarrolladores
 
